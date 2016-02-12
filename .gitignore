@@ -2,3 +2,4 @@
 lexer/project/project/
 lexer/project/target/
 lexer/target/
+lexer/src/main/scala/slacc/target/
