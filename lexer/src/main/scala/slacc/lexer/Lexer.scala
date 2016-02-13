@@ -22,14 +22,19 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
         source.hasNext || consumed.size > 0
       }
 
-      def next = {
+      def next: Token = {
         var currMatch = ""
         var longestMatch = new Token(BAD)
 
         while (hasNext && matching) {
           var currChar: Char = readChar
-          if (currChar.toString == "\n" || currChar.toString == " ") {
-            if (hasNext) currChar = readChar
+          if (currChar == '\n' || currChar == ' ' || currChar == '\t') {
+            return longestMatch
+            if (hasNext) {
+              next
+            } else {
+              new Token(EOF)
+            }
           }
           currMatch += currChar
           val tok = matchToken(currMatch)
@@ -76,7 +81,23 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "+" => new Token(PLUS)
           case "-" => new Token(MINUS)
           case "*" => new Token(TIMES)
-          case "/" => new Token(DIV)
+          case "/" => {
+            new Token(DIV)
+            if (hasNext) {
+              var nextChar: Char = source.next
+              if (nextChar == '/') {
+                  /* // comment, look for line break */
+                  while (nextChar != '\n') {
+                    nextChar = source.next
+                  }
+                  next
+              } else {
+                new Token(DIV)
+              }
+            } else {
+              new Token(BAD)
+            }
+          }
           case "class" => new Token(CLASS)
           case "method" => new Token(METHOD)
           case "var" => new Token(VAR)
@@ -98,7 +119,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "\"" => {
             var strLit: String = ""
             var sourceNext: String = source.next.toString
-            while (source.hasNext && sourceNext != "\"") {
+            while (hasNext && sourceNext != "\"") {
               strLit += sourceNext
               sourceNext = source.next.toString
             }
