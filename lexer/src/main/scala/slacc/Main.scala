@@ -65,7 +65,10 @@ object Main {
       }
     } else {
       val pipeline = Lexer
-      pipeline.run(ctx)(ctx.files.head)
+      val it = pipeline.run(ctx)(ctx.files.head)
+      while (it.hasNext) {
+        println(it.next)
+      }
     }
   }
 }

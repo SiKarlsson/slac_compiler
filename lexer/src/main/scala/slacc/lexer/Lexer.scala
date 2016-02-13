@@ -4,6 +4,7 @@ package lexer
 import utils._
 import scala.io.Source
 import java.io.File
+import scala.collection.mutable.Stack
 
 object Lexer extends Pipeline[File, Iterator[Token]] {
   import Tokens._
@@ -12,16 +13,86 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
     val source = Source.fromFile(f)
     import ctx.reporter._
 
-    // Complete this file
-
     new Iterator[Token] {
 
+      var matching = true
+      val consumed = Stack[Char]()
+
       def hasNext = {
-        ???
+        source.hasNext || consumed.size > 0
       }
 
       def next = {
-        ???
+        var currMatch = ""
+        var longestMatch = new Token(BAD)
+        
+        while (hasNext && matching) {
+          val currChar = readChar
+          currMatch += currChar
+          val tok = matchToken(currMatch)
+          if (tok.toString == "BAD" && longestMatch.toString != "BAD") {
+            matching = false
+            consumed.push(currChar)
+          }
+          if (tok.toString != "BAD") {
+            longestMatch = tok    
+          }
+        }
+
+        matching = true
+        longestMatch
+      }
+
+      def matchToken(s: String) = {
+        s match {
+          case ":" => new Token(COLON)
+          case ";" => new Token(SEMICOLON)
+          case "." => new Token(DOT)
+          case "," => new Token(COMMA)
+          case "=" => new Token(EQSIGN)
+          case "==" => new Token(EQUALS)
+          case "!" => new Token(BANG)
+          case "(" => new Token(LPAREN)
+          case ")" => new Token(RPAREN)
+          case "[" => new Token(LBRACKET)
+          case "]" => new Token(RBRACKET)
+          case "{" => new Token(LBRACE)
+          case "}" => new Token(RBRACE)
+          case "&&" => new Token(AND)
+          case "||" => new Token(OR)
+          case "<" => new Token(LESSTHAN)
+          case "+" => new Token(PLUS)
+          case "-" => new Token(MINUS)
+          case "*" => new Token(TIMES)
+          case "/" => new Token(DIV)
+          case "class" => new Token(CLASS)
+          case "method" => new Token(METHOD)
+          case "var" => new Token(VAR)
+          case "unit" => new Token(UNIT)
+          case "string" => new Token(STRING)
+          case "extends" => new Token(EXTENDS)
+          case "int" => new Token(INT)
+          case "boolean" => new Token(BOOLEAN)
+          case "while" => new Token(WHILE)
+          case "if" => new Token(IF)
+          case "else" => new Token(ELSE)
+          case "length" => new Token(LENGTH)
+          case "true" => new Token(TRUE)
+          case "false" => new Token(FALSE)
+          case "self" => new Token(SELF)
+          case "new" => new Token(NEW)
+          case "println" => new Token(PRINTLN)
+          case "strOf" => new Token(STROF)
+          case _ => new Token(BAD)
+        }
+      }
+
+      def readChar = {
+        if (consumed.size > 0) {
+          consumed.pop
+        } else {
+          source.next
+        }
       }
     }
 
