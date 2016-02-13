@@ -1,6 +1,3 @@
-while
-(
-true
-)
-{
+while (true) {
+  println("hejsan"); //test  
 }
