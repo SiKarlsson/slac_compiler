@@ -25,21 +25,33 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
       def next = {
         var currMatch = ""
         var longestMatch = new Token(BAD)
-        
+
         while (hasNext && matching) {
-          val currChar = readChar
+          var currChar: Char = readChar
+          if (currChar.toString == "\n") {
+            if (hasNext) currChar = readChar
+          }
           currMatch += currChar
           val tok = matchToken(currMatch)
           if (tok.toString == "BAD" && longestMatch.toString != "BAD") {
-            matching = false
+            /* the new match is "BAD" and we have a longest match already,
+              no more matches possible*/
             consumed.push(currChar)
+            matching = false
           }
           if (tok.toString != "BAD") {
-            longestMatch = tok    
+            /* found a match! update longest match */
+            longestMatch = tok
           }
         }
 
         matching = true
+
+        /* nothing more to read, EOF */
+        if (!hasNext) {
+          longestMatch = new Token(EOF)
+        }
+
         longestMatch
       }
 
@@ -95,7 +107,6 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
         }
       }
     }
-
   }
 }
 
