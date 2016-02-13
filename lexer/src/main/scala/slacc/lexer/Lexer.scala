@@ -28,7 +28,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
 
         while (hasNext && matching) {
           var currChar: Char = readChar
-          if (currChar.toString == "\n") {
+          if (currChar.toString == "\n" || currChar.toString == " ") {
             if (hasNext) currChar = readChar
           }
           currMatch += currChar
@@ -95,6 +95,15 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "new" => new Token(NEW)
           case "println" => new Token(PRINTLN)
           case "strOf" => new Token(STROF)
+          case "\"" => {
+            var strLit: String = ""
+            var sourceNext: String = source.next.toString
+            while (source.hasNext && sourceNext != "\"") {
+              strLit += sourceNext
+              sourceNext = source.next.toString
+            }
+            new STRLIT(strLit)
+          }
           case _ => new Token(BAD)
         }
       }
