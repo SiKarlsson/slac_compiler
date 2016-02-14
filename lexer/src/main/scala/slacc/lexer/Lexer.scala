@@ -28,19 +28,19 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
 
         while (hasNext && matching) {
           var currChar: Char = readChar
-          if (currChar == '\n' || currChar == ' ' || currChar == '\t') {
-            return longestMatch
-            if (hasNext) {
-              next
-            } else {
-              new Token(EOF)
-            }
+          while (hasNext && (currChar == '\n' || currChar == ' ' || currChar == '\t')) {
+            // read past line breaks, whitespaces, tabs
+            // prob not optimal, no token contains any of these characters so
+            // should probably just return longest match so far, but how to
+            // deal with several whitespaces in a row? Will return BAD token
+            currChar = readChar
           }
           currMatch += currChar
           val tok = matchToken(currMatch)
           if (tok.toString == "BAD" && longestMatch.toString != "BAD") {
             /* the new match is "BAD" and we have a longest match already,
-              no more matches possible*/
+              no more matches possible but we need to push the consumed Char
+              for when we look for next match */
             consumed.push(currChar)
             matching = false
           }
@@ -61,6 +61,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
       }
 
       def matchToken(s: String) = {
+        //println("matching: \"" + s + "\"")
         s match {
           case ":" => new Token(COLON)
           case ";" => new Token(SEMICOLON)
