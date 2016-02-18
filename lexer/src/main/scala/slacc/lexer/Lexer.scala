@@ -17,6 +17,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
 
       var matching = true
       val consumed = Stack[Char]()
+      var pos = 0
 
       def hasNext = {
         source.hasNext || consumed.size > 0
@@ -90,11 +91,11 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "/" => {
             new Token(DIV)
             if (hasNext) {
-              var nextChar: Char = source.next
+              var nextChar: Char = readFromSource
               if (nextChar == '/') {
                   /* // comment, look for line break */
                   while (nextChar != '\n') {
-                    nextChar = source.next
+                    nextChar = readFromSource
                   }
                   next
               } else {
@@ -124,10 +125,10 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "strOf" => new Token(STROF)
           case "\"" => {
             var strLit: String = ""
-            var sourceNext: String = source.next.toString
+            var sourceNext: String = readFromSource.toString
             while (hasNext && sourceNext != "\"") {
               strLit += sourceNext
-              sourceNext = source.next.toString
+              sourceNext = readFromSource.toString
             }
             new STRLIT(strLit)
           }
@@ -151,8 +152,13 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
         if (consumed.size > 0) {
           consumed.pop
         } else {
-          source.next
+          readFromSource
         }
+      }
+
+      def readFromSource: Char = {
+        pos = pos + 1
+        source.next
       }
     }
   }
