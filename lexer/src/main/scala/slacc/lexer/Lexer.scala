@@ -28,12 +28,17 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
 
         while (hasNext && matching) {
           var currChar: Char = readChar
-          while (hasNext && (currChar == '\n' || currChar == ' ' || currChar == '\t')) {
-            // read past line breaks, whitespaces, tabs
-            // prob not optimal, no token contains any of these characters so
-            // should probably just return longest match so far, but how to
-            // deal with several whitespaces in a row? Will return BAD token
-            currChar = readChar
+          if (currChar == '\n' || currChar == ' ' || currChar == '\t') {
+            longestMatch match {
+              case Kinded(BAD) => {
+                if (currMatch == "") {
+                  return next
+                } else {
+                  return longestMatch
+                }
+              }
+              case _ => 
+            }
           }
           currMatch += currChar
           val tok = matchToken(currMatch)
