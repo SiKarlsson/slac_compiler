@@ -134,6 +134,12 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case _ => {
             if (s.matches("[a-zA-Z]+[a-zA-Z0-9_]*")) {
               new ID(s)
+            } else if (s.matches("[0-9]+")) {
+              try {
+                new INTLIT(s.toInt)
+              } catch {
+                case e: Exception => new Token(BAD)
+              }
             } else {
               new Token(BAD)
             }
