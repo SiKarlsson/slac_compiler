@@ -38,7 +38,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
                   return longestMatch
                 }
               }
-              case _ => 
+              case _ =>
             }
           }
           currMatch += currChar
@@ -135,7 +135,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case _ => {
             if (s.matches("[a-zA-Z]+[a-zA-Z0-9_]*")) {
               new ID(s)
-            } else if (s.matches("[0-9]+")) {
+            } else if (s.matches("[1-9][0-9]*")) {
               try {
                 new INTLIT(s.toInt)
               } catch {
