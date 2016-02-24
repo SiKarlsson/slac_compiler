@@ -4,6 +4,7 @@ import utils._
 import java.io.File
 
 import lexer._
+import ast._
 
 object Main {
 
@@ -19,6 +20,14 @@ object Main {
 
       case "--tokens" :: args =>
         ctx = ctx.copy(doTokens = true)
+        processOption(args)
+
+      case "--print" :: args =>
+        ctx = ctx.copy(doPrintMain = true)
+        processOption(args)
+
+      case "--ast" :: args =>
+        ctx = ctx.copy(doAST = true)
         processOption(args)
 
       case "-d" :: out :: args =>
@@ -51,6 +60,8 @@ object Main {
     println("Options include:")
     println(" --help        displays this help")
     println(" --tokens      displays the list of tokens")
+    println(" --print       pretty-prints the program")
+    println(" --ast         displays the AST")
     println(" -d <outdir>   generates class files in the specified directory")
   }
 
@@ -63,9 +74,16 @@ object Main {
         val n = iter.next()
         println(n+"("+n.line+":"+n.col+")")
       }
+    } else if (ctx.doPrintMain) {
+      val pipeline = Lexer andThen Parser
+      val ast = pipeline.run(ctx)(ctx.files.head)
+      println(Printer(ast))
+    } else if (ctx.doAST) {
+      val pipeline = Lexer andThen Parser
+      val ast = pipeline.run(ctx)(ctx.files.head)
+      println(ast)
     } else {
-      val pipeline = Lexer
-      pipeline.run(ctx)(ctx.files.head)
+      ???
     }
   }
 }
