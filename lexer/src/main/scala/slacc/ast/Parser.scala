@@ -45,17 +45,17 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         // class Identifier ( <: Identifier )? { ( VarDeclaration )* ( MethodDeclaration )* }
         if (currentToken == Token(CLASS)) {
           readToken
-          identifier
+          [identifier]
           if (currentToken == Token(LESSTHAN)) {
             eat(COLON)
-            identifier
+            [identifier]
           } 
           eat(Token(LBRACE))
           while (currentToken == Token(VAR)) {
-            varDeclaration
+            [varDeclaration]
           }
           while (currentToken == Token(METHOD)) {
-            methodDeclaration
+            [methodDeclaration]
           }
         }
       }
@@ -76,7 +76,23 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def type = {
-
+        if (currentToken == Token(INT)) {
+          readToken
+          if (currentToken == Token(LBRACKET)) {
+            eat(Token(RBRACKET))
+            // Int array
+          } else {
+            // Int
+          }
+        } else if (currentToken == Token(BOOLEAN)) {
+          // Boolean
+        } else if (currentToken == Token(STR)) {
+          // Str
+        } else if (currentToken == Token(UNIT)) {
+          // Unit
+        } else {
+          identifier
+        }
       }
 
       def type expression = {
