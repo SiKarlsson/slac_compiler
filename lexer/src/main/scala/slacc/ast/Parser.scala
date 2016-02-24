@@ -43,90 +43,107 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
       def classDeclaration = {
         // class Identifier ( <: Identifier )? { ( VarDeclaration )* ( MethodDeclaration )* }
-        if (currentToken == Token(CLASS)) {
+        if (currentToken == CLASS) {
           readToken
-          [identifier]
-          if (currentToken == Token(LESSTHAN)) {
+          val ident = identifier
+          var parent: Option[Identifier] = Some(???)
+          if (currentToken == LESSTHAN) {
             eat(COLON)
-            identifier
+            //eat(Token(COLON))
+            parent = identifier
           }
-          eat(Token(LBRACE))
-          while (currentToken == Token(VAR)) {
-            [varDeclaration]
+          eat(LBRACE)
+          val vars = List();
+          while (currentToken == VAR) {
+            vars :+ varDeclaration
           }
-          while (currentToken == Token(METHOD)) {
-            [methodDeclaration]
+          val methods = List();
+          while (currentToken == METHOD) {
+            methods :+ methodDeclaration
           }
+          new ClassDecl(ident, parent, vars, methods)
         }
       }
 
       def varDeclaration = {
         // var Identifier : Type ;
-        if (currentToken == Token(VAR)) {
+        if (currentToken == VAR) {
           readToken
-          identifier
-          eat(Token(COLON))
-          type
-          eat(Token(SEMICOLON))
+          val ident = identifier
+          eat(COLON)
+          val tt = typeTree
+          eat(SEMICOLON)
+          new VarDecl(tt, ident)
         }
       }
 
       def methodDeclaration = {
-        eat(Token(METHOD))
-        identifier
-        eat(Token(LPAREN))
-        if (currentToken == Token(ID)) {
-          identifier
-          eat(Token(COLON))
-          type
-          while (currentToken == Token(SEMICOLON) {
-            identifier
-            eat(Token(COLON))
-            type
+        eat(METHOD)
+        val ident = identifier
+        val argsList = List()
+        val varList = List()
+        val exprList = List()
+        eat(LPAREN)
+        if (currentToken == IDKIND) {
+          var argIdent = identifier
+          eat(COLON)
+          var argType = typeTree
+          argsList :+ new Formal(argType, argIdent)
+          while (currentToken == SEMICOLON) {
+            argIdent = identifier
+            eat(COLON)
+            argType = typeTree
+            argsList :+ new Formal(argType, argIdent)
           }
         }
-        eat(Token(RPAREN))
-        eat(Token(COLON))
-        type
-        eat(Token(EQUALS))
-        eat(Token(LBRACE))
-        while (currentToken == Token(VAR)) {
-          varDeclaration
+        eat(RPAREN)
+        eat(COLON)
+        val retType = typeTree
+        eat(EQUALS)
+        eat(LBRACE)
+        while (currentToken == VAR) {
+          varList :+ varDeclaration
         }
-        expression
-        while (currentToken == Token(SEMICOLON)) {
-          expression
+        exprList :+ expression
+        while (currentToken == SEMICOLON) {
+          exprList :+ expression
         }
-        eat(Token(RBRACE))
+        eat(RBRACE)
+
+        new MethodDecl(retType, ident, argsList, varList, exprList, ???)
       }
 
-      def type = {
-        if (currentToken == Token(INT)) {
+      def typeTree = {
+        if (currentToken == INTLITKIND) {
           readToken
-          if (currentToken == Token(LBRACKET)) {
-            eat(Token(RBRACKET))
+          if (currentToken == LBRACKET) {
+            eat(RBRACKET)
             // Int array
           } else {
             // Int
           }
-        } else if (currentToken == Token(BOOLEAN)) {
+        } else if (currentToken == BOOLEAN) {
           // Boolean
-        } else if (currentToken == Token(STR)) {
+        } else if (currentToken == STRLITKIND) {
           // Str
-        } else if (currentToken == Token(UNIT)) {
+        } else if (currentToken == UNIT) {
           // Unit
         } else {
           identifier
         }
+
+        ???
       }
 
-      def type expression = {
+      def expression = {
 
       }
 
-      def type identifier = {
-
+      def identifier = {
+        ???
       }
+
+      ???
 
     }
 
