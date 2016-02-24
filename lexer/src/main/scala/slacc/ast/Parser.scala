@@ -40,7 +40,53 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     }
 
     def parseGoal: Program = {
-      ???
+      
+      def classDeclaration = {
+        // class Identifier ( <: Identifier )? { ( VarDeclaration )* ( MethodDeclaration )* }
+        if (currentToken == Token(CLASS)) {
+          readToken
+          identifier
+          if (currentToken == Token(LESSTHAN)) {
+            eat(COLON)
+            identifier
+          } 
+          eat(Token(LBRACE))
+          while (currentToken == Token(VAR)) {
+            varDeclaration
+          }
+          while (currentToken == Token(METHOD)) {
+            methodDeclaration
+          }
+        }
+      }
+
+      def varDeclaration = {
+        // var Identifier : Type ;
+        if (currentToken == Token(VAR)) { 
+          readToken
+          identifier
+          eat(Token(COLON))
+          type
+          eat(Token(SEMICOLON))
+        }
+      }
+
+      def methodDeclaration = {
+
+      }
+
+      def type = {
+
+      }
+
+      def type expression = {
+
+      }
+
+      def type identifier = {
+
+      }
+
     }
 
     readToken
