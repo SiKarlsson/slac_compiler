@@ -40,7 +40,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     }
 
     def parseGoal: Program = {
-      
+
       def classDeclaration = {
         // class Identifier ( <: Identifier )? { ( VarDeclaration )* ( MethodDeclaration )* }
         if (currentToken == Token(CLASS)) {
@@ -48,8 +48,8 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           [identifier]
           if (currentToken == Token(LESSTHAN)) {
             eat(COLON)
-            [identifier]
-          } 
+            identifier
+          }
           eat(Token(LBRACE))
           while (currentToken == Token(VAR)) {
             [varDeclaration]
@@ -62,7 +62,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
       def varDeclaration = {
         // var Identifier : Type ;
-        if (currentToken == Token(VAR)) { 
+        if (currentToken == Token(VAR)) {
           readToken
           identifier
           eat(Token(COLON))
@@ -72,7 +72,32 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def methodDeclaration = {
-
+        eat(Token(METHOD))
+        identifier
+        eat(Token(LPAREN))
+        if (currentToken == Token(ID)) {
+          identifier
+          eat(Token(COLON))
+          type
+          while (currentToken == Token(SEMICOLON) {
+            identifier
+            eat(Token(COLON))
+            type
+          }
+        }
+        eat(Token(RPAREN))
+        eat(Token(COLON))
+        type
+        eat(Token(EQUALS))
+        eat(Token(LBRACE))
+        while (currentToken == Token(VAR)) {
+          varDeclaration
+        }
+        expression
+        while (currentToken == Token(SEMICOLON)) {
+          expression
+        }
+        eat(Token(RBRACE))
       }
 
       def type = {
