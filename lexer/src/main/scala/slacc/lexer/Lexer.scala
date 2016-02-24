@@ -98,6 +98,9 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
                     nextChar = readFromSource
                   }
                   next
+              } else if (nextChar == '*') {
+                /* TODO CODE FOR BLOCK COMMENTS */
+                new Token(DIV)
               } else {
                 new Token(DIV)
               }
