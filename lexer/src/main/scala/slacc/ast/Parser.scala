@@ -163,8 +163,16 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             readToken
             return new Self()
           }
-          case INTLITKIND => currentToken.asInstanceOf[INTLIT].value
-          case STRLITKIND => currentToken.asInstanceOf[STRLIT].value
+          case INTLITKIND => {
+            val value = currentToken.asInstanceOf[INTLIT].value
+            readToken
+            return new IntLit(value)
+          }
+          case STRLITKIND => {
+            val value = currentToken.asInstanceOf[STRLIT].value
+            readToken
+            return new StringLit(value)
+          }
           case IDKIND => return identifier
           case NEW => {
             readToken
