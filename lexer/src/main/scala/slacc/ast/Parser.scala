@@ -5,6 +5,7 @@ import utils._
 import Trees._
 import lexer._
 import lexer.Tokens._
+import scala.collection.mutable.ListBuffer
 
 object Parser extends Pipeline[Iterator[Token], Program] {
   def run(ctx: Context)(tokens: Iterator[Token]): Program = {
@@ -48,6 +49,10 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         classDeclList :+ classDeclaration
       }
 
+      if (currentToken.kind == METHOD) {
+        mainMethod = Some(new MainMethod(methodDeclaration))
+      }
+
       def classDeclaration = {
         // class Identifier ( <: Identifier )? { ( VarDeclaration )* ( MethodDeclaration )* }
         readToken
@@ -67,6 +72,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         while (currentToken.kind == METHOD) {
           methods :+ methodDeclaration
         }
+        eat(RBRACE)
         new ClassDecl(ident, parent, vars, methods)
       }
 
@@ -87,9 +93,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
          : Type = { ( VarDeclaration )* Expression ( ; Expression )* } */
         eat(METHOD)
         val ident = identifier
-        val argsList = List()
-        val varList = List()
-        val exprList = List()
+        val argsList = new ListBuffer[Formal]()
+        val varList = new ListBuffer[VarDecl]()
+        val exprList = new ListBuffer[ExprTree]()
         eat(LPAREN)
         if (currentToken.kind == IDKIND) {
           var argIdent = identifier
@@ -106,22 +112,22 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         eat(RPAREN)
         eat(COLON)
         val retType = typeTree
-        eat(EQUALS)
+        eat(EQSIGN)
         eat(LBRACE)
         while (currentToken.kind == VAR) {
           varList :+ varDeclaration
         }
-        exprList :+ expression
+        println(currentToken.kind)
+        exprList += expression
         while (currentToken.kind == SEMICOLON) {
           exprList :+ expression
         }
         eat(RBRACE)
 
-        val meth = new MethodDecl(retType, ident, argsList, varList,
-          exprList.dropRight(1), exprList.last)
-        if (1 == 1) {
-          mainMethod = Some(new MainMethod(meth))
-        }
+        println(exprList.size)
+
+        new MethodDecl(retType, ident, argsList.toList, varList.toList,
+          exprList.toList, exprList.toList.last)
       }
 
       def typeTree = {
@@ -134,18 +140,23 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             new IntType
           }
         } else if (currentToken.kind == BOOLEAN) {
+          readToken
           new BooleanType
         } else if (currentToken.kind == STRLITKIND) {
+          readToken
           new StringType
         } else if (currentToken.kind == UNIT) {
+          readToken
           new UnitType
+        } else {
+          identifier
         }
-        identifier
       }
 
       def expression: ExprTree = {
         if (currentToken.kind == TRUE) {
-          new True()
+          readToken
+          return new True()
         } else if (currentToken.kind == INTLITKIND) {
           new IntLit(currentToken.asInstanceOf[INTLIT].value)
         } else if (currentToken.kind == STRLITKIND) {
