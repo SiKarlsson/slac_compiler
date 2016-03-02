@@ -78,7 +78,8 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def methodDeclaration = {
-        // method Identifier ( ( Identifier : Type ( , Identifier : Type )* )? ) : Type = { ( VarDeclaration )* Expression ( ; Expression )* }
+        /* method Identifier ( ( Identifier : Type ( , Identifier : Type )* )? )
+         : Type = { ( VarDeclaration )* Expression ( ; Expression )* } */
         eat(METHOD)
         val ident = identifier
         val argsList = List()
@@ -129,7 +130,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           new StringType
         } else if (currentToken == UNIT) {
           new UnitType
-        } 
+        }
         identifier
       }
 
