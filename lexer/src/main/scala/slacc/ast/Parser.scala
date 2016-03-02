@@ -119,21 +119,18 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           readToken
           if (currentToken == LBRACKET) {
             eat(RBRACKET)
-            // Int array
+            new IntArrayType
           } else {
-            // Int
+            new IntType
           }
         } else if (currentToken == BOOLEAN) {
-          // Boolean
+          new BoolType
         } else if (currentToken == STRLITKIND) {
-          // Str
+          new StringType
         } else if (currentToken == UNIT) {
-          // Unit
-        } else {
-          identifier
-        }
-
-        ???
+          new UnitType
+        } 
+        identifier
       }
 
       def expression = {
