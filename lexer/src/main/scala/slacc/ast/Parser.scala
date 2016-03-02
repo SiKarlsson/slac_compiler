@@ -44,10 +44,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       val classDeclList = List()
       var mainMethod: Option[MainMethod] = None
 
-      println("Token is " + currentToken)
-
       while (currentToken.kind == CLASS) {
-        println("SIMONNN " + currentToken.toString)
         classDeclList :+ classDeclaration
       }
 
@@ -57,8 +54,8 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         val ident = identifier
         var parent: Option[Identifier] = None
         if (currentToken.kind == LESSTHAN) {
+          readToken
           eat(COLON)
-          //eat(Token(COLON))
           parent = Some(identifier)
         }
         eat(LBRACE)
@@ -227,34 +224,47 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             eat(RBRACKET)
           } else if (currentToken.kind == DOT) {
             readToken
-            if (currentToken.kind == LENGTH) {
-              new ArrayLength(lhs);
-            } else if (currentToken.kind == IDKIND) {
-              readToken
-              eat(LPAREN)
-              expression
-              while (currentToken.kind == COMMA) {
-                expression
+
+            currentToken.kind match {
+              case LENGTH => {
+                new ArrayLength(lhs)
               }
-              readToken
-              eat(RPAREN)
-            } else if (currentToken.kind == AND) {
-              new And(lhs, expression)
-            } else if (currentToken.kind == OR) {
-              new Or(lhs, expression)
-            } else if (currentToken.kind == EQUALS) {
-              new Equals(lhs, expression)
-            } else if (currentToken.kind == LESSTHAN) {
-              new LessThan(lhs, expression)
-            } else if (currentToken.kind == PLUS) {
-              new Plus(lhs, expression)
-            } else if (currentToken.kind == MINUS) {
-              new Minus(lhs, expression)
-            } else if (currentToken.kind == TIMES) {
-              new Times(lhs, expression)
-            } else if (currentToken.kind == DIV) {
-              new Div(lhs, expression)
+              case IDKIND => {
+                readToken
+                eat(LPAREN)
+                expression
+                while (currentToken.kind == COMMA) {
+                  expression
+                }
+                readToken
+                eat(RPAREN)
+              }
+              case AND => {
+                new And(lhs, expression)
+              }
+              case OR => {
+                new Or(lhs, expression)
+              }
+              case EQUALS => {
+                new Equals(lhs, expression)
+              }
+              case LESSTHAN => {
+                new LessThan(lhs, expression)
+              }
+              case PLUS => {
+                new Plus(lhs, expression)
+              }
+              case MINUS => {
+                new Minus(lhs, expression)
+              }
+              case TIMES => {
+                new Times(lhs, expression)
+              }
+              case DIV => {
+                new Div(lhs, expression)
+              }
             }
+
             expression
           }
         }
@@ -262,7 +272,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def identifier = {
-        new Identifier(currentToken.asInstanceOf[ID].value)
+        val ident = new Identifier(currentToken.asInstanceOf[ID].value)
+        readToken
+        ident
       }
 
       mainMethod match {
