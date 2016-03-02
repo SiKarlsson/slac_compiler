@@ -145,79 +145,81 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def expression: ExprTree = {
-        if (currentToken.kind == TRUE) {
-          new True()
-        } else if (currentToken.kind == INTLITKIND) {
-          new IntLit(currentToken.asInstanceOf[INTLIT].value)
-        } else if (currentToken.kind == STRLITKIND) {
-          new StringLit(currentToken.asInstanceOf[STRLIT].value)
-        } else if (currentToken.kind == FALSE) {
-          new False()
-        } else if (currentToken.kind == SELF) {
-          new Self()
-        } else if (currentToken.kind == IDKIND) {
-          identifier
-        } else if (currentToken.kind == NEW) {
-          readToken
-          if (currentToken.kind == INT) {
-            readToken
-            eat(LBRACKET)
-            val expr = expression
-            eat(RBRACKET)
-            new NewIntArray(expr)
-          } else {
-            val ident = identifier
-            eat(RBRACKET)
-            eat(LBRACKET)
-            new New(ident)
+
+        currentToken.kind match {
+          case TRUE => new True()
+          case FALSE => new False()
+          case SELF => new Self()
+          case INTLITKIND => currentToken.asInstanceOf[INTLIT].value
+          case STRLITKIND => currentToken.asInstanceOf[STRLIT].value
+          case IDKIND => identifier
+          case NEW => {
+            if (currentToken.kind == INT) {
+              readToken
+              eat(LBRACKET)
+              val expr = expression
+              eat(RBRACKET)
+              new NewIntArray(expr)
+            } else {
+              val ident = identifier
+              eat(RBRACKET)
+              eat(LBRACKET)
+              new New(ident)
+            }
           }
-        } else if (currentToken.kind == BANG) {
-          readToken
-          new Not(expression)
-        } else if (currentToken.kind == LPAREN) {
-          eat(LPAREN)
-          expression
-          eat(RPAREN)
-        } else if (currentToken.kind == LBRACE) {
-          readToken
-          val block = List()
-          block :+ expression
-          while (currentToken.kind == SEMICOLON) {
+          case BANG => {
+            readToken
+            new Not(expression)
+          }
+          case LPAREN => {
+            eat(LPAREN)
+            expression
+            eat(RPAREN)
+          }
+          case LBRACE => {
+            readToken
+            val block = List()
             block :+ expression
+            while (currentToken.kind == SEMICOLON) {
+              block :+ expression
+            }
+            eat(LBRACE)
           }
-          eat(LBRACE)
-        } else if (currentToken.kind == IF) {
-          readToken
-          eat(LPAREN)
-          val cond = expression
-          eat(RPAREN)
-          val thn = expression
-          var els: Option[ExprTree] = None
-          if (currentToken.kind == ELSE) {
+          case IF => {
             readToken
-            els = Some(expression)
+            eat(LPAREN)
+            val cond = expression
+            eat(RPAREN)
+            val thn = expression
+            var els: Option[ExprTree] = None
+            if (currentToken.kind == ELSE) {
+              readToken
+              els = Some(expression)
+            }
+            new If(cond, thn, els)
           }
-          new If(cond, thn, els)
-        } else if (currentToken.kind == WHILE) {
-          readToken
-          eat(LPAREN)
-          val cond = expression
-          eat(RPAREN)
-          val body = expression
-          new While(cond, body)
-        } else if (currentToken.kind == PRINTLN) {
-          readToken
-          eat(LPAREN)
-          val expr = expression
-          eat(RPAREN)
-          new Println(expr)
-        } else if (currentToken.kind == STROF) {
-          readToken
-          eat(LPAREN)
-          val expr = expression
-          eat(RPAREN)
-          new Strof(expr)
-        } else {
+          case WHILE => {
+            eat(LPAREN)
+            readToken
+            val cond = expression
+            eat(RPAREN)
+            val body = expression
+            new While(cond, body)
+          }
+          case PRINTLN => {
+            readToken
+            eat(LPAREN)
+            val expr = expression
+            eat(RPAREN)
+            new Println(expr)
+          }
+          case STROF => {
+            readToken
+            eat(LPAREN)
+            val expr = expression
+            eat(RPAREN)
+            new Strof(expr)
+          }
           val lhs = expression
           if (currentToken.kind == LBRACKET) {
             readToken
@@ -269,7 +271,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             expression
           }
         }
-        ???
+        fatal("Didn't catch " + currentToken)
       }
 
       def identifier = {
