@@ -46,7 +46,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         if (currentToken == CLASS) {
           readToken
           val ident = identifier
-          var parent: Option[Identifier] = Some(???)
+          var parent: Option[Identifier] = None
           if (currentToken == LESSTHAN) {
             eat(COLON)
             //eat(Token(COLON))
@@ -125,7 +125,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             new IntType
           }
         } else if (currentToken == BOOLEAN) {
-          new BoolType
+          new BooleanType
         } else if (currentToken == STRLITKIND) {
           new StringType
         } else if (currentToken == UNIT) {
@@ -134,7 +134,56 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         identifier
       }
 
-      def expression = {
+      def expression: ExprTree = {
+        if (currentToken == TRUE) {
+          new True()
+        } else if (currentToken == INTLITKIND) {
+          new IntLit(14) // TODO
+        } else if (currentToken == STRLITKIND) {
+          new StringLit("marcus")
+        } else if (currentToken == FALSE) {
+          new False()
+        } else if (currentToken == SELF) {
+          new Self()
+        } else if (currentToken == IDKIND) {
+          identifier
+        } else {
+          val lhs = expression
+          if (currentToken == LBRACKET) {
+            expression
+            eat(RBRACKET)
+          } else if (currentToken == DOT) {
+            readToken
+            if (currentToken == LENGTH) {
+
+            } else if (currentToken == IDKIND) {
+              eat(LPAREN)
+              expression
+              while (currentToken == COMMA) {
+                expression
+              }
+              eat(RPAREN)
+            }
+          } else if (currentToken == AND) {
+            new And(lhs, expression)
+          } else if (currentToken == OR) {
+            new Or(lhs, expression)
+          } else if (currentToken == EQUALS) {
+            new Equals(lhs, expression)
+          } else if (currentToken == LESSTHAN) {
+            new LessThan(lhs, expression)
+          } else if (currentToken == PLUS) {
+            new Plus(lhs, expression)
+          } else if (currentToken == MINUS) {
+            new Minus(lhs, expression)
+          } else if (currentToken == TIMES) {
+            new Times(lhs, expression)
+          } else if (currentToken == DIV) {
+            new Div(lhs, expression)
+          }
+          expression
+        }
+
         ???
       }
 
