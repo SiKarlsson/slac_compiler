@@ -138,9 +138,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         if (currentToken == TRUE) {
           new True()
         } else if (currentToken == INTLITKIND) {
-          new IntLit(14) // TODO
+          new IntLit(currentToken.asInstanceOf[INTLIT].value)
         } else if (currentToken == STRLITKIND) {
-          new StringLit("marcus")
+          new StringLit(currentToken.asInstanceOf[STRLIT].value)
         } else if (currentToken == FALSE) {
           new False()
         } else if (currentToken == SELF) {
@@ -215,7 +215,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           } else if (currentToken == DOT) {
             readToken
             if (currentToken == LENGTH) {
-              // TODO
+              new ArrayLength(lhs);
             } else if (currentToken == IDKIND) {
               eat(LPAREN)
               expression
