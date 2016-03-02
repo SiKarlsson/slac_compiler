@@ -28,7 +28,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
     /** ''Eats'' the expected token, or terminates with an error. */
     def eat(kind: TokenKind): Unit = {
-      println("eating " + currentToken.kind)
+      //println("eating " + currentToken.kind)
       if (currentToken.kind == kind) {
         readToken
       } else {
@@ -43,11 +43,11 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
     def parseGoal: Program = {
 
-      val classDeclList = List()
+      val classDeclList = new ListBuffer[ClassDecl]()
       var mainMethod: Option[MainMethod] = None
 
       while (currentToken.kind == CLASS) {
-        classDeclList :+ classDeclaration
+        classDeclList += classDeclaration
       }
 
       if (currentToken.kind == METHOD) {
@@ -65,28 +65,26 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           parent = Some(identifier)
         }
         eat(LBRACE)
-        val vars = List()
+        val vars = new ListBuffer[VarDecl]()
         while (currentToken.kind == VAR) {
-          vars :+ varDeclaration
+          vars += varDeclaration
         }
-        val methods = List()
+        val methods = new ListBuffer[MethodDecl]()
         while (currentToken.kind == METHOD) {
-          methods :+ methodDeclaration
+          methods += methodDeclaration
         }
         eat(RBRACE)
-        new ClassDecl(ident, parent, vars, methods)
+        new ClassDecl(ident, parent, vars.toList, methods.toList)
       }
 
-      def varDeclaration = {
+      def varDeclaration: VarDecl = {
         // var Identifier : Type ;
-        if (currentToken.kind == VAR) {
-          readToken
-          val ident = identifier
-          eat(COLON)
-          val tt = typeTree
-          eat(SEMICOLON)
-          new VarDecl(tt, ident)
-        }
+        eat(VAR)
+        val ident = identifier
+        eat(COLON)
+        val tt = typeTree
+        eat(SEMICOLON)
+        new VarDecl(tt, ident)
       }
 
       def methodDeclaration = {
@@ -109,7 +107,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             argType = typeTree
             argsList :+ new Formal(argType, argIdent)
           }
-        }
+        }        
         eat(RPAREN)
         eat(COLON)
         val retType = typeTree
@@ -118,14 +116,11 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         while (currentToken.kind == VAR) {
           varList :+ varDeclaration
         }
-        println(currentToken.kind)
         exprList += expression
         while (currentToken.kind == SEMICOLON) {
           exprList :+ expression
         }
         eat(RBRACE)
-
-        println(exprList.size)
 
         new MethodDecl(retType, ident, argsList.toList, varList.toList,
           exprList.toList, exprList.toList.last)
@@ -156,30 +151,39 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
       def expression: ExprTree = {
         currentToken.kind match {
-          case TRUE => new True()
-          case FALSE => new False()
-          case SELF => new Self()
+          case TRUE => {
+            readToken
+            return new True()
+          } 
+          case FALSE => {
+            readToken
+            return new False()
+          }
+          case SELF => {
+            readToken
+            return new Self()
+          }
           case INTLITKIND => currentToken.asInstanceOf[INTLIT].value
           case STRLITKIND => currentToken.asInstanceOf[STRLIT].value
-          case IDKIND => identifier
+          case IDKIND => return identifier
           case NEW => {
+            readToken
             if (currentToken.kind == INT) {
               readToken
               eat(LBRACKET)
               val expr = expression
               eat(RBRACKET)
-              new NewIntArray(expr)
+              return new NewIntArray(expr)
             } else {
-              readToken
               val ident = identifier
               eat(LPAREN)
               eat(RPAREN)
-              new New(ident)
+              return new New(ident)
             }
           }
           case BANG => {
             readToken
-            new Not(expression)
+            return new Not(expression)
           }
           case LPAREN => {
             eat(LPAREN)
@@ -291,7 +295,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       mainMethod match {
-        case Some(m) => new Program(m, classDeclList)
+        case Some(m) => new Program(m, classDeclList.toList)
         case None => fatal("No main method")
       }
     }
