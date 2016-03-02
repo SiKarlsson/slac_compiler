@@ -147,6 +147,66 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           new Self()
         } else if (currentToken == IDKIND) {
           identifier
+        } else if (currentToken == NEW) {
+          readToken
+          if (currentToken == INT) {
+            readToken
+            eat(LBRACKET)
+            val expr = expression
+            eat(RBRACKET)
+            new NewIntArray(expr)
+          } else {
+            val ident = identifier
+            eat(RBRACKET)
+            eat(LBRACKET)
+            new New(ident)
+          }
+        } else if (currentToken == BANG) {
+          readToken
+          new Not(expression)
+        } else if (currentToken == LPAREN) {
+          eat(LPAREN)
+          expression
+          eat(RPAREN)
+        } else if (currentToken == LBRACE) {
+          readToken
+          val block = List()
+          block :+ expression
+          while (currentToken == SEMICOLON) {
+            block :+ expression
+          }
+          eat(LBRACE)
+        } else if (currentToken == IF) {
+          readToken
+          eat(LPAREN)
+          val cond = expression
+          eat(RPAREN)
+          val thn = expression
+          var els: Option[ExprTree] = None
+          if (currentToken == ELSE) {
+            readToken
+            els = Some(expression)
+          }
+          new If(cond, thn, els)
+        } else if (currentToken == WHILE) {
+          readToken
+          eat(LPAREN)
+          val cond = expression
+          eat(RPAREN)
+          val body = expression
+          new While(cond, body)
+        } else if (currentToken == PRINTLN) {
+          readToken
+          eat(LPAREN)
+          val expr = expression
+          eat(RPAREN)
+          new Println(expr)
+        } else if (currentToken == STROF) {
+          readToken
+          eat(LPAREN)
+          val expr = expression
+          eat(RPAREN)
+          new Strof(expr)
         } else {
           val lhs = expression
           if (currentToken == LBRACKET) {
