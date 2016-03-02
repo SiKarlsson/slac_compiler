@@ -170,9 +170,10 @@ object Parser extends Pipeline[Iterator[Token], Program] {
               eat(RBRACKET)
               new NewIntArray(expr)
             } else {
+              readToken
               val ident = identifier
-              eat(RBRACKET)
-              eat(LBRACKET)
+              eat(LPAREN)
+              eat(RPAREN)
               new New(ident)
             }
           }
