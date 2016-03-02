@@ -78,6 +78,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def methodDeclaration = {
+        // method Identifier ( ( Identifier : Type ( , Identifier : Type )* )? ) : Type = { ( VarDeclaration )* Expression ( ; Expression )* }
         eat(METHOD)
         val ident = identifier
         val argsList = List()
@@ -89,7 +90,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           eat(COLON)
           var argType = typeTree
           argsList :+ new Formal(argType, argIdent)
-          while (currentToken == SEMICOLON) {
+          while (currentToken == COMMA) {
             argIdent = identifier
             eat(COLON)
             argType = typeTree
@@ -110,7 +111,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         }
         eat(RBRACE)
 
-        new MethodDecl(retType, ident, argsList, varList, exprList, ???)
+        new MethodDecl(retType, ident, argsList, varList, exprList.dropRight(1), exprList.last)
       }
 
       def typeTree = {
@@ -136,7 +137,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def expression = {
-
+        ???
       }
 
       def identifier = {
