@@ -210,6 +210,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         } else {
           val lhs = expression
           if (currentToken == LBRACKET) {
+            readToken
             expression
             eat(RBRACKET)
           } else if (currentToken == DOT) {
@@ -217,11 +218,13 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             if (currentToken == LENGTH) {
               new ArrayLength(lhs);
             } else if (currentToken == IDKIND) {
+              readToken
               eat(LPAREN)
               expression
               while (currentToken == COMMA) {
                 expression
               }
+              readToken
               eat(RPAREN)
             } else if (currentToken == AND) {
               new And(lhs, expression)
@@ -248,7 +251,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def identifier = {
-        ???
+        new Identifier(currentToken.asInstanceOf[ID].value)
       }
 
       ???
