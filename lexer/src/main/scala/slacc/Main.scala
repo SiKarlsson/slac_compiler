@@ -83,6 +83,7 @@ object Main {
       val ast = pipeline.run(ctx)(ctx.files.head)
       println(ast)
     } else {
+      println("hej simon")
       ???
     }
   }

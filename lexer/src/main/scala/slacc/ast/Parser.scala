@@ -41,6 +41,11 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
     def parseGoal: Program = {
 
+      val classDeclList = List()
+      var mainMethod: Option[MainMethod] = None
+
+      classDeclaration
+
       def classDeclaration = {
         // class Identifier ( <: Identifier )? { ( VarDeclaration )* ( MethodDeclaration )* }
         if (currentToken == CLASS) {
@@ -50,18 +55,19 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           if (currentToken == LESSTHAN) {
             eat(COLON)
             //eat(Token(COLON))
-            parent = identifier
+            parent = Some(identifier)
           }
           eat(LBRACE)
-          val vars = List();
+          val vars = List()
           while (currentToken == VAR) {
             vars :+ varDeclaration
           }
-          val methods = List();
+          val methods = List()
           while (currentToken == METHOD) {
             methods :+ methodDeclaration
           }
-          new ClassDecl(ident, parent, vars, methods)
+          val newClass = new ClassDecl(ident, parent, vars, methods)
+          classDeclList :+ newClass
         }
       }
 
@@ -112,7 +118,11 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         }
         eat(RBRACE)
 
-        new MethodDecl(retType, ident, argsList, varList, exprList.dropRight(1), exprList.last)
+        val meth = new MethodDecl(retType, ident, argsList, varList,
+          exprList.dropRight(1), exprList.last)
+        if (1 == 1) {
+          mainMethod = Some(new MainMethod(meth))
+        }
       }
 
       def typeTree = {
@@ -246,7 +256,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             expression
           }
         }
-
         ???
       }
 
@@ -254,8 +263,10 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         new Identifier(currentToken.asInstanceOf[ID].value)
       }
 
-      ???
-
+      mainMethod match {
+        case Some(m) => new Program(m, classDeclList)
+        case None => fatal("No main method")
+      }
     }
 
     readToken
