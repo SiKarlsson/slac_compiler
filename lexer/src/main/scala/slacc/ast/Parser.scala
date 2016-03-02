@@ -155,7 +155,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           } else if (currentToken == DOT) {
             readToken
             if (currentToken == LENGTH) {
-
+              // TODO
             } else if (currentToken == IDKIND) {
               eat(LPAREN)
               expression
@@ -163,25 +163,25 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 expression
               }
               eat(RPAREN)
+            } else if (currentToken == AND) {
+              new And(lhs, expression)
+            } else if (currentToken == OR) {
+              new Or(lhs, expression)
+            } else if (currentToken == EQUALS) {
+              new Equals(lhs, expression)
+            } else if (currentToken == LESSTHAN) {
+              new LessThan(lhs, expression)
+            } else if (currentToken == PLUS) {
+              new Plus(lhs, expression)
+            } else if (currentToken == MINUS) {
+              new Minus(lhs, expression)
+            } else if (currentToken == TIMES) {
+              new Times(lhs, expression)
+            } else if (currentToken == DIV) {
+              new Div(lhs, expression)
             }
-          } else if (currentToken == AND) {
-            new And(lhs, expression)
-          } else if (currentToken == OR) {
-            new Or(lhs, expression)
-          } else if (currentToken == EQUALS) {
-            new Equals(lhs, expression)
-          } else if (currentToken == LESSTHAN) {
-            new LessThan(lhs, expression)
-          } else if (currentToken == PLUS) {
-            new Plus(lhs, expression)
-          } else if (currentToken == MINUS) {
-            new Minus(lhs, expression)
-          } else if (currentToken == TIMES) {
-            new Times(lhs, expression)
-          } else if (currentToken == DIV) {
-            new Div(lhs, expression)
+            expression
           }
-          expression
         }
 
         ???
