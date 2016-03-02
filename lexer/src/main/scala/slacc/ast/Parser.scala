@@ -27,6 +27,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
     /** ''Eats'' the expected token, or terminates with an error. */
     def eat(kind: TokenKind): Unit = {
+      println("eating " + currentToken.kind)
       if (currentToken.kind == kind) {
         readToken
       } else {
@@ -106,7 +107,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         eat(RPAREN)
         eat(COLON)
         val retType = typeTree
-        eat(EQUALS)
+        eat(EQSIGN)
         eat(LBRACE)
         while (currentToken.kind == VAR) {
           varList :+ varDeclaration
