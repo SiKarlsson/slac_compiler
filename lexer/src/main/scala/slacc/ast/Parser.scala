@@ -153,6 +153,80 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def expression: ExprTree = {
+        val expr = expr_helper
+        currentToken.kind match {
+          case DOT => {
+            eat(DOT)
+            currentToken.kind match {
+              case LENGTH => {
+                eat(LENGTH)
+                return new ArrayLength(expr)
+              }
+              case IDKIND => {
+                val ident = new Identifier(currentToken.asInstanceOf[ID].value)
+                eat(IDKIND)
+                eat(LPAREN)
+                val args = new ListBuffer[ExprTree]()
+                if (currentToken.kind != RPAREN) {
+                  var expr_arg = expression
+                  args += expr_arg
+                  while (currentToken.kind == COMMA) {
+                    eat(COMMA)
+                    expr_arg = expression
+                    args += expr_arg
+                  }
+                }
+                eat(RPAREN)
+                return new MethodCall(expr, ident, args.toList)
+              }
+            }
+          }
+          case LBRACKET => {
+            eat(LBRACKET)
+            expression
+            eat(RBRACKET)
+            return new ArrayRead(expr, expression)
+          }
+          case AND => {
+            eat(AND)
+            return new And(expr, expression)
+          }
+          case OR => {
+            eat(OR)
+            return new Or(expr, expression)
+          }
+          case EQUALS => {
+            eat(EQUALS)
+            return new Equals(expr, expression)
+          }
+          case LESSTHAN => {
+            eat(LESSTHAN)
+            return new LessThan(expr, expression)
+          }
+          case PLUS => {
+            eat(PLUS)
+            return new Plus(expr, expression)
+          }
+          case MINUS => {
+            eat(MINUS)
+            return new Minus(expr, expression)
+          }
+          case TIMES => {
+            eat(TIMES)
+            return new Times(expr, expression)
+          }
+          case DIV => {
+            eat(DIV)
+            return new Div(expr, expression)
+          }
+          case _ => {
+            return expr
+          }
+        }
+      }
+
+      def expr_helper: ExprTree = {
+        println("matching " + currentToken.kind)
         currentToken.kind match {
           case INTLITKIND => {
             val value = currentToken.asInstanceOf[INTLIT].value
@@ -224,7 +298,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 eat(SEMICOLON)
                 block += expression
               }
-            }            
+            }
             eat(RBRACE)
           }
           case IF => {
@@ -262,7 +336,10 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             eat(RPAREN)
             return new Strof(expr)
           }
-          val lhs = expression
+          case _ => {
+            println(":(((")
+          }
+          /*val lhs = expression
           if (currentToken.kind == LBRACKET) {
             eat(LBRACKET)
             expression
@@ -321,9 +398,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 return new Div(lhs, expression)
               }
             }
-          }
-
-          expression
+          }*/
         }
         fatal("Didn't catch " + currentToken)
       }
