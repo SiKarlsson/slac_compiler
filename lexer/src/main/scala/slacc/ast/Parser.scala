@@ -28,7 +28,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
     /** ''Eats'' the expected token, or terminates with an error. */
     def eat(kind: TokenKind): Unit = {
-      //println("eating " + currentToken.kind)
+      println("eating " + currentToken.kind)
       if (currentToken.kind == kind) {
         readToken
       } else {
@@ -102,12 +102,13 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           var argType = typeTree
           argsList :+ new Formal(argType, argIdent)
           while (currentToken.kind == COMMA) {
+            readToken
             argIdent = identifier
             eat(COLON)
             argType = typeTree
             argsList :+ new Formal(argType, argIdent)
           }
-        }        
+        }
         eat(RPAREN)
         eat(COLON)
         val retType = typeTree
@@ -154,7 +155,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           case TRUE => {
             readToken
             return new True()
-          } 
+          }
           case FALSE => {
             readToken
             return new False()
@@ -297,6 +298,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def identifier = {
+        println("ident " + currentToken.asInstanceOf[ID].value)
         val ident = new Identifier(currentToken.asInstanceOf[ID].value)
         readToken
         ident
