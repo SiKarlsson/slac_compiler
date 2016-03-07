@@ -240,7 +240,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             eat(LPAREN)
             val expr = expression
             eat(RPAREN)
-            new Strof(expr)
+            return new Strof(expr)
           }
           val lhs = expression
           if (currentToken.kind == LBRACKET) {
@@ -252,7 +252,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
             currentToken.kind match {
               case LENGTH => {
-                new ArrayLength(lhs)
+                return new ArrayLength(lhs)
               }
               case IDKIND => {
                 readToken
@@ -265,28 +265,36 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 eat(RPAREN)
               }
               case AND => {
-                new And(lhs, expression)
+                readToken
+                return new And(lhs, expression)
               }
               case OR => {
-                new Or(lhs, expression)
+                readToken
+                return new Or(lhs, expression)
               }
               case EQUALS => {
-                new Equals(lhs, expression)
+                readToken
+                return new Equals(lhs, expression)
               }
               case LESSTHAN => {
-                new LessThan(lhs, expression)
+                readToken
+                return new LessThan(lhs, expression)
               }
               case PLUS => {
-                new Plus(lhs, expression)
+                readToken
+                return new Plus(lhs, expression)
               }
               case MINUS => {
-                new Minus(lhs, expression)
+                readToken
+                return new Minus(lhs, expression)
               }
               case TIMES => {
-                new Times(lhs, expression)
+                readToken
+                return new Times(lhs, expression)
               }
               case DIV => {
-                new Div(lhs, expression)
+                readToken
+                return new Div(lhs, expression)
               }
             }
 
