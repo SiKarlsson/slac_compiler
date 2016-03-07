@@ -241,7 +241,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             eat(LPAREN)
             val expr = expression
             eat(RPAREN)
-            new Strof(expr)
+            return new Strof(expr)
           }
           val lhs = expression
           if (currentToken.kind == LBRACKET) {
@@ -266,27 +266,35 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 eat(RPAREN)
               }
               case AND => {
+                readToken
                 return new And(lhs, expression)
               }
               case OR => {
+                readToken
                 return new Or(lhs, expression)
               }
               case EQUALS => {
+                readToken
                 return new Equals(lhs, expression)
               }
               case LESSTHAN => {
+                readToken
                 return new LessThan(lhs, expression)
               }
               case PLUS => {
+                readToken
                 return new Plus(lhs, expression)
               }
               case MINUS => {
+                readToken
                 return new Minus(lhs, expression)
               }
               case TIMES => {
+                readToken
                 return new Times(lhs, expression)
               }
               case DIV => {
+                readToken
                 return new Div(lhs, expression)
               }
             }
