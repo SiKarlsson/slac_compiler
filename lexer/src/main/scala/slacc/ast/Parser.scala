@@ -28,7 +28,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
     /** ''Eats'' the expected token, or terminates with an error. */
     def eat(kind: TokenKind): Unit = {
-      println("eating " + currentToken.kind)
+      println("eating " + currentToken.kind + ", expecting " + kind)
       if (currentToken.kind == kind) {
         readToken
       } else {
@@ -253,7 +253,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
             currentToken.kind match {
               case LENGTH => {
-                new ArrayLength(lhs)
+                return new ArrayLength(lhs)
               }
               case IDKIND => {
                 readToken
@@ -266,28 +266,28 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 eat(RPAREN)
               }
               case AND => {
-                new And(lhs, expression)
+                return new And(lhs, expression)
               }
               case OR => {
-                new Or(lhs, expression)
+                return new Or(lhs, expression)
               }
               case EQUALS => {
-                new Equals(lhs, expression)
+                return new Equals(lhs, expression)
               }
               case LESSTHAN => {
-                new LessThan(lhs, expression)
+                return new LessThan(lhs, expression)
               }
               case PLUS => {
-                new Plus(lhs, expression)
+                return new Plus(lhs, expression)
               }
               case MINUS => {
-                new Minus(lhs, expression)
+                return new Minus(lhs, expression)
               }
               case TIMES => {
-                new Times(lhs, expression)
+                return new Times(lhs, expression)
               }
               case DIV => {
-                new Div(lhs, expression)
+                return new Div(lhs, expression)
               }
             }
 
