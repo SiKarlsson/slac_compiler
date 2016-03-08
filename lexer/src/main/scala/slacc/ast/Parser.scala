@@ -183,9 +183,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           }
           case LBRACKET => {
             eat(LBRACKET)
-            expression
+            val idx = expression
             eat(RBRACKET)
-            return new ArrayRead(expr, expression)
+            return new ArrayRead(expr, idx)
           }
           case AND => {
             eat(AND)
@@ -255,8 +255,15 @@ object Parser extends Pipeline[Iterator[Token], Program] {
               eat(LBRACKET)
               val index = expression
               eat(RBRACKET)
-              eat(EQSIGN)
-              return new ArrayAssign(ident, index, expression)
+              currentToken.kind match {
+                case EQSIGN => {
+                  eat(EQSIGN)
+                  return new ArrayAssign(ident, index, expression)
+                }
+                case _ => {
+                  return new ArrayRead(ident, index)
+                }
+              }
             } else {
               return ident
             }
@@ -339,66 +346,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           case _ => {
             println(":(((")
           }
-          /*val lhs = expression
-          if (currentToken.kind == LBRACKET) {
-            eat(LBRACKET)
-            expression
-            eat(RBRACKET)
-          } else if (currentToken.kind == DOT) {
-            eat(DOT)
-            currentToken.kind match {
-              case LENGTH => {
-                return new ArrayLength(lhs)
-              }
-              case IDKIND => {
-                eat(IDKIND)
-                eat(LPAREN)
-                if (currentToken.kind != RPAREN) {
-                  expression
-                  while (currentToken.kind == COMMA) {
-                    eat(COMMA)
-                    expression
-                  }
-                }
-                eat(RPAREN)
-              }
-            }
-          } else {
-            currentToken.kind match {
-              case AND => {
-                eat(AND)
-                return new And(lhs, expression)
-              }
-              case OR => {
-                eat(OR)
-                return new Or(lhs, expression)
-              }
-              case EQUALS => {
-                eat(EQUALS)
-                return new Equals(lhs, expression)
-              }
-              case LESSTHAN => {
-                eat(LESSTHAN)
-                return new LessThan(lhs, expression)
-              }
-              case PLUS => {
-                eat(PLUS)
-                return new Plus(lhs, expression)
-              }
-              case MINUS => {
-                eat(MINUS)
-                return new Minus(lhs, expression)
-              }
-              case TIMES => {
-                eat(TIMES)
-                return new Times(lhs, expression)
-              }
-              case DIV => {
-                eat(DIV)
-                return new Div(lhs, expression)
-              }
-            }
-          }*/
         }
         fatal("Didn't catch " + currentToken)
       }
