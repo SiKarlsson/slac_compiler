@@ -183,9 +183,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           }
           case LBRACKET => {
             eat(LBRACKET)
-            expression
+            val idx = expression
             eat(RBRACKET)
-            return new ArrayRead(expr, expression)
+            return new ArrayRead(expr, idx)
           }
           case AND => {
             eat(AND)
