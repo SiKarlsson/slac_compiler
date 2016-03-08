@@ -59,11 +59,9 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
         matching = true
 
         /* nothing more to read, EOF */
-        /*
         if (!hasNext) {
           longestMatch = new Token(EOF)
         }
-        */
 
         longestMatch
       }
@@ -93,11 +91,11 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "/" => {
             new Token(DIV)
             if (hasNext) {
-              var nextChar: Char = readFromSource
+              var nextChar: Char = readChar
               if (nextChar == '/') {
                   /* // comment, look for line break */
                   while (nextChar != '\n') {
-                    nextChar = readFromSource
+                    nextChar = readChar
                   }
                   next
               } else if (nextChar == '*') {
@@ -151,10 +149,10 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "strOf" => new Token(STROF)
           case "\"" => {
             var strLit: String = ""
-            var sourceNext: String = readFromSource.toString
+            var sourceNext: String = readChar.toString
             while (hasNext && sourceNext != "\"") {
               strLit += sourceNext
-              sourceNext = readFromSource.toString
+              sourceNext = readChar.toString
             }
             new STRLIT(strLit)
           }
