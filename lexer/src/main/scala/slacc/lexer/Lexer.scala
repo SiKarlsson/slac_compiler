@@ -59,9 +59,11 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
         matching = true
 
         /* nothing more to read, EOF */
+        /*
         if (!hasNext) {
           longestMatch = new Token(EOF)
         }
+        */
 
         longestMatch
       }
@@ -99,8 +101,29 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
                   }
                   next
               } else if (nextChar == '*') {
-                /* TODO CODE FOR BLOCK COMMENTS */
-                new Token(DIV)
+                /* Block comment, look for 'end block comment' */
+                var looking = true
+                while (looking && hasNext) {
+                    nextChar = readChar
+                  if (nextChar == '*') {
+                      nextChar = readChar
+                    if (nextChar == '/') {
+                      /* Found end of block comment, stop looking */
+                      looking = false
+                    } else {
+                      if (nextChar == '*') {
+                        /* Push back '*'. It could still be in 'end block comment'*/
+                        consumed.push(nextChar)
+                      }
+                    }
+                  }
+                }
+                if (!hasNext) {
+                  /* The block comment wasn't closed until eof */
+                  new Token(BAD)
+                } else {
+                  next
+                }
               } else {
                 new Token(DIV)
               }
