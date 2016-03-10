@@ -25,7 +25,7 @@ object Tokens {
 
   // This allows you to do:
   // myToken match {
-  //   case Kinded(IDKIND) => 
+  //   case Kinded(IDKIND) =>
   //  ...
   // }
   object Kinded {

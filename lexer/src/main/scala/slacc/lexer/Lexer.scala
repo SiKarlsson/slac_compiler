@@ -91,16 +91,37 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "/" => {
             new Token(DIV)
             if (hasNext) {
-              var nextChar: Char = readFromSource
+              var nextChar: Char = readChar
               if (nextChar == '/') {
                   /* // comment, look for line break */
                   while (nextChar != '\n') {
-                    nextChar = readFromSource
+                    nextChar = readChar
                   }
                   next
               } else if (nextChar == '*') {
-                /* TODO CODE FOR BLOCK COMMENTS */
-                new Token(DIV)
+                /* Block comment, look for 'end block comment' */
+                var looking = true
+                while (looking && hasNext) {
+                    nextChar = readChar
+                  if (nextChar == '*') {
+                      nextChar = readChar
+                    if (nextChar == '/') {
+                      /* Found end of block comment, stop looking */
+                      looking = false
+                    } else {
+                      if (nextChar == '*') {
+                        /* Push back '*'. It could still be in 'end block comment'*/
+                        consumed.push(nextChar)
+                      }
+                    }
+                  }
+                }
+                if (!hasNext) {
+                  /* The block comment wasn't closed until eof */
+                  new Token(BAD)
+                } else {
+                  next
+                }
               } else {
                 new Token(DIV)
               }
@@ -111,11 +132,11 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "class" => new Token(CLASS)
           case "method" => new Token(METHOD)
           case "var" => new Token(VAR)
-          case "unit" => new Token(UNIT)
-          case "string" => new Token(STRING)
+          case "Unit" => new Token(UNIT)
+          case "String" => new Token(STRING)
           case "extends" => new Token(EXTENDS)
-          case "int" => new Token(INT)
-          case "boolean" => new Token(BOOLEAN)
+          case "Int" => new Token(INT)
+          case "Bool" => new Token(BOOLEAN)
           case "while" => new Token(WHILE)
           case "if" => new Token(IF)
           case "else" => new Token(ELSE)
@@ -128,17 +149,17 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           case "strOf" => new Token(STROF)
           case "\"" => {
             var strLit: String = ""
-            var sourceNext: String = readFromSource.toString
+            var sourceNext: String = readChar.toString
             while (hasNext && sourceNext != "\"") {
               strLit += sourceNext
-              sourceNext = readFromSource.toString
+              sourceNext = readChar.toString
             }
             new STRLIT(strLit)
           }
           case _ => {
             if (s.matches("[a-zA-Z]+[a-zA-Z0-9_]*")) {
               new ID(s)
-            } else if (s.matches("[1-9][0-9]*")) {
+            } else if (s.matches("([0-9]|[1-9][0-9]*)")) {
               try {
                 new INTLIT(s.toInt)
               } catch {
