@@ -128,7 +128,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         eat(RBRACE)
 
         new MethodDecl(retType, ident, argsList.toList, varList.toList,
-          exprList.toList, exprList.toList.last)
+          exprList.toList.dropRight(1), exprList.toList.last)
       }
 
       def typeTree = {
@@ -237,6 +237,15 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           /* new expression */
           case None => {
             println("matching " + currentToken.kind)
+            var expr_temp = expr_helper
+            while (true) {
+                var expr_temp2 = expression(Some(expr_temp))
+                if (expr_temp2 == expr_temp) {
+                    return expr_temp
+                } else {
+                    expr_temp = expr_temp2
+                }
+            }
             return expression(Some(expr_helper))
           }
           fatal("Didn't catch " + currentToken)
@@ -268,7 +277,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             if (currentToken.kind == EQSIGN) {
               eat(EQSIGN)
               return new Assign(ident, expression(None))
-              //return expression(Some(new Assign(ident, expression(None))))
             } else if (currentToken.kind == LBRACKET) {
               eat(LBRACKET)
               val index = expression(None)
