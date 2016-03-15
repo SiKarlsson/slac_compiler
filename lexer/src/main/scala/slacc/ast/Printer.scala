@@ -4,6 +4,7 @@ package ast
 import Trees._
 
 object Printer {
+  var tabCount = 0
   def apply(t: Tree): String = {
       t match {
           case Program(mainMethod, classes) => {
@@ -24,13 +25,15 @@ object Printer {
             } else {
               classString += " <: ".concat(apply(parent.get)).concat(" {") + "\n"
             }
+            incrementTabCount
             for (vari <- vars) {
-              classString += apply(vari) + "\n"
+              classString += printTabs.concat(apply(vari)) + "\n"
             }
             for (method <- methods) {
-              classString += apply(method) + "\n"
+              classString += printTabs.concat(apply(method)) + "\n"
             }
-            classString += "}"
+            decrementTabCount
+            classString += printTabs.concat("}")
             return classString
           }
           case VarDecl(tpe, id) => {
@@ -48,13 +51,16 @@ object Printer {
               methodString += apply(arg)
             }
             methodString += ") : " + apply(retType) + " {\n"
+            incrementTabCount
             for (vari <- vars) {
-              methodString += apply(vari) + "\n"
+              methodString += printTabs.concat(apply(vari)) + "\n"
             }
             for (expr <- exprs) {
-              methodString += apply(expr) + "\n"
+              methodString += printTabs.concat(apply(expr)) + "\n"
             }
-            methodString += apply(retExpr) + "\n}"
+            methodString += printTabs.concat(apply(retExpr)) + "\n"
+            decrementTabCount
+            methodString += printTabs.concat("}")
             return methodString
           }
           case IntArrayType() => {
@@ -145,10 +151,12 @@ object Printer {
           }
           case Block(exprs) => {
             var blockString = "{\n"
+            incrementTabCount
             for (expr <- exprs) {
-              blockString += apply(expr) + "\n"
+              blockString += printTabs.concat(apply(expr)) + "\n"
             }
-            blockString += "}"
+            decrementTabCount
+            blockString += printTabs.concat("}")
             return blockString
           }
           case If(expr, thn, els) => {
@@ -185,5 +193,21 @@ object Printer {
               ":("
           }
       }
+  }
+
+  def printTabs(): String = {
+    var tabs = ""
+    for (i <- 1 to tabCount){
+      tabs += "  "
+    }
+    tabs
+  }
+
+  def incrementTabCount(): Unit = {
+    tabCount = tabCount + 1
+  }
+
+  def decrementTabCount(): Unit = {
+    tabCount = tabCount - 1
   }
 }
