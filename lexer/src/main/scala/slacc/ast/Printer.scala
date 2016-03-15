@@ -27,7 +27,7 @@ object Printer {
             for (vari <- vars) {
               classString += apply(vari) + "\n"
             }
-            for (method <- methods) { 
+            for (method <- methods) {
               classString += apply(method) + "\n"
             }
             classString += "}"
@@ -73,28 +73,28 @@ object Printer {
             return "Unit"
           }
           case And(lhs, rhs) => {
-            return apply(lhs).concat(" && ").concat(apply(rhs))
+            return "(".concat(apply(lhs).concat(" && ").concat(apply(rhs))).concat(")")
           }
           case Or(lhs, rhs) => {
-            return apply(lhs).concat(" || ").concat(apply(rhs))
+            return "(".concat(apply(lhs).concat(" || ").concat(apply(rhs))).concat(")")
           }
           case Plus(lhs, rhs) => {
-            return apply(lhs).concat(" + ").concat(apply(rhs)) 
+            return "(".concat(apply(lhs).concat(" + ").concat(apply(rhs))).concat(")")
           }
           case Minus(lhs, rhs) => {
-            return apply(lhs).concat(" - ").concat(apply(rhs))  
+            return "(".concat(apply(lhs).concat(" - ").concat(apply(rhs))).concat(")")
           }
           case Times(lhs, rhs) => {
-            return apply(lhs).concat(" * ").concat(apply(rhs))   
+            return "(".concat(apply(lhs).concat(" * ").concat(apply(rhs))).concat(")")
           }
           case Div(lhs, rhs) => {
-            return apply(lhs).concat(" / ").concat(apply(rhs))    
+            return "(".concat(apply(lhs).concat(" / ").concat(apply(rhs))).concat(")")
           }
           case LessThan(lhs, rhs) => {
-            return apply(lhs).concat(" < ").concat(apply(rhs))
+            return "(".concat(apply(lhs).concat(" < ").concat(apply(rhs))).concat(")")
           }
           case Equals(lhs, rhs) => {
-            return apply(lhs).concat(" == ").concat(apply(rhs))
+            return "(".concat(apply(lhs).concat(" == ").concat(apply(rhs))).concat(")")
           }
           case ArrayRead(arr, index) => {
             return apply(arr).concat("[").concat(apply(index)).concat("]")
