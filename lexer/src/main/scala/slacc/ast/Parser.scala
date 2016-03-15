@@ -109,7 +109,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             argsList += new Formal(argType, argIdent)
           }
         }
-        println("METHOD LPAREN args RPAREN")
         eat(RPAREN)
         eat(COLON)
         val retType = typeTree
@@ -185,7 +184,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                         args += expr_arg
                       } while (currentToken.kind == COMMA)
                     }
-                    println(".identifier LPAREN args RPAREN")
                     eat(RPAREN)
                     return new MethodCall(e, ident, args.toList)
                   }
@@ -197,21 +195,35 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 eat(RBRACKET)
                 return new ArrayRead(e, idx)
               }
-              case AND => {
-                eat(AND)
-                return new And(e, expression(None))
+              case TIMES => {
+                eat(TIMES)
+                val rest_expr = expression(None)
+                rest_expr match {
+                  case Plus(a,b) => {
+                    return new Plus(new Times(e, a), b)
+                  }
+                  case Minus(a,b) => {
+                    return new Minus(new Times(e, a), b)
+                  }
+                  case _ => {
+                    return new Times(e, rest_expr)
+                  }
+                }
               }
-              case OR => {
-                eat(OR)
-                return new Or(e, expression(None))
-              }
-              case EQUALS => {
-                eat(EQUALS)
-                return new Equals(e, expression(None))
-              }
-              case LESSTHAN => {
-                eat(LESSTHAN)
-                return new LessThan(e, expression(None))
+              case DIV => {
+                eat(DIV)
+                val rest_expr = expression(None)
+                rest_expr match {
+                  case Plus(a,b) => {
+                    return new Plus(new Times(e, a), b)
+                  }
+                  case Minus(a,b) => {
+                    return new Minus(new Times(e, a), b)
+                  }
+                  case _ => {
+                    return new Div(e, rest_expr)
+                  }
+                }
               }
               case PLUS => {
                 eat(PLUS)
@@ -221,13 +233,21 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 eat(MINUS)
                 return new Minus(e, expression(None))
               }
-              case TIMES => {
-                eat(TIMES)
-                return new Times(e, expression(None))
+              case EQUALS => {
+                eat(EQUALS)
+                return new Equals(e, expression(None))
               }
-              case DIV => {
-                eat(DIV)
-                return new Div(e, expression(None))
+              case LESSTHAN => {
+                eat(LESSTHAN)
+                return new LessThan(e, expression(None))
+              }
+              case AND => {
+                eat(AND)
+                return new And(e, expression(None))
+              }
+              case OR => {
+                eat(OR)
+                return new Or(e, expression(None))
               }
               case _ => {
                 return e
@@ -309,7 +329,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             } else {
               val ident = identifier
               eat(LPAREN)
-              println("NEW LPAREN RPAREN")
               eat(RPAREN)
               return new New(ident)
             }
@@ -321,7 +340,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           case LPAREN => {
             eat(LPAREN)
             var expr = expression(None)
-            println("LPAREN expression RPAREN")
             eat(RPAREN)
             return expr
           }
@@ -341,7 +359,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             eat(IF)
             eat(LPAREN)
             var cond = expression(None)
-            println("IF LPAREN expression RPAREN")
             eat(RPAREN)
             val thn = expression(None)
             var els: Option[ExprTree] = None
@@ -355,7 +372,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             eat(WHILE)
             eat(LPAREN)
             var cond = expression(None)
-            println("WHILE LPAREN expression RPAREN")
             eat(RPAREN)
             val body = expression(None)
             return new While(cond, body)
@@ -367,7 +383,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             while (currentToken.kind != RPAREN) {
               expr = expression(Some(expr))
             }
-            println("PRINTLN LPAREN expression RPAREN")
             eat(RPAREN)
             return new Println(expr)
           }
@@ -375,7 +390,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             eat(STROF)
             eat(LPAREN)
             var expr = expression(None)
-            println("STROF LPAREN expression RPAREN")
             eat(RPAREN)
             return new Strof(expr)
           }
