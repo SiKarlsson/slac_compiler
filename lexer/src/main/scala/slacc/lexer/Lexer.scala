@@ -123,6 +123,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
                   next
                 }
               } else {
+                consumed.push(nextChar)
                 new Token(DIV)
               }
             } else {
