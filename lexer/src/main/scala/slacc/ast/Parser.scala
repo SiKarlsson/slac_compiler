@@ -121,7 +121,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           if (currentToken.kind == SEMICOLON) {
             eat(SEMICOLON)
           }
-          var expr = expression(None)
+          var expr = parseExpr1
           exprList += expr
         } while (currentToken.kind == SEMICOLON)
         eat(RBRACE)
@@ -154,125 +154,116 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         }
       }
 
-      def expression(expr: Option[ExprTree]): ExprTree = {
-        expr match {
-          /* we have an expression, but the expression goes on */
-          case Some(e) => {
-            currentToken.kind match {
-              /* expr. */
-              case DOT => {
-                eat(DOT)
-                currentToken.kind match {
-                  case LENGTH => {
-                    eat(LENGTH)
-                    return new ArrayLength(e)
-                  }
-                  case IDKIND => {
-                    val ident = identifier
-                    eat(LPAREN)
-                    val args = new ListBuffer[ExprTree]()
-                    /* if currentToken is RPAREN, empty call */
-                    if (currentToken.kind != RPAREN) {
-                      /* otherwise, there is at least one argument */
-                      do {
-                        if (currentToken.kind == COMMA) {
-                          /* separator of arguments */
-                          eat(COMMA)
-                        }
-                        /* find a new expression */
-                        var expr_arg = expression(None)
-                        args += expr_arg
-                      } while (currentToken.kind == COMMA)
-                    }
-                    eat(RPAREN)
-                    return new MethodCall(e, ident, args.toList)
-                  }
-                }
-              }
-              case LBRACKET => {
-                eat(LBRACKET)
-                val idx = expression(None)
-                eat(RBRACKET)
-                return new ArrayRead(e, idx)
-              }
-              case TIMES => {
-                eat(TIMES)
-                val rest_expr = expression(None)
-                rest_expr match {
-                  case Plus(a,b) => {
-                    return new Plus(new Times(e, a), b)
-                  }
-                  case Minus(a,b) => {
-                    return new Minus(new Times(e, a), b)
-                  }
-                  case _ => {
-                    return new Times(e, rest_expr)
-                  }
-                }
-              }
-              case DIV => {
-                eat(DIV)
-                val rest_expr = expression(None)
-                rest_expr match {
-                  case Plus(a,b) => {
-                    return new Plus(new Times(e, a), b)
-                  }
-                  case Minus(a,b) => {
-                    return new Minus(new Times(e, a), b)
-                  }
-                  case _ => {
-                    return new Div(e, rest_expr)
-                  }
-                }
-              }
-              case PLUS => {
-                eat(PLUS)
-                return new Plus(e, expression(None))
-              }
-              case MINUS => {
-                eat(MINUS)
-                return new Minus(e, expression(None))
-              }
-              case EQUALS => {
-                eat(EQUALS)
-                return new Equals(e, expression(None))
-              }
-              case LESSTHAN => {
-                eat(LESSTHAN)
-                return new LessThan(e, expression(None))
-              }
-              case AND => {
-                eat(AND)
-                return new And(e, expression(None))
-              }
-              case OR => {
-                eat(OR)
-                return new Or(e, expression(None))
-              }
-              case _ => {
-                return e
-              }
-            }
-          }
-          /* new expression */
-          case None => {
-            println("matching " + currentToken.kind)
-            var expr_temp = expr_helper
-            while (true) {
-                var expr_temp2 = expression(Some(expr_temp))
-                if (expr_temp2 == expr_temp) {
-                    return expr_temp
-                } else {
-                    expr_temp = expr_temp2
-                }
-            }
-            return expression(Some(expr_helper))
-          }
-          fatal("Didn't catch " + currentToken)
+      def parseExpr1: ExprTree = {
+        var e1 = parseExpr2
+        while (currentToken.kind == OR) {
+          eat(OR)
+          var e2 = parseExpr2
+          e1 = new Or(e1, e2)
         }
+        currentToken.kind match {
+          case DOT => {
+            eat(DOT)
+            currentToken.kind match {
+              case LENGTH => {
+                eat(LENGTH)
+                e1 = new ArrayLength(e1)
+              }
+              case IDKIND => {
+                var ident = identifier
+                val exprList = new ListBuffer[ExprTree]()
+                eat(LPAREN)
+                do {
+                  if (currentToken.kind == COMMA) eat(COMMA)
+                  val e2 = parseExpr1
+                  exprList += e2
+                } while (currentToken.kind == COMMA)
+                eat(RPAREN)
+
+                e1 = new MethodCall(e1, ident, exprList.toList)
+              }
+              case _ => fatal("fatal")
+            }
+          }
+          case LBRACKET => {
+            eat(LBRACKET)
+            val e2 = parseExpr1
+            eat(RBRACKET)
+            e1 = new ArrayRead(e1, e2)
+          }
+          case _ => { }
+        }
+        e1
       }
 
-      def expr_helper: ExprTree = {
+      def parseExpr2: ExprTree = {
+        var e1 = parseExpr3
+        while (currentToken.kind == AND) {
+          eat(AND)
+          var e2 = parseExpr3
+          e1 = new And(e1, e2)
+        }
+        e1
+      }
+
+      def parseExpr3: ExprTree = {
+        var e1 = parseExpr4
+        while (currentToken.kind == EQUALS || currentToken.kind == LESSTHAN) {
+          var equals = (currentToken.kind == EQUALS)
+          readToken
+          var e2 = parseExpr4
+          if (equals) {
+              e1 = new Equals(e1, e2)
+          } else {
+            e1 = new LessThan(e1, e2)
+          }
+        }
+        e1
+      }
+
+      def parseExpr4: ExprTree = {
+        var e1 = parseExpr5
+        while (currentToken.kind == PLUS || currentToken.kind == MINUS) {
+          var plus = (currentToken.kind == PLUS)
+          readToken
+          var e2 = parseExpr5
+          if (plus) {
+            e1 = new Plus(e1, e2)
+          } else {
+            e1 = new Minus(e1, e2)
+          }
+        }
+        e1
+      }
+
+      def parseExpr5: ExprTree = {
+        var e1 = expression
+        while (currentToken.kind == TIMES || currentToken.kind == DIV) {
+          var times = (currentToken.kind == TIMES)
+          readToken
+          var e2 = expression
+          if (times) {
+            e1 = new Times(e1, e2)
+          } else {
+            e1 = new Div(e1, e2)
+          }
+        }
+        e1
+      }
+
+      /*
+      def parseExpr6: ExprTree = {
+        var e1 = expression
+        while (currentToken.kind == BANG) {
+          readToken
+          var e2 = expression
+          e1 = Not(e2)
+        }
+        return e1
+      }
+      */
+
+      def expression: ExprTree = {
         currentToken.kind match {
           case INTLITKIND => {
             val value = currentToken.asInstanceOf[INTLIT].value
@@ -284,64 +275,50 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             eat(STRLITKIND)
             return new StringLit(value)
           }
-          case TRUE => {
-            eat(TRUE)
-            return new True()
-          }
-          case FALSE => {
-            eat(FALSE)
-            return new False()
-          }
+          case TRUE => new True()
+          case FALSE => new False()
           case IDKIND => {
-            val ident = identifier
+            val id = identifier
             if (currentToken.kind == EQSIGN) {
               eat(EQSIGN)
-              return new Assign(ident, expression(None))
-            } else if (currentToken.kind == LBRACKET) {
+              val e1 = parseExpr1
+              new Assign(id, e1)
+            } else if (currentToken.kind == LBRACKET){
               eat(LBRACKET)
-              val index = expression(None)
+              val e1 = parseExpr1
               eat(RBRACKET)
-              currentToken.kind match {
-                case EQSIGN => {
-                  eat(EQSIGN)
-                  return new ArrayAssign(ident, index, expression(None))
-                }
-                case _ => {
-                  return new ArrayRead(ident, index)
-                }
-              }
+              eat(EQSIGN)
+              val e2 = parseExpr1
+              new ArrayAssign(id, e1, e2)
             } else {
-              return ident
+              id
             }
           }
-          case SELF => {
-            eat(SELF)
-            return new Self()
-          }
+          case SELF => new Self()
           case NEW => {
             eat(NEW)
             if (currentToken.kind == INT) {
               eat(INT)
               eat(LBRACKET)
-              val expr = expression(None)
+              val expr = parseExpr1
               eat(RBRACKET)
-              return new NewIntArray(expr)
+              new NewIntArray(expr)
             } else {
               val ident = identifier
               eat(LPAREN)
               eat(RPAREN)
-              return new New(ident)
+              new New(ident)
             }
           }
           case BANG => {
             eat(BANG)
-            return new Not(expression(None))
+            new Not(parseExpr1)
           }
           case LPAREN => {
             eat(LPAREN)
-            var expr = expression(None)
+            var expr = parseExpr1
             eat(RPAREN)
-            return expr
+            expr
           }
           case LBRACE => {
             eat(LBRACE)
@@ -350,51 +327,45 @@ object Parser extends Pipeline[Iterator[Token], Program] {
               if (currentToken.kind == SEMICOLON) {
                 eat(SEMICOLON)
               }
-              block += expression(None)
+              block += parseExpr1
             } while (currentToken.kind == SEMICOLON)
             eat(RBRACE)
-            return Block(block.toList)
+            Block(block.toList)
           }
           case IF => {
             eat(IF)
             eat(LPAREN)
-            var cond = expression(None)
+            var cond = parseExpr1
             eat(RPAREN)
-            val thn = expression(None)
+            val thn = parseExpr1
             var els: Option[ExprTree] = None
             if (currentToken.kind == ELSE) {
               eat(ELSE)
-              els = Some(expression(None))
+              els = Some(parseExpr1)
             }
-            return new If(cond, thn, els)
+            new If(cond, thn, els)
           }
           case WHILE => {
             eat(WHILE)
             eat(LPAREN)
-            var cond = expression(None)
+            var cond = parseExpr1
             eat(RPAREN)
-            val body = expression(None)
-            return new While(cond, body)
+            val body = parseExpr1
+            new While(cond, body)
           }
           case PRINTLN => {
             eat(PRINTLN)
             eat(LPAREN)
-            var expr = expression(None)
-            while (currentToken.kind != RPAREN) {
-              expr = expression(Some(expr))
-            }
+            var expr = parseExpr1
             eat(RPAREN)
-            return new Println(expr)
+            new Println(expr)
           }
           case STROF => {
             eat(STROF)
             eat(LPAREN)
-            var expr = expression(None)
+            var expr = parseExpr1
             eat(RPAREN)
-            return new Strof(expr)
-          }
-          case _ => {
-            fatal("Didn't match " + currentToken.kind)
+            new Strof(expr)
           }
         }
       }
