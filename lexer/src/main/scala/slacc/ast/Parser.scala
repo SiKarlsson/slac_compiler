@@ -248,20 +248,49 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             e1 = new Div(e1, e2)
           }
         }
-        e1
+        parseExpr6(e1)
       }
 
-      /*
-      def parseExpr6: ExprTree = {
-        var e1 = expression
-        while (currentToken.kind == BANG) {
-          readToken
-          var e2 = expression
-          e1 = Not(e2)
+      def parseExpr6(expr: ExprTree): ExprTree = {
+        var e1 = expr
+        while (currentToken.kind == DOT || currentToken.kind == LBRACKET) {
+          currentToken.kind match {
+            case DOT => {
+              eat(DOT)
+              currentToken.kind match {
+                case LENGTH => {
+                  eat(LENGTH)
+                  e1 = new ArrayLength(e1)
+                }
+                case IDKIND => {
+                  var ident = identifier
+                  val exprList = new ListBuffer[ExprTree]()
+                  eat(LPAREN)
+                  if (currentToken.kind != RPAREN) {
+                    do {
+                      if (currentToken.kind == COMMA) eat(COMMA)
+                      val e2 = parseExpr1
+                      exprList += e2
+                    } while (currentToken.kind == COMMA)
+                  }
+                  eat(RPAREN)
+
+                  e1 = new MethodCall(e1, ident, exprList.toList)
+                }
+                case _ => fatal("fatal")
+              }
+            }
+            case LBRACKET => {
+              eat(LBRACKET)
+              val e2 = parseExpr1
+              eat(RBRACKET)
+              e1 = new ArrayRead(e1, e2)
+            }
+            case _ => { e1 }
+          }
         }
-        return e1
+        e1
       }
-      */
 
       def expression: ExprTree = {
         currentToken.kind match {
@@ -275,8 +304,14 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             eat(STRLITKIND)
             return new StringLit(value)
           }
-          case TRUE => new True()
-          case FALSE => new False()
+          case TRUE => {
+            eat(TRUE)
+            new True()
+          }
+          case FALSE => {
+            eat(FALSE)
+            new False()
+          }
           case IDKIND => {
             val id = identifier
             if (currentToken.kind == EQSIGN) {
@@ -287,14 +322,21 @@ object Parser extends Pipeline[Iterator[Token], Program] {
               eat(LBRACKET)
               val e1 = parseExpr1
               eat(RBRACKET)
-              eat(EQSIGN)
-              val e2 = parseExpr1
-              new ArrayAssign(id, e1, e2)
+              if (currentToken.kind == EQSIGN) {
+                eat(EQSIGN)
+                val e2 = parseExpr1
+                new ArrayAssign(id, e1, e2)
+              } else {
+                new ArrayRead(id, e1)
+              }
             } else {
               id
             }
           }
-          case SELF => new Self()
+          case SELF => {
+            eat(SELF)
+            new Self()
+          }
           case NEW => {
             eat(NEW)
             if (currentToken.kind == INT) {
