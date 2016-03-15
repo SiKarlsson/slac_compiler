@@ -126,7 +126,7 @@ object Printer {
             return value.toString
           }
           case StringLit(value) => {
-            return value
+            return "\"".concat(value).concat("\"")
           }
           case True() => {
             return "true"
@@ -171,9 +171,9 @@ object Printer {
             return "while (".concat(apply(cond)).concat(") ").concat(apply(body))
           }
           case Println(expr) => {
-            var printString = "Println(\""
+            var printString = "Println("
             printString = printString.concat(apply(expr))
-            printString = printString.concat("\")")
+            printString = printString.concat(")")
             return printString
           }
           case Assign(id, expr) => {
