@@ -26,6 +26,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
       def next: Token = {
         var currMatch = ""
         var longestMatch = new Token(BAD)
+        var registeredPos = false
 
         while (hasNext && matching) {
           var currChar: Char = readChar
@@ -40,6 +41,11 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
               }
               case _ =>
             }
+          }
+          /* Register starting point of match */
+          if (!registeredPos) {
+              pos = source.pos
+              registeredPos = true
           }
           currMatch += currChar
           val tok = matchToken(currMatch)
@@ -63,6 +69,8 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
           longestMatch = new Token(EOF)
         }
 
+        /* Set position to the starting point of the match */
+        longestMatch.setPos(f, pos)
         longestMatch
       }
 
@@ -182,7 +190,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
       }
 
       def readFromSource: Char = {
-        pos = pos + 1
+        //pos = pos + 1
         source.next
       }
     }
