@@ -1,6 +1,6 @@
 .DS_Store
-lexer/project/
-lexer/target/
-lexer/src/main/scala/slacc/target/
-lexer/src/project/
+project/
+target/
+src/main/scala/slacc/target/
+src/project/
 *.slac
