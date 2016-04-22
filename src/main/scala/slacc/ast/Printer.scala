@@ -5,6 +5,7 @@ import Trees._
 
 object Printer {
   var tabCount = 0
+  var symid = false;
   def apply(t: Tree): String = {
       t match {
           case Program(mainMethod, classes) => {
@@ -20,6 +21,7 @@ object Printer {
           }
           case ClassDecl(id, parent, vars, methods) => {
             var classString = "class ".concat(apply(id))
+            if (symid) classString.concat(t.asInstanceOf[ClassDecl].getSymbol.id.toString)
             if (parent.isEmpty) {
               classString += " {" + "\n"
             } else {
@@ -37,7 +39,10 @@ object Printer {
             return classString
           }
           case VarDecl(tpe, id) => {
-            return "var ".concat(apply(id)).concat(" : ").concat(apply(tpe)).concat(";")
+            var varString = "var ".concat(apply(id))
+            if (symid) varString.concat(t.asInstanceOf[VarDecl].getSymbol.id.toString)
+            varString.oncat(" : ").concat(apply(tpe)).concat(";");
+            return varString
           }
           case MethodDecl(retType, id, args, vars, exprs, retExpr) => {
             var methodString = "method ".concat(apply(id)).concat("(")
@@ -135,7 +140,7 @@ object Printer {
             return "false"
           }
           case Identifier(value) => {
-            return value
+            return value + "#"
           }
           case Self() => {
             return "self"
