@@ -30,6 +30,10 @@ object Main {
         ctx = ctx.copy(doAST = true)
         processOption(args)
 
+      case "--symid" :: args =>
+        ctx = ctx.copy(doSymbolIds = true)
+        processOption(args)
+
       case "-d" :: out :: args =>
         ctx = ctx.copy(outDir = Some(new File(out)))
         processOption(args)
@@ -82,6 +86,8 @@ object Main {
       val pipeline = Lexer andThen Parser
       val ast = pipeline.run(ctx)(ctx.files.head)
       println(ast)
+    } else if (ctx.doSymbolIds) {
+      println("Do symbol ids")
     } else {
       println("hej simon")
       ???
