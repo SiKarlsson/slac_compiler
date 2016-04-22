@@ -67,6 +67,7 @@ object Main {
     println(" --tokens      displays the list of tokens")
     println(" --print       pretty-prints the program")
     println(" --ast         displays the AST")
+    println(" --symid       displays the AST with symbols")
     println(" -d <outdir>   generates class files in the specified directory")
   }
 
