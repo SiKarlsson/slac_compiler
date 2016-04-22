@@ -5,6 +5,7 @@ import java.io.File
 
 import lexer._
 import ast._
+import analyzer._
 
 object Main {
 
@@ -87,7 +88,9 @@ object Main {
       val ast = pipeline.run(ctx)(ctx.files.head)
       println(ast)
     } else if (ctx.doSymbolIds) {
-      println("Do symbol ids")
+      val pipeline = Lexer andThen Parser andThen NameAnalysis
+      val ast = pipeline.run(ctx)(ctx.files.head)
+      println(Printer(ast))
     } else {
       println("hej simon")
       ???
