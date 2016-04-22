@@ -5,7 +5,7 @@ import Trees._
 
 object Printer {
   var tabCount = 0
-  var symid = false;
+  var symid = true;
   def apply(t: Tree): String = {
       t match {
           case Program(mainMethod, classes) => {
@@ -21,7 +21,7 @@ object Printer {
           }
           case ClassDecl(id, parent, vars, methods) => {
             var classString = "class ".concat(apply(id))
-            if (symid) classString.concat(t.asInstanceOf[ClassDecl].getSymbol.id.toString)
+            if (symid) classString = classString.concat("#").concat(t.asInstanceOf[ClassDecl].getSymbol.id.toString)
             if (parent.isEmpty) {
               classString += " {" + "\n"
             } else {
@@ -40,12 +40,14 @@ object Printer {
           }
           case VarDecl(tpe, id) => {
             var varString = "var ".concat(apply(id))
-            if (symid) varString.concat(t.asInstanceOf[VarDecl].getSymbol.id.toString)
-            varString.oncat(" : ").concat(apply(tpe)).concat(";");
+            if (symid) varString = varString.concat("#").concat(t.asInstanceOf[VarDecl].getSymbol.id.toString)
+            varString = varString.concat(" : ").concat(apply(tpe)).concat(";");
             return varString
           }
           case MethodDecl(retType, id, args, vars, exprs, retExpr) => {
-            var methodString = "method ".concat(apply(id)).concat("(")
+            var methodString = "method ".concat(apply(id))
+            if (!symid) methodString = methodString.concat("#").concat(t.asInstanceOf[MethodDecl].getSymbol.id.toString)
+            methodString = methodString.concat("(")
             var first = true
             for (arg <- args) {
               if (!first) {
@@ -140,7 +142,7 @@ object Printer {
             return "false"
           }
           case Identifier(value) => {
-            return value + "#"
+            return value
           }
           case Self() => {
             return "self"
