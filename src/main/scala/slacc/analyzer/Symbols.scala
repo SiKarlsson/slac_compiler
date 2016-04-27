@@ -37,7 +37,13 @@ object Symbols {
     var mainClass: ClassSymbol = _
     var classes = Map[String, ClassSymbol]()
 
-    def lookupClass(n: String): Option[ClassSymbol] = ???
+    def lookupClass(n: String): Option[ClassSymbol] = {
+      classes get n
+    }
+
+    def addClass(n: String, cs: ClassSymbol) = {
+      classes = classes + (n -> cs)
+    }
   }
 
   class ClassSymbol(val name: String) extends Symbol {
