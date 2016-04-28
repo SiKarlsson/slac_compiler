@@ -19,9 +19,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
     for (classDecl <- prog.classes) {
       val classId = classDecl.id.value
       glob.lookupClass(classId) match {
-        case Some(s) => {
-          println(classId, " already defined")
-        }
+        case Some(s) => {}
         case None => {
           classDecl.setSymbol(new ClassSymbol(classId))
           glob.addClass(classId, classDecl.getSymbol)
@@ -30,21 +28,49 @@ object NameAnalysis extends Pipeline[Program, Program] {
       println("C--".concat(classDecl.getSymbol.id.toString))
 
       for (classVar <- classDecl.vars) {
-        classVar.setSymbol(new VariableSymbol(classVar.id.value))
+        val varID = classVar.id.value
+        glob.classes(classDecl.id.value).lookupVar(varID) match {
+          case Some(s) => {}
+          case None => {
+            classVar.setSymbol(new VariableSymbol(classVar.id.value))
+            glob.classes(classDecl.id.value).addMember(varID, classVar.getSymbol)
+          }
+        }
         println("CV--".concat(classVar.getSymbol.id.toString))
       }
 
       for (method <- classDecl.methods) {
-        method.setSymbol(new MethodSymbol(method.id.value, classDecl.getSymbol))
+        val methodId = method.id.value
+        glob.classes(classDecl.id.value).lookupMethod(methodId) match {
+          case Some(s) => {}
+          case None => {
+            method.setSymbol(new MethodSymbol(method.id.value, classDecl.getSymbol))
+            glob.classes(classDecl.id.value).addMethod(methodId, method.getSymbol)
+          }
+        }
         println("M--".concat(method.getSymbol.id.toString))
 
-        for (arg <- method.args) {
-          arg.setSymbol(new VariableSymbol(arg.id.value))
-          println("MP--".concat(arg.getSymbol.id.toString))
+        for (param <- method.args) {
+          val paramId = param.id.value
+          glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
+            case Some(s) => {}
+            case None => {
+              param.setSymbol(new VariableSymbol(param.id.value))
+              glob.classes(classDecl.id.value).methods(method.id.value).addParam(paramId, param.getSymbol)
+            }
+          }
+          println("MP--".concat(param.getSymbol.id.toString))
         }
 
         for (methodVar <- method.vars) {
-          methodVar.setSymbol(new VariableSymbol(methodVar.id.value))
+          val methodVarId = methodVar.id.value
+          glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(methodVarId) match {
+            case Some(s) => {}
+            case None => {
+              methodVar.setSymbol(new VariableSymbol(methodVar.id.value))
+              glob.classes(classDecl.id.value).methods(method.id.value).addMember(methodVarId, methodVar.getSymbol)
+            }
+          }
           println("MV--".concat(methodVar.getSymbol.id.toString))
         }
 
