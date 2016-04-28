@@ -38,7 +38,10 @@ object Symbols {
     var classes = Map[String, ClassSymbol]()
 
     def lookupClass(n: String): Option[ClassSymbol] = classes get n match {
-      case Some(e) => Some(e)
+      case Some(e) => {
+        println(n + " already defined")
+        Some(e)
+      }
       case None => None
     }
 
@@ -53,12 +56,27 @@ object Symbols {
     var members = Map[String, VariableSymbol]()
 
     def lookupMethod(n: String): Option[MethodSymbol] = methods get n match {
-      case Some(e) => Some(e)
+      case Some(e) => {
+        println(n + " already defined")
+        Some(e)
+      }
       case None => None
     }
+
     def lookupVar(n: String): Option[VariableSymbol] = members get n match {
-      case Some(e) => Some(e)
+      case Some(e) => {
+        println(n + " already defined")
+        Some(e)
+      }
       case None => None
+    }
+
+    def addMember(n: String, vs: VariableSymbol): Unit = {
+      members = members + (n -> vs)
+    }
+
+    def addMethod(n: String, ms: MethodSymbol): Unit = {
+      methods = methods + (n -> ms)
     }
   }
 
@@ -69,8 +87,27 @@ object Symbols {
     var overridden: Option[MethodSymbol] = None
 
     def lookupVar(n: String): Option[VariableSymbol] = members get n match {
-      case Some(e) => Some(e)
-      case None => None
+      case Some(e) => {
+        println(n + " already defined")
+        Some(e)
+      }
+      case None => {
+        params get n match {
+          case Some(p) => {
+            println(n + " already defined")
+            Some(p)
+          }
+          case None => None
+        }
+      }
+    }
+
+    def addParam(n: String, vs: VariableSymbol): Unit = {
+      params = params + (n -> vs)
+    }
+
+    def addMember(n: String, vs: VariableSymbol): Unit = {
+      members = members + (n -> vs)
     }
   }
 
