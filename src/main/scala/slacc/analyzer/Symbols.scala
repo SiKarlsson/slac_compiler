@@ -44,7 +44,7 @@ object Symbols {
 
     def lookupClass(n: String): Option[ClassSymbol] = classes get n match {
       case Some(e) => {
-        println(n + " already defined")
+        printAlreadyDefined(n)
         Some(e)
       }
       case None => None
@@ -62,7 +62,7 @@ object Symbols {
 
     def lookupMethod(n: String): Option[MethodSymbol] = methods get n match {
       case Some(e) => {
-        println(n + " already defined")
+        printAlreadyDefined(n)
         Some(e)
       }
       case None => None
@@ -70,7 +70,7 @@ object Symbols {
 
     def lookupVar(n: String): Option[VariableSymbol] = members get n match {
       case Some(e) => {
-        println(n + " already defined")
+        printAlreadyDefined(n)
         Some(e)
       }
       case None => None
@@ -93,13 +93,13 @@ object Symbols {
 
     def lookupVar(n: String): Option[VariableSymbol] = members get n match {
       case Some(e) => {
-        println(n + " already defined")
+        printAlreadyDefined(n)
         Some(e)
       }
       case None => {
         params get n match {
           case Some(p) => {
-            println(n + " already defined")
+            printAlreadyDefined(n)
             Some(p)
           }
           case None => None
@@ -114,6 +114,10 @@ object Symbols {
     def addMember(n: String, vs: VariableSymbol): Unit = {
       members = members + (n -> vs)
     }
+  }
+
+  def printAlreadyDefined(n: String): Unit = {
+    println(n + " already defined")
   }
 
   class VariableSymbol(val name: String) extends Symbol
