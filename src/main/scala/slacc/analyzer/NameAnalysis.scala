@@ -17,10 +17,19 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     // Step 1: Collect symbols in declarations
     for (classDecl <- prog.classes) {
+      println(classDecl.id)
       val classId = classDecl.id.value
       glob.lookupClass(classId) match {
         case Some(s) => {}
         case None => {
+          classDecl.parent match {
+            case Some(p) => {
+              glob.lookupClass(p.value) match {
+                case None => { error(p.value + " not defined (Parent of " + classId + ")") }
+              }
+            }
+            case None => { }
+          }
           classDecl.setSymbol(new ClassSymbol(classId))
           classDecl.id.setSymbol(classDecl.getSymbol)
           glob.addClass(classId, classDecl.getSymbol)
