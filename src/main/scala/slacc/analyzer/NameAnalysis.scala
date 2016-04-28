@@ -20,12 +20,13 @@ object NameAnalysis extends Pipeline[Program, Program] {
       println(classDecl.id)
       val classId = classDecl.id.value
       glob.lookupClass(classId) match {
-        case Some(s) => {}
+        case Some(s) => printAlreadyDefined(classId)
         case None => {
           classDecl.parent match {
             case Some(p) => {
               glob.lookupClass(p.value) match {
                 case None => { error(p.value + " not defined (Parent of " + classId + ")") }
+                case _ => {}
               }
             }
             case None => { }
@@ -40,7 +41,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       for (classVar <- classDecl.vars) {
         val varID = classVar.id.value
         glob.classes(classDecl.id.value).lookupVar(varID) match {
-          case Some(s) => {}
+          case Some(s) => printAlreadyDefined(varID)
           case None => {
             classVar.setSymbol(new VariableSymbol(classVar.id.value))
             classVar.id.setSymbol(classVar.getSymbol)
@@ -53,7 +54,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       for (method <- classDecl.methods) {
         val methodId = method.id.value
         glob.classes(classDecl.id.value).lookupMethod(methodId) match {
-          case Some(s) => {}
+          case Some(s) => printAlreadyDefined(methodId)
           case None => {
             method.setSymbol(new MethodSymbol(method.id.value, classDecl.getSymbol))
             method.id.setSymbol(method.getSymbol)
@@ -65,7 +66,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         for (param <- method.args) {
           val paramId = param.id.value
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
-            case Some(s) => {}
+            case Some(s) => printAlreadyDefined(paramId)
             case None => {
               param.setSymbol(new VariableSymbol(param.id.value))
               param.id.setSymbol(param.getSymbol)
@@ -78,7 +79,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         for (methodVar <- method.vars) {
           val methodVarId = methodVar.id.value
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(methodVarId) match {
-            case Some(s) => {}
+            case Some(s) => printAlreadyDefined(methodVarId)
             case None => {
               methodVar.setSymbol(new VariableSymbol(methodVar.id.value))
               methodVar.id.setSymbol(methodVar.getSymbol)
@@ -102,5 +103,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
     // Make sure you check all constraints
 
     prog
+  }
+  
+  def printAlreadyDefined(n: String): Unit = {
+    error(n + " already defined")
   }
 }
