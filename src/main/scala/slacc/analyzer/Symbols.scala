@@ -16,6 +16,11 @@ object Symbols {
       case Some(s) => s
       case None => sys.error("Accessing undefined symbol.")
     }
+
+    def hasSymbol: Boolean = _sym match {
+      case Some(s) => true
+      case None => false
+    }
   }
 
   sealed abstract class Symbol extends Positioned {
