@@ -21,8 +21,7 @@ object Printer {
           }
           case ClassDecl(id, parent, vars, methods) => {
             var classString = "class ".concat(apply(id))
-            println(t, " has symbol: ", t.asInstanceOf[ClassDecl].hasSymbol)
-            if (symid) classString = classString.concat("#").concat(t.asInstanceOf[ClassDecl].getSymbol.id.toString)
+            //if (symid) classString = classString.concat("#").concat(t.asInstanceOf[ClassDecl].getSymbol.id.toString)
             if (parent.isEmpty) {
               classString += " {" + "\n"
             } else {
@@ -41,7 +40,7 @@ object Printer {
           }
           case VarDecl(tpe, id) => {
             var varString = "var ".concat(apply(id))
-            if (symid) varString = varString.concat("#").concat(t.asInstanceOf[VarDecl].getSymbol.id.toString)
+            //if (symid) varString = varString.concat("#").concat(t.asInstanceOf[VarDecl].getSymbol.id.toString)
             varString = varString.concat(" : ").concat(apply(tpe)).concat(";");
             return varString
           }
@@ -50,7 +49,7 @@ object Printer {
             if (id.value == "main") {
               //methodString = methodString.concat("#").concat(t.asInstanceOf[MethodDecl].getSymbol.id.toString)
             } else {
-              if (symid) methodString = methodString.concat("#").concat(t.asInstanceOf[MethodDecl].getSymbol.id.toString)
+              //if (symid) methodString = methodString.concat("#").concat(t.asInstanceOf[MethodDecl].getSymbol.id.toString)
             }
             methodString = methodString.concat("(")
             var first = true

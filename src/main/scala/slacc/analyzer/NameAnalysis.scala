@@ -22,6 +22,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         case Some(s) => {}
         case None => {
           classDecl.setSymbol(new ClassSymbol(classId))
+          classDecl.id.setSymbol(classDecl.getSymbol)
           glob.addClass(classId, classDecl.getSymbol)
         }
       }
@@ -33,6 +34,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           case Some(s) => {}
           case None => {
             classVar.setSymbol(new VariableSymbol(classVar.id.value))
+            classVar.id.setSymbol(classVar.getSymbol)
             glob.classes(classDecl.id.value).addMember(varID, classVar.getSymbol)
           }
         }
@@ -45,6 +47,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           case Some(s) => {}
           case None => {
             method.setSymbol(new MethodSymbol(method.id.value, classDecl.getSymbol))
+            method.id.setSymbol(method.getSymbol)
             glob.classes(classDecl.id.value).addMethod(methodId, method.getSymbol)
           }
         }
@@ -56,6 +59,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case Some(s) => {}
             case None => {
               param.setSymbol(new VariableSymbol(param.id.value))
+              param.id.setSymbol(param.getSymbol)
               glob.classes(classDecl.id.value).methods(method.id.value).addParam(paramId, param.getSymbol)
             }
           }
@@ -68,6 +72,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case Some(s) => {}
             case None => {
               methodVar.setSymbol(new VariableSymbol(methodVar.id.value))
+              methodVar.id.setSymbol(methodVar.getSymbol)
               glob.classes(classDecl.id.value).methods(method.id.value).addMember(methodVarId, methodVar.getSymbol)
             }
           }
