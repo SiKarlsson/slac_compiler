@@ -213,7 +213,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           readToken
           var e2 = parseExpr4
           if (equals) {
-              e1 = new Equals(e1, e2)
+            e1 = new Equals(e1, e2)
           } else {
             e1 = new LessThan(e1, e2)
           }
