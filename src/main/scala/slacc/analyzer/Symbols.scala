@@ -116,9 +116,9 @@ object Symbols {
     }
   }
 
-  def printAlreadyDefined(n: String): Unit = {
-    println(n + " already defined")
-  }
-
   class VariableSymbol(val name: String) extends Symbol
+
+  def printAlreadyDefined(n: String): Unit = {
+    error(n + " already defined")
+  }
 }
