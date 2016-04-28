@@ -26,7 +26,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case Some(p) => {
               glob.lookupClass(p.value) match {
                 case None => { error(p.value + " not defined (Parent of " + classId + ")") }
-                case _ => {}
+                case _ => {  }
               }
             }
             case None => { }
@@ -37,7 +37,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
       }
       println("C--".concat(classDecl.getSymbol.id.toString))
+    }
 
+    for (classDecl <- prog.classes) {
       for (classVar <- classDecl.vars) {
         val varID = classVar.id.value
         glob.classes(classDecl.id.value).lookupVar(varID) match {
@@ -62,7 +64,11 @@ object NameAnalysis extends Pipeline[Program, Program] {
           }
         }
         println("M--".concat(method.getSymbol.id.toString))
+      }
+    }
 
+    for (classDecl <- prog.classes) {
+      for (method <- classDecl.methods) {
         for (param <- method.args) {
           val paramId = param.id.value
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
@@ -90,10 +96,109 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
 
         for (expr <- method.exprs) {
-
+          attachIdentifier(expr)
         }
 
-        // TODO: Handle retexpr of method
+        attachIdentifier(method.retExpr)
+
+        def attachIdentifier(t: ExprTree): Unit = {
+          t match {
+            case And(lhs, rhs) => {
+              attachIdentifier(lhs)
+              attachIdentifier(rhs)
+            }
+            case Or(lhs, rhs) => {
+              attachIdentifier(lhs)
+              attachIdentifier(rhs)
+            }
+            case Plus(lhs, rhs) => {
+              attachIdentifier(lhs)
+              attachIdentifier(rhs)
+            }
+            case Times(lhs, rhs) => {
+              attachIdentifier(lhs)
+              attachIdentifier(rhs)
+            }
+            case Div(lhs, rhs) => {
+              attachIdentifier(lhs)
+              attachIdentifier(rhs)
+            }
+            case LessThan(lhs, rhs) => {
+              attachIdentifier(lhs)
+              attachIdentifier(rhs)
+            }
+            case Equals(lhs, rhs) => {
+              attachIdentifier(lhs)
+              attachIdentifier(rhs)
+            }
+            case ArrayRead(arr, index) => {
+              attachIdentifier(arr)
+              attachIdentifier(index)
+            }
+            case ArrayLength(arr) => {
+              attachIdentifier(arr)
+            }
+            case MethodCall(obj, meth, args) => {
+              attachIdentifier(obj)
+              attachIdentifier(meth)
+              for (arg <- args) {
+                attachIdentifier(arg)
+              }
+            }
+            case Self() => {
+              t.asInstanceOf[Self].setSymbol(classDecl.getSymbol)
+            }
+            case NewIntArray(size) => {
+              attachIdentifier(size)
+            }
+            case New(id) => {
+              attachIdentifier(id)
+            }
+            case Not(expr) => {
+              attachIdentifier(expr)
+            }
+            case Block(exprList) => {
+              for (expr <- exprList) {
+                attachIdentifier(expr)
+              }
+            }
+            case If(expr, thn, els) => {
+              attachIdentifier(expr)
+              attachIdentifier(thn)
+              els match {
+                case Some(e) => attachIdentifier(e)
+                case None => { }
+              }
+            }
+            case While(cond, body) => {
+              attachIdentifier(cond)
+              attachIdentifier(body)
+            }
+            case Println(expr) => {
+              attachIdentifier(expr)
+            }
+            case Assign(id, expr) => {
+              attachIdentifier(id)
+              attachIdentifier(expr)
+            }
+            case ArrayAssign(id, index, expr) => {
+              attachIdentifier(id)
+              attachIdentifier(index)
+              attachIdentifier(expr)
+            }
+            case Strof(expr) => {
+              attachIdentifier(expr)
+            }
+            case Identifier(value) => {
+              val sym = method.asInstanceOf[MethodDecl].getSymbol
+              sym.lookupVar(value) match {
+                case Some(s) => { t.asInstanceOf[Identifier].setSymbol(s) }
+                case None => { error(value + " is not defined in this scope") }
+              }
+            }
+            case _ => { println("todo: " + t) }
+          }
+        }
       }
     }
 

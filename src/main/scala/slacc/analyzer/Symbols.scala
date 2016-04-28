@@ -97,7 +97,12 @@ object Symbols {
           case Some(p) => {
             Some(p)
           }
-          case None => None
+          case None => {
+            classSymbol.lookupVar(n) match {
+              case Some(q) => Some(q)
+              case None => None
+            }
+          }
         }
       }
     }
