@@ -140,7 +140,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
             }
             case MethodCall(obj, meth, args) => {
               attachIdentifier(obj)
-              attachIdentifier(meth)
+              classDecl.getSymbol.lookupMethod(meth.value) match {
+                case Some(s) => { meth.asInstanceOf[Identifier].setSymbol(s) }
+                case None => { error(meth + " is not defined in this scope") }
+              }
               for (arg <- args) {
                 attachIdentifier(arg)
               }
