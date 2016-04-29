@@ -7,10 +7,10 @@ import Symbols._
 
 object NameAnalysis extends Pipeline[Program, Program] {
 
+  var glob = new GlobalScope()
+
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
-
-    var glob = new GlobalScope()
 
     prog.main.setSymbol(new ClassSymbol("Main"))
     println("MM--".concat(prog.main.getSymbol.id.toString))
@@ -22,18 +22,23 @@ object NameAnalysis extends Pipeline[Program, Program] {
       glob.lookupClass(classId) match {
         case Some(s) => printAlreadyDefined(classId)
         case None => {
+          classDecl.setSymbol(new ClassSymbol(classId))
+          classDecl.id.setSymbol(classDecl.getSymbol)
+          glob.addClass(classId, classDecl.getSymbol)
           classDecl.parent match {
             case Some(p) => {
               glob.lookupClass(p.value) match {
                 case None => { error(p.value + " not defined (Parent of " + classId + ")") }
-                case _ => {}
+                case Some(c) => {
+                  classDecl.getSymbol.parent = Some(c)
+                  if (hasInheritanceCycle(classDecl.getSymbol)) {
+                    error("cycles in the inheritance graph")
+                  }
+                }
               }
             }
             case None => { }
           }
-          classDecl.setSymbol(new ClassSymbol(classId))
-          classDecl.id.setSymbol(classDecl.getSymbol)
-          glob.addClass(classId, classDecl.getSymbol)
         }
       }
       println("C--".concat(classDecl.getSymbol.id.toString))
@@ -104,8 +109,19 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     prog
   }
-  
+
   def printAlreadyDefined(n: String): Unit = {
     error(n + " already defined")
+  }
+
+  def hasInheritanceCycle(c: ClassSymbol): Boolean = {
+    var parent: Option[ClassSymbol] = c.parent
+    while (parent != None) {
+      if (c.name == parent.get.name) {
+        return true
+      }
+      parent = parent.get.parent
+    }
+    false
   }
 }
