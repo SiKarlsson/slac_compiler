@@ -12,8 +12,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
-    //var mainClass =
-    prog.main.setSymbol(new ClassSymbol("Main"))
+    val mainClass = new ClassSymbol("main")
+    val mainSymbol = new MethodSymbol("main", mainClass)
+    mainClass.addMethod("main", mainSymbol)
+    println(prog.main)
+    prog.main.main.id.setSymbol(mainSymbol)
+    glob.addClass("main", mainClass)
 
     // Step 1: Collect symbols in declarations
     for (classDecl <- prog.classes) {

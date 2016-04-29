@@ -17,11 +17,10 @@ object Printer {
               return programString
           }
           case MainMethod(methodDecl) => {
-              return apply(methodDecl)
+            apply(methodDecl)
           }
           case ClassDecl(id, parent, vars, methods) => {
             var classString = "class ".concat(apply(id))
-            //if (symid) classString = classString.concat("#").concat(t.asInstanceOf[ClassDecl].getSymbol.id.toString)
             if (parent.isEmpty) {
               classString += " {" + "\n"
             } else {
@@ -46,11 +45,6 @@ object Printer {
           }
           case MethodDecl(retType, id, args, vars, exprs, retExpr) => {
             var methodString = "method ".concat(apply(id))
-            if (id.value == "main") {
-              //methodString = methodString.concat("#").concat(t.asInstanceOf[MethodDecl].getSymbol.id.toString)
-            } else {
-              //if (symid) methodString = methodString.concat("#").concat(t.asInstanceOf[MethodDecl].getSymbol.id.toString)
-            }
             methodString = methodString.concat("(")
             var first = true
             for (arg <- args) {
