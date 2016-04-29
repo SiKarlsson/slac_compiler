@@ -12,8 +12,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
+    //var mainClass =
     prog.main.setSymbol(new ClassSymbol("Main"))
-    println("MM--".concat(prog.main.getSymbol.id.toString))
 
     // Step 1: Collect symbols in declarations
     for (classDecl <- prog.classes) {
@@ -41,7 +41,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
           }
         }
       }
-      println("C--".concat(classDecl.getSymbol.id.toString))
     }
 
     for (classDecl <- prog.classes) {
@@ -55,7 +54,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
             glob.classes(classDecl.id.value).addMember(varID, classVar.getSymbol)
           }
         }
-        println("CV--".concat(classVar.getSymbol.id.toString))
       }
 
       for (method <- classDecl.methods) {
@@ -68,7 +66,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
             glob.classes(classDecl.id.value).addMethod(methodId, method.getSymbol)
           }
         }
-        println("M--".concat(method.getSymbol.id.toString))
       }
     }
 
@@ -81,10 +78,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case None => {
               param.setSymbol(new VariableSymbol(param.id.value))
               param.id.setSymbol(param.getSymbol)
-              glob.classes(classDecl.id.value).methods(method.id.value).addParam(paramId, param.getSymbol)
+              method.getSymbol.addParam(paramId, param.getSymbol)
             }
           }
-          println("MP--".concat(param.getSymbol.id.toString))
         }
 
         for (methodVar <- method.vars) {
@@ -97,7 +93,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
               glob.classes(classDecl.id.value).methods(method.id.value).addMember(methodVarId, methodVar.getSymbol)
             }
           }
-          println("MV--".concat(methodVar.getSymbol.id.toString))
         }
 
         for (expr <- method.exprs) {
@@ -201,7 +196,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case None => { error(value + " is not defined in this scope") }
               }
             }
-            case _ => { println("todo: " + t) }
+            case _ => {  }
           }
         }
       }
