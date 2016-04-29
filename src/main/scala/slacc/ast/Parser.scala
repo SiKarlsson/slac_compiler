@@ -28,7 +28,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
     /** ''Eats'' the expected token, or terminates with an error. */
     def eat(kind: TokenKind): Unit = {
-      println("eating " + currentToken.kind + ", expecting " + kind)
       if (currentToken.kind == kind) {
         readToken
       } else {
@@ -413,7 +412,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def identifier = {
-        println("ident " + currentToken.asInstanceOf[ID].value)
         val ident = new Identifier(currentToken.asInstanceOf[ID].value)
         eat(IDKIND)
         ident
