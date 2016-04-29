@@ -152,7 +152,9 @@ object Printer {
             s
           }
           case Self() => {
-            return "self"
+            var s = "self"
+            if (symid) s = s.concat("#").concat(t.asInstanceOf[Self].getSymbol.id.toString)
+            s
           }
           case NewIntArray(size) => {
             return "new Int[".concat(apply(size)).concat("]")
