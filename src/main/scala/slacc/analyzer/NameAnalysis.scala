@@ -114,6 +114,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           attachIdentifier(expr)
         }
 
+
         attachIdentifier(method.retExpr)
 
         def attachIdentifier(t: ExprTree): Unit = {
@@ -131,6 +132,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
               attachIdentifier(rhs)
             }
             case Times(lhs, rhs) => {
+              attachIdentifier(lhs)
+              attachIdentifier(rhs)
+            }
+            case Minus(lhs, rhs) => {
               attachIdentifier(lhs)
               attachIdentifier(rhs)
             }
