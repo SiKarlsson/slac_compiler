@@ -55,6 +55,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
       def classDeclaration = {
         // class Identifier ( <: Identifier )? { ( VarDeclaration )* ( MethodDeclaration )* }
+        val pos = currentToken
         eat(CLASS)
         val ident = identifier
         var parent: Option[Identifier] = None
@@ -73,22 +74,28 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           methods += methodDeclaration
         }
         eat(RBRACE)
-        new ClassDecl(ident, parent, vars.toList, methods.toList)
+        var classDecl = new ClassDecl(ident, parent, vars.toList, methods.toList)
+        classDecl.setPos(pos)
+        classDecl
       }
 
       def varDeclaration: VarDecl = {
         // var Identifier : Type ;
+        val pos = currentToken
         eat(VAR)
         val ident = identifier
         eat(COLON)
         val tt = typeTree
         eat(SEMICOLON)
-        new VarDecl(tt, ident)
+        var varDecl = new VarDecl(tt, ident)
+        varDecl.setPos(pos)
+        varDecl
       }
 
       def methodDeclaration = {
         /* method Identifier ( ( Identifier : Type ( , Identifier : Type )* )? )
          : Type = { ( VarDeclaration )* Expression ( ; Expression )* } */
+        val pos = currentToken
         eat(METHOD)
         val ident = identifier
         val argsList = new ListBuffer[Formal]()
@@ -125,29 +132,42 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         } while (currentToken.kind == SEMICOLON)
         eat(RBRACE)
 
-        new MethodDecl(retType, ident, argsList.toList, varList.toList,
+        var methodDecl = new MethodDecl(retType, ident, argsList.toList, varList.toList,
           exprList.toList.dropRight(1), exprList.toList.last)
+        methodDecl.setPos(pos)
+        methodDecl
       }
 
       def typeTree = {
+        val pos = currentToken
         if (currentToken.kind == INT) {
           eat(INT)
           if (currentToken.kind == LBRACKET) {
             eat(LBRACKET)
             eat(RBRACKET)
-            new IntArrayType
+            var intArrayType = new IntArrayType
+            intArrayType.setPos(pos)
+            intArrayType
           } else {
-            new IntType
+            var intType = new IntType
+            intType.setPos(pos)
+            intType
           }
         } else if (currentToken.kind == BOOLEAN) {
           eat(BOOLEAN)
-          new BooleanType
+          var bool = new BooleanType
+          bool.setPos(pos)
+          bool
         } else if (currentToken.kind == STRING) {
           eat(STRING)
-          new StringType
+          var strType = new StringType
+          strType.setPos(pos)
+          strType
         } else if (currentToken.kind == UNIT) {
           eat(UNIT)
-          new UnitType
+          var unitType = new UnitType
+          unitType.setPos(pos)
+          unitType
         } else {
           identifier
         }
