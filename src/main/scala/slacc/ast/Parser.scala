@@ -434,7 +434,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       def identifier = {
         val ident = new Identifier(currentToken.asInstanceOf[ID].value)
         ident.setPos(currentToken)
-        println(ident.position)
         eat(IDKIND)
         ident
       }
