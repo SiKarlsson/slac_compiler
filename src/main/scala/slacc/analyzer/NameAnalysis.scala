@@ -24,9 +24,11 @@ object NameAnalysis extends Pipeline[Program, Program] {
       println(classDecl.id)
       val classId = classDecl.id.value
       glob.lookupClass(classId) match {
-        case Some(s) => printAlreadyDefined(classId)
+        case Some(s) => printAlreadyDefined(classId, s)
         case None => {
-          classDecl.setSymbol(new ClassSymbol(classId))
+          val classSym = new ClassSymbol(classId)
+          classSym.setPos(classDecl)
+          classDecl.setSymbol(classSym)
           classDecl.id.setSymbol(classDecl.getSymbol)
           glob.addClass(classId, classDecl.getSymbol)
           classDecl.parent match {
@@ -51,9 +53,11 @@ object NameAnalysis extends Pipeline[Program, Program] {
       for (classVar <- classDecl.vars) {
         val varID = classVar.id.value
         glob.classes(classDecl.id.value).lookupVar(varID) match {
-          case Some(s) => printAlreadyDefined(varID)
+          case Some(s) => printAlreadyDefined(varID, s)
           case None => {
-            classVar.setSymbol(new VariableSymbol(classVar.id.value))
+            var classVarSym = new VariableSymbol(classVar.id.value)
+            classVarSym.setPos(classVarSym)
+            classVar.setSymbol(classVarSym)
             classVar.id.setSymbol(classVar.getSymbol)
             classDecl.getSymbol.addMember(varID, classVar.getSymbol)
           }
@@ -63,9 +67,11 @@ object NameAnalysis extends Pipeline[Program, Program] {
       for (method <- classDecl.methods) {
         val methodId = method.id.value
         glob.classes(classDecl.id.value).lookupMethod(methodId) match {
-          case Some(s) => printAlreadyDefined(methodId)
+          case Some(s) => printAlreadyDefined(methodId, s)
           case None => {
-            method.setSymbol(new MethodSymbol(method.id.value, classDecl.getSymbol))
+            var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
+            methodSym.setPos(method)
+            method.setSymbol(methodSym)
             method.id.setSymbol(method.getSymbol)
             classDecl.getSymbol.addMethod(methodId, method.getSymbol)
           }
@@ -78,9 +84,11 @@ object NameAnalysis extends Pipeline[Program, Program] {
         for (param <- method.args) {
           val paramId = param.id.value
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
-            case Some(s) => printAlreadyDefined(paramId)
+            case Some(s) => printAlreadyDefined(paramId, s)
             case None => {
-              param.setSymbol(new VariableSymbol(param.id.value))
+              var paramSymbol = new VariableSymbol(param.id.value)
+              paramSymbol.setPos(param)
+              param.setSymbol(paramSymbol)
               param.id.setSymbol(param.getSymbol)
               method.getSymbol.addParam(paramId, param.getSymbol)
             }
@@ -90,9 +98,11 @@ object NameAnalysis extends Pipeline[Program, Program] {
         for (methodVar <- method.vars) {
           val methodVarId = methodVar.id.value
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(methodVarId) match {
-            case Some(s) => printAlreadyDefined(methodVarId)
+            case Some(s) => printAlreadyDefined(methodVarId, s)
             case None => {
-              methodVar.setSymbol(new VariableSymbol(methodVar.id.value))
+              var methodVarSym = new VariableSymbol(methodVar.id.value)
+              methodVarSym.setPos(methodVar)
+              methodVar.setSymbol(methodVarSym)
               methodVar.id.setSymbol(methodVar.getSymbol)
               method.getSymbol.addMember(methodVarId, methodVar.getSymbol)
             }
@@ -217,8 +227,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
     prog
   }
 
-  def printAlreadyDefined(n: String): Unit = {
-    error(n + " already defined")
+  def printAlreadyDefined(n: String, pos: Positioned): Unit = {
+    var rep: Reporter = new Reporter()
+    println(pos.position)
+    rep.error(n + " already defined", pos)
   }
 
   def hasInheritanceCycle(c: ClassSymbol): Boolean = {
