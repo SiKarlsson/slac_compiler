@@ -68,6 +68,25 @@ object NameAnalysis extends Pipeline[Program, Program] {
         glob.classes(classDecl.id.value).lookupMethod(methodId) match {
           case Some(s) => printAlreadyDefined(methodId, s, method.id, ctx.reporter)
           case None => {
+            classDecl.parent match {
+              case Some(p) => {
+                glob.classes(p.value).lookupMethod(methodId) match {
+                  case Some(m) => {
+                    println(m.argList)
+                    println(method.args)
+                    if (m.argList.length == method.args.length) {
+                      // OK!!
+                    } else {
+                      ctx.reporter.error("Method is already defined in superclass " + p.value, method)
+                    }
+                  }
+                  case None => {
+
+                  }
+                }
+              }
+              case None => { }
+            }
             var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
             methodSym.setPos(method)
             method.setSymbol(methodSym)
@@ -112,7 +131,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
         for (expr <- method.exprs) {
           attachIdentifier(expr)
         }
-
 
         attachIdentifier(method.retExpr)
 
@@ -218,7 +236,15 @@ object NameAnalysis extends Pipeline[Program, Program] {
               sym.lookupVar(value) match {
                 case Some(s) => { t.asInstanceOf[Identifier].setSymbol(s) }
                 case None => {
-                  printNotDeclared(value, t, ctx.reporter)
+                  val classSym = sym.classSymbol
+                  classSym.lookupVar(value) match {
+                    case Some(ss) => {
+                      t.asInstanceOf[Identifier].setSymbol(ss)
+                    }
+                    case None => {
+                      printNotDeclared(value, t, ctx.reporter)
+                    }
+                  }
                 }
               }
             }
