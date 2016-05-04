@@ -32,7 +32,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           classDecl.parent match {
             case Some(p) => {
               glob.lookupClass(p.value) match {
-                case None => { error(p.value + " not defined (Parent of " + classId + ")") }
+                case None => { printNotDeclared(p.value, p, ctx.reporter) }
                 case Some(c) => {
                   classDecl.getSymbol.parent = Some(c)
                   if (hasInheritanceCycle(classDecl.getSymbol)) {
