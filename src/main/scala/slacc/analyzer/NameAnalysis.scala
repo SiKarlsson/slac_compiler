@@ -15,20 +15,17 @@ object NameAnalysis extends Pipeline[Program, Program] {
     val mainClass = new ClassSymbol("main")
     val mainSymbol = new MethodSymbol("main", mainClass)
     mainClass.addMethod("main", mainSymbol)
-    println(prog.main)
     prog.main.main.id.setSymbol(mainSymbol)
     glob.addClass("main", mainClass)
 
     // Step 1: Collect symbols in declarations
     for (classDecl <- prog.classes) {
-      println(classDecl.id)
       val classId = classDecl.id.value
       glob.lookupClass(classId) match {
         case Some(s) => printAlreadyDefined(classId, s, classDecl.id, ctx.reporter)
         case None => {
           val classSym = new ClassSymbol(classId)
           classSym.setPos(classDecl)
-          println(classDecl.position)
           classDecl.setSymbol(classSym)
           classDecl.id.setSymbol(classDecl.getSymbol)
           glob.addClass(classId, classDecl.getSymbol)
@@ -236,7 +233,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
   }
 
   def printAlreadyDefined(n: String, definedAt: Positioned, pos: Positioned, rep: Reporter): Unit = {
-    println(pos.position)
     rep.error(n + " already defined at " + definedAt.position, pos)
   }
 
