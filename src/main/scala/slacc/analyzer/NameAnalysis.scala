@@ -36,7 +36,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case Some(c) => {
                   classDecl.getSymbol.parent = Some(c)
                   if (hasInheritanceCycle(classDecl.getSymbol)) {
-                    error("cycles in the inheritance graph")
+                    ctx.reporter.error("cycles in the inheritance graph", p)
                   }
                 }
               }
