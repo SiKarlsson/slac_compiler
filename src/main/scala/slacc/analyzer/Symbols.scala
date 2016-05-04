@@ -98,10 +98,7 @@ object Symbols {
             Some(p)
           }
           case None => {
-            classSymbol.lookupVar(n) match {
-              case Some(q) => Some(q)
-              case None => None
-            }
+            None
           }
         }
       }
