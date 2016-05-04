@@ -12,14 +12,17 @@ object NameAnalysis extends Pipeline[Program, Program] {
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
-    val mainClass = new ClassSymbol("main")
-    val mainSymbol = new MethodSymbol("main", mainClass)
-    mainClass.addMethod("main", mainSymbol)
+    var mainClassDecl = new ClassDecl(new Identifier("main"), None, List(), List(prog.main.main))
+    val mainClassSym = new ClassSymbol(mainClassDecl.id.value)
+    mainClassDecl.setSymbol(mainClassSym)
+    val mainSymbol = new MethodSymbol(mainClassDecl.id.value, mainClassSym)
+    mainClassSym.addMethod(mainClassDecl.id.value, mainSymbol)
+    prog.main.main.setSymbol(mainSymbol)
     prog.main.main.id.setSymbol(mainSymbol)
-    glob.addClass("main", mainClass)
+    glob.addClass(mainClassDecl.id.value, mainClassSym)
 
     // Step 1: Collect symbols in declarations
-    for (classDecl <- prog.classes) {
+    for (classDecl <- prog.classes :+ mainClassDecl) {
       val classId = classDecl.id.value
       glob.lookupClass(classId) match {
         case Some(s) => printAlreadyDefined(classId, s, classDecl.id, ctx.reporter)
@@ -47,7 +50,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       }
     }
 
-    for (classDecl <- prog.classes) {
+    for (classDecl <- prog.classes :+ mainClassDecl) {
       for (classVar <- classDecl.vars) {
         val varID = classVar.id.value
         glob.classes(classDecl.id.value).lookupVar(varID) match {
@@ -97,7 +100,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       }
     }
 
-    for (classDecl <- prog.classes) {
+    for (classDecl <- prog.classes :+ mainClassDecl) {
       for (method <- classDecl.methods) {
         for (param <- method.args) {
           val paramId = param.id.value
