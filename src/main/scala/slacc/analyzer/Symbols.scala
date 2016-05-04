@@ -42,12 +42,7 @@ object Symbols {
     var mainClass: ClassSymbol = _
     var classes = Map[String, ClassSymbol]()
 
-    def lookupClass(n: String): Option[ClassSymbol] = classes get n match {
-      case Some(e) => {
-        Some(e)
-      }
-      case None => None
-    }
+    def lookupClass(n: String): Option[ClassSymbol] = classes get n
 
     def addClass(n: String, cs: ClassSymbol): Unit = {
       classes = classes + (n -> cs)
@@ -59,19 +54,9 @@ object Symbols {
     var methods = Map[String, MethodSymbol]()
     var members = Map[String, VariableSymbol]()
 
-    def lookupMethod(n: String): Option[MethodSymbol] = methods get n match {
-      case Some(e) => {
-        Some(e)
-      }
-      case None => None
-    }
+    def lookupMethod(n: String): Option[MethodSymbol] = methods get n
 
-    def lookupVar(n: String): Option[VariableSymbol] = members get n match {
-      case Some(e) => {
-        Some(e)
-      }
-      case None => None
-    }
+    def lookupVar(n: String): Option[VariableSymbol] = members get n
 
     def addMember(n: String, vs: VariableSymbol): Unit = {
       members = members + (n -> vs)
@@ -89,19 +74,8 @@ object Symbols {
     var overridden: Option[MethodSymbol] = None
 
     def lookupVar(n: String): Option[VariableSymbol] = members get n match {
-      case Some(e) => {
-        Some(e)
-      }
-      case None => {
-        params get n match {
-          case Some(p) => {
-            Some(p)
-          }
-          case None => {
-            None
-          }
-        }
-      }
+      case Some(e) => { Some(e) }
+      case None => { params get n }
     }
 
     def addParam(n: String, vs: VariableSymbol): Unit = {
