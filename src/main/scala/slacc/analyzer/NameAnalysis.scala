@@ -56,6 +56,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         glob.classes(classDecl.id.value).lookupVar(varID) match {
           case Some(s) => printAlreadyDefined(varID, s, classVar.id, ctx.reporter)
           case None => {
+            checkClassType(classVar, ctx.reporter)
             var classVarSym = new VariableSymbol(classVar.id.value)
             classVarSym.setPos(classVarSym)
             classVar.setSymbol(classVarSym)
@@ -101,6 +102,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(methodVarId) match {
             case Some(s) => printAlreadyDefined(methodVarId, s, methodVar.id, ctx.reporter)
             case None => {
+              checkClassType(methodVar, ctx.reporter)
               var methodVarSym = new VariableSymbol(methodVar.id.value)
               methodVarSym.setPos(methodVar)
               methodVar.setSymbol(methodVarSym)
@@ -247,5 +249,16 @@ object NameAnalysis extends Pipeline[Program, Program] {
       parent = parent.get.parent
     }
     false
+  }
+
+  def checkClassType(varDecl: VarDecl, reporter: Reporter): Unit = {
+    if (varDecl.tpe.isInstanceOf[Identifier]) {
+      glob.lookupClass(varDecl.tpe.asInstanceOf[Identifier].value) match {
+        case None => {
+          reporter.error("Class " + varDecl.tpe.asInstanceOf[Identifier].value + " is not defined", varDecl)
+        }
+        case _ => {}
+      }
+    }
   }
 }
