@@ -161,7 +161,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
               attachIdentifier(obj)
               classDecl.getSymbol.lookupMethod(meth.value) match {
                 case Some(s) => { meth.asInstanceOf[Identifier].setSymbol(s) }
-                case None => { error(meth + " is not defined in this scope") }
+                case None => {
+                  printNotDeclared(meth.value, meth, ctx.reporter)
+                }
               }
               for (arg <- args) {
                 attachIdentifier(arg)
@@ -215,7 +217,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
               val sym = method.asInstanceOf[MethodDecl].getSymbol
               sym.lookupVar(value) match {
                 case Some(s) => { t.asInstanceOf[Identifier].setSymbol(s) }
-                case None => { error(value + " is not defined in this scope") }
+                case None => {
+                  printNotDeclared(value, t, ctx.reporter)
+                }
               }
             }
             case _ => {  }
@@ -234,6 +238,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
   def printAlreadyDefined(n: String, definedAt: Positioned, pos: Positioned, rep: Reporter): Unit = {
     rep.error(n + " already defined at " + definedAt.position, pos)
+  }
+
+  def printNotDeclared(n: String, obj: ExprTree, reporter: Reporter): Unit = {
+    reporter.error(n + " is not declared", obj)
   }
 
   def hasInheritanceCycle(c: ClassSymbol): Boolean = {
