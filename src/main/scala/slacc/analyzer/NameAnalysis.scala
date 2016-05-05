@@ -243,7 +243,14 @@ object NameAnalysis extends Pipeline[Program, Program] {
                     }
                     case None => {
                       // Variable value not define in method or class
-                      printNotDeclared(value, t, ctx.reporter)
+                      glob.lookupClass(value) match {
+                        case Some(sss) => {
+                          t.asInstanceOf[Identifier].setSymbol(sss)
+                        }
+                        case None => {
+                          printNotDeclared(value, t, ctx.reporter)
+                        }
+                      }
                     }
                   }
                 }
