@@ -91,10 +91,10 @@ object Main {
     } else if (ctx.doSymbolIds) {
       val pipeline = Lexer andThen Parser andThen NameAnalysis
       val ast = pipeline.run(ctx)(ctx.files.head)
-      //println(Printer(ast))
+      println(Printer(ast))
     } else {
-      println("hej simon")
-      ???
+      val pipeline = Lexer andThen Parser andThen NameAnalysis
+      pipeline.run(ctx)(ctx.files.head)
     }
   }
 }
