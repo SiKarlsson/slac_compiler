@@ -124,6 +124,13 @@ object NameAnalysis extends Pipeline[Program, Program] {
           }
         }
 
+        classDecl.parent match {
+          case Some(p) => {
+            attachIdentifier(p)
+          }
+          case None => { }
+        }
+
         for (expr <- method.exprs) {
           attachIdentifier(expr)
         }
