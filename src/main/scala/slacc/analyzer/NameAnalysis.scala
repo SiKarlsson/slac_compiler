@@ -13,13 +13,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
     import ctx.reporter._
 
     var mainClassDecl = new ClassDecl(new Identifier("main"), None, List(), List(prog.main.main))
-    val mainClassSym = new ClassSymbol(mainClassDecl.id.value)
-    mainClassDecl.setSymbol(mainClassSym)
-    val mainSymbol = new MethodSymbol(mainClassDecl.id.value, mainClassSym)
-    mainClassSym.addMethod(mainClassDecl.id.value, mainSymbol)
-    prog.main.main.setSymbol(mainSymbol)
-    prog.main.main.id.setSymbol(mainSymbol)
-    glob.addClass(mainClassDecl.id.value, mainClassSym)
 
     // Step 1: Collect symbols in declarations
     for (classDecl <- prog.classes :+ mainClassDecl) {
