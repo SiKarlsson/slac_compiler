@@ -152,39 +152,36 @@ object NameAnalysis extends Pipeline[Program, Program] {
           }
         }
 
+        def dualAttachment(t1: ExprTree, t2: ExprTree): Unit = {
+          attachIdentifier(t1)
+          attachIdentifier(t2)
+        }
+
         def attachIdentifier(t: ExprTree): Unit = {
           t match {
             case And(lhs, rhs) => {
-              attachIdentifier(lhs)
-              attachIdentifier(rhs)
+              dualAttachment(lhs, rhs)
             }
             case Or(lhs, rhs) => {
-              attachIdentifier(lhs)
-              attachIdentifier(rhs)
+              dualAttachment(lhs, rhs)
             }
             case Plus(lhs, rhs) => {
-              attachIdentifier(lhs)
-              attachIdentifier(rhs)
+              dualAttachment(lhs, rhs)
             }
             case Times(lhs, rhs) => {
-              attachIdentifier(lhs)
-              attachIdentifier(rhs)
+              dualAttachment(lhs, rhs)
             }
             case Minus(lhs, rhs) => {
-              attachIdentifier(lhs)
-              attachIdentifier(rhs)
+              dualAttachment(lhs, rhs)
             }
             case Div(lhs, rhs) => {
-              attachIdentifier(lhs)
-              attachIdentifier(rhs)
+              dualAttachment(lhs, rhs)
             }
             case LessThan(lhs, rhs) => {
-              attachIdentifier(lhs)
-              attachIdentifier(rhs)
+              dualAttachment(lhs, rhs)
             }
             case Equals(lhs, rhs) => {
-              attachIdentifier(lhs)
-              attachIdentifier(rhs)
+              dualAttachment(lhs, rhs)
             }
             case ArrayRead(arr, index) => {
               attachIdentifier(arr)
