@@ -18,7 +18,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
     for (classDecl <- prog.classes :+ mainClassDecl) {
       val classId = classDecl.id.value
       glob.lookupClass(classId) match {
-        case Some(s) => printAlreadyDefined(classId, s, classDecl.id, ctx.reporter)
+        case Some(s) => printAlreadyDefined(classId, classDecl.id, ctx.reporter)
         case None => {
           val classSym = new ClassSymbol(classId)
           classSym.setPos(classDecl)
@@ -47,7 +47,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       for (classVar <- classDecl.vars) {
         val varID = classVar.id.value
         glob.classes(classDecl.id.value).lookupVar(varID) match {
-          case Some(s) => printAlreadyDefined(varID, s, classVar.id, ctx.reporter)
+          case Some(s) => printAlreadyDefined(varID, classVar.id, ctx.reporter)
           case None => {
             checkClassType(classVar, ctx.reporter)
             var classVarSym = new VariableSymbol(classVar.id.value)
@@ -62,7 +62,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       for (method <- classDecl.methods) {
         val methodId = method.id.value
         glob.classes(classDecl.id.value).lookupMethod(methodId) match {
-          case Some(s) => printAlreadyDefined(methodId, s, method.id, ctx.reporter)
+          case Some(s) => printAlreadyDefined(methodId, method.id, ctx.reporter)
           case None => {
             classDecl.parent match {
               case Some(p) => {
@@ -98,7 +98,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         for (param <- method.args) {
           val paramId = param.id.value
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
-            case Some(s) => printAlreadyDefined(paramId, s, param.id, ctx.reporter)
+            case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
             case None => {
               var paramSymbol = new VariableSymbol(param.id.value)
               paramSymbol.setPos(param)
@@ -112,7 +112,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         for (methodVar <- method.vars) {
           val methodVarId = methodVar.id.value
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(methodVarId) match {
-            case Some(s) => printAlreadyDefined(methodVarId, s, methodVar.id, ctx.reporter)
+            case Some(s) => printAlreadyDefined(methodVarId, methodVar.id, ctx.reporter)
             case None => {
               checkClassType(methodVar, ctx.reporter)
               var methodVarSym = new VariableSymbol(methodVar.id.value)
@@ -290,8 +290,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
     prog
   }
 
-  def printAlreadyDefined(n: String, definedAt: Positioned, pos: Positioned, rep: Reporter): Unit = {
-    rep.error(n + " already defined at " + definedAt.position, pos)
+  def printAlreadyDefined(n: String, pos: Positioned, rep: Reporter): Unit = {
+    rep.error(n + " already defined", pos)
   }
 
   def printNotDeclared(n: String, obj: ExprTree, reporter: Reporter): Unit = {
