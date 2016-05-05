@@ -137,6 +137,21 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
         attachIdentifier(method.retExpr)
 
+        def getSymbolFromObj(obj: ExprTree): Symbol = {
+          obj match {
+            case New(tpe) => {
+              tpe.getSymbol
+            }
+            case Self() => {
+              obj.asInstanceOf[Self].getSymbol
+            }
+            case MethodCall(obj, meth, args) => {
+              getSymbolFromObj(obj)
+            }
+            case _ => { println("Missing impl for " + obj); ??? }
+          }
+        }
+
         def attachIdentifier(t: ExprTree): Unit = {
           t match {
             case And(lhs, rhs) => {
@@ -180,7 +195,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
             }
             case MethodCall(obj, meth, args) => {
               attachIdentifier(obj)
-              classDecl.getSymbol.lookupMethod(meth.value) match {
+              var scope = getSymbolFromObj(obj)
+              scope.asInstanceOf[ClassSymbol].lookupMethod(meth.value) match {
                 case Some(s) => { meth.asInstanceOf[Identifier].setSymbol(s) }
                 case None => {
                   printNotDeclared(meth.value, meth, ctx.reporter)
