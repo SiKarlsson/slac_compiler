@@ -94,6 +94,7 @@ object Main {
       println(Printer(ast))
     } else {
       val pipeline = Lexer andThen Parser andThen NameAnalysis
+      pipeline.run(ctx)(ctx.files.head)
     }
   }
 }
