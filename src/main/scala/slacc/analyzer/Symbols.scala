@@ -54,7 +54,17 @@ object Symbols {
     var methods = Map[String, MethodSymbol]()
     var members = Map[String, VariableSymbol]()
 
-    def lookupMethod(n: String): Option[MethodSymbol] = methods get n
+    def lookupMethod(n: String): Option[MethodSymbol] = {
+      methods get n match {
+        case Some(m) => Some(m)
+        case None => {
+          parent match {
+            case Some(p) => p.lookupMethod(n)
+            case None => None
+          }
+        }
+      }
+    }
 
     def lookupVar(n: String): Option[VariableSymbol] = {
       members get n match {
@@ -90,6 +100,7 @@ object Symbols {
 
     def addParam(n: String, vs: VariableSymbol): Unit = {
       params = params + (n -> vs)
+      argList = argList :+ vs
     }
 
     def addMember(n: String, vs: VariableSymbol): Unit = {

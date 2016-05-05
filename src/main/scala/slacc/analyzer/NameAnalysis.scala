@@ -62,25 +62,37 @@ object NameAnalysis extends Pipeline[Program, Program] {
       for (method <- classDecl.methods) {
         val methodId = method.id.value
         glob.classes(classDecl.id.value).lookupMethod(methodId) match {
-          case Some(s) => printAlreadyDefined(methodId, method.id, ctx.reporter)
-          case None => {
-            classDecl.parent match {
-              case Some(p) => {
-                glob.classes(p.value).lookupMethod(methodId) match {
-                  case Some(m) => {
-                    if (m.params.size == method.args.length) {
-                      // OK!!
-                    } else {
-                      ctx.reporter.error("Method is already defined in superclass " + p.value, method)
+          case Some(s) => {
+            if (classDecl.methods.contains(s)) {
+              printAlreadyDefined(methodId, method.id, ctx.reporter)
+            } else {
+              // TODO: Check if overriding
+              if (s.argList.length == method.args.length) {
+                var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
+                methodSym.setPos(method)
+                method.setSymbol(methodSym)
+                method.id.setSymbol(method.getSymbol)
+                classDecl.getSymbol.addMethod(methodId, method.getSymbol)
+
+                for (param <- method.args) {
+                  val paramId = param.id.value
+                  glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
+                    case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
+                    case None => {
+                      var paramSymbol = new VariableSymbol(param.id.value)
+                      paramSymbol.setPos(param)
+                      param.setSymbol(paramSymbol)
+                      param.id.setSymbol(param.getSymbol)
+                      method.getSymbol.addParam(paramId, param.getSymbol)
                     }
                   }
-                  case None => {
-
-                  }
                 }
+              } else {
+                ctx.reporter.error("Method is already defined in superclass", method)
               }
-              case None => { }
             }
+          }
+          case None => {
             var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
             methodSym.setPos(method)
             method.setSymbol(methodSym)
@@ -100,7 +112,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 }
               }
             }
-
           }
         }
       }
@@ -147,7 +158,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case MethodCall(obj, meth, args) => {
               getSymbolFromObj(obj)
             }
-            case _ => { println("Missing impl for " + obj); ??? }
+            case _ => { ctx.reporter.error("Can't use method call on " + obj, obj); ??? }
           }
         }
 
@@ -158,29 +169,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
         def attachIdentifier(t: ExprTree): Unit = {
           t match {
-            case And(lhs, rhs) => {
-              dualAttachment(lhs, rhs)
-            }
-            case Or(lhs, rhs) => {
-              dualAttachment(lhs, rhs)
-            }
-            case Plus(lhs, rhs) => {
-              dualAttachment(lhs, rhs)
-            }
-            case Times(lhs, rhs) => {
-              dualAttachment(lhs, rhs)
-            }
-            case Minus(lhs, rhs) => {
-              dualAttachment(lhs, rhs)
-            }
-            case Div(lhs, rhs) => {
-              dualAttachment(lhs, rhs)
-            }
-            case LessThan(lhs, rhs) => {
-              dualAttachment(lhs, rhs)
-            }
-            case Equals(lhs, rhs) => {
-              dualAttachment(lhs, rhs)
+            case tuple: AsTuple => {
+              dualAttachment(tuple.lhs, tuple.rhs)
             }
             case ArrayRead(arr, index) => {
               attachIdentifier(arr)
