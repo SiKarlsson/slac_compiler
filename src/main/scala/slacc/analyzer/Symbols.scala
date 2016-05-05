@@ -56,7 +56,17 @@ object Symbols {
 
     def lookupMethod(n: String): Option[MethodSymbol] = methods get n
 
-    def lookupVar(n: String): Option[VariableSymbol] = members get n
+    def lookupVar(n: String): Option[VariableSymbol] = {
+      members get n match {
+        case Some(m) => Some(m)
+        case None => {
+          parent match {
+            case Some(p) => { p.lookupVar(n) }
+            case None => None
+          }
+        }
+      }
+    }
 
     def addMember(n: String, vs: VariableSymbol): Unit = {
       members = members + (n -> vs)
