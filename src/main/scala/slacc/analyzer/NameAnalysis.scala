@@ -68,9 +68,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
               case Some(p) => {
                 glob.classes(p.value).lookupMethod(methodId) match {
                   case Some(m) => {
-                    println(m.argList)
-                    println(method.args)
-                    if (m.argList.length == method.args.length) {
+                    if (m.params.size == method.args.length) {
                       // OK!!
                     } else {
                       ctx.reporter.error("Method is already defined in superclass " + p.value, method)
@@ -88,6 +86,21 @@ object NameAnalysis extends Pipeline[Program, Program] {
             method.setSymbol(methodSym)
             method.id.setSymbol(method.getSymbol)
             classDecl.getSymbol.addMethod(methodId, method.getSymbol)
+
+            for (param <- method.args) {
+              val paramId = param.id.value
+              glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
+                case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
+                case None => {
+                  var paramSymbol = new VariableSymbol(param.id.value)
+                  paramSymbol.setPos(param)
+                  param.setSymbol(paramSymbol)
+                  param.id.setSymbol(param.getSymbol)
+                  method.getSymbol.addParam(paramId, param.getSymbol)
+                }
+              }
+            }
+
           }
         }
       }
@@ -95,20 +108,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     for (classDecl <- prog.classes :+ mainClassDecl) {
       for (method <- classDecl.methods) {
-        for (param <- method.args) {
-          val paramId = param.id.value
-          glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
-            case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
-            case None => {
-              var paramSymbol = new VariableSymbol(param.id.value)
-              paramSymbol.setPos(param)
-              param.setSymbol(paramSymbol)
-              param.id.setSymbol(param.getSymbol)
-              method.getSymbol.addParam(paramId, param.getSymbol)
-            }
-          }
-        }
-
         for (methodVar <- method.vars) {
           val methodVarId = methodVar.id.value
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(methodVarId) match {
