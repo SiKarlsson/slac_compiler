@@ -237,27 +237,29 @@ object NameAnalysis extends Pipeline[Program, Program] {
               attachIdentifier(expr)
             }
             case Identifier(value) => {
-              val sym = method.asInstanceOf[MethodDecl].getSymbol
-              sym.lookupVar(value) match {
-                case Some(s) => {
-                  // There is a symbol named value in the method scope
-                  t.asInstanceOf[Identifier].setSymbol(s)
-                }
-                case None => {
-                  val classSym = sym.classSymbol
-                  classSym.lookupVar(value) match {
-                    case Some(ss) => {
-                      // THere is a symbol named value in the class scope
-                      t.asInstanceOf[Identifier].setSymbol(ss)
-                    }
-                    case None => {
-                      // Variable value not define in method or class
-                      glob.lookupClass(value) match {
-                        case Some(sss) => {
-                          t.asInstanceOf[Identifier].setSymbol(sss)
-                        }
-                        case None => {
-                          printNotDeclared(value, t, ctx.reporter)
+              if (method.asInstanceOf[MethodDecl].hasSymbol) {
+                val sym = method.asInstanceOf[MethodDecl].getSymbol
+                sym.lookupVar(value) match {
+                  case Some(s) => {
+                    // There is a symbol named value in the method scope
+                    t.asInstanceOf[Identifier].setSymbol(s)
+                  }
+                  case None => {
+                    val classSym = sym.classSymbol
+                    classSym.lookupVar(value) match {
+                      case Some(ss) => {
+                        // THere is a symbol named value in the class scope
+                        t.asInstanceOf[Identifier].setSymbol(ss)
+                      }
+                      case None => {
+                        // Variable value not define in method or class
+                        glob.lookupClass(value) match {
+                          case Some(sss) => {
+                            t.asInstanceOf[Identifier].setSymbol(sss)
+                          }
+                          case None => {
+                            printNotDeclared(value, t, ctx.reporter)
+                          }
                         }
                       }
                     }
