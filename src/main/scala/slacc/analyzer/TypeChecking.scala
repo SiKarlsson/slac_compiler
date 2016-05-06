@@ -47,10 +47,16 @@ object TypeChecking extends Pipeline[Program, Program] {
                 case TString => {
                   TString
                 }
+                case _ => {
+                  sys.error("Tried to match something else than TInt or TString in a plus expression")
+                }
               }
             }
             case TString => {
               TString
+            }
+            case _ => {
+              sys.error("Tried to match something else than TInt or TString in a plus expression")
             }
           }
         }
