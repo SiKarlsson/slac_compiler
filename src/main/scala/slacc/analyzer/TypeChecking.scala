@@ -136,6 +136,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           TUnit
         }
         case Println(expr: ExprTree) => {
+          tcExpr(expr, TString)
           TUnit
         }
         case Assign(id: Identifier, expr: ExprTree) => {
