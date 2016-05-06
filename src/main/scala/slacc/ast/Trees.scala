@@ -8,6 +8,11 @@ import analyzer.Types._
 object Trees {
   sealed trait Tree extends Positioned
 
+  sealed trait AsTuple {
+    def lhs: ExprTree
+    def rhs: ExprTree
+  }
+
   case class Program(main: MainMethod, classes: List[ClassDecl]) extends Tree
   // Note: we attach a `ClassSymbol`, because the main method should be put into a (synthetic) class called "Main";
   // the attached `ClassSymbol` is then the symbol of this "Main" class.
@@ -29,14 +34,14 @@ object Trees {
   case class UnitType() extends TypeTree
 
   sealed trait ExprTree extends Tree with Typed
-  case class And(lhs: ExprTree, rhs: ExprTree) extends ExprTree
-  case class Or(lhs: ExprTree, rhs: ExprTree) extends ExprTree
-  case class Plus(lhs: ExprTree, rhs: ExprTree) extends ExprTree
-  case class Minus(lhs: ExprTree, rhs: ExprTree) extends ExprTree
-  case class Times(lhs: ExprTree, rhs: ExprTree) extends ExprTree
-  case class Div(lhs: ExprTree, rhs: ExprTree) extends ExprTree
-  case class LessThan(lhs: ExprTree, rhs: ExprTree) extends ExprTree
-  case class Equals(lhs: ExprTree, rhs: ExprTree) extends ExprTree
+  case class And(lhs: ExprTree, rhs: ExprTree) extends ExprTree with AsTuple
+  case class Or(lhs: ExprTree, rhs: ExprTree) extends ExprTree with AsTuple
+  case class Plus(lhs: ExprTree, rhs: ExprTree) extends ExprTree with AsTuple
+  case class Minus(lhs: ExprTree, rhs: ExprTree) extends ExprTree with AsTuple
+  case class Times(lhs: ExprTree, rhs: ExprTree) extends ExprTree with AsTuple
+  case class Div(lhs: ExprTree, rhs: ExprTree) extends ExprTree with AsTuple
+  case class LessThan(lhs: ExprTree, rhs: ExprTree) extends ExprTree with AsTuple
+  case class Equals(lhs: ExprTree, rhs: ExprTree) extends ExprTree with AsTuple
   case class ArrayRead(arr: ExprTree, index: ExprTree) extends ExprTree
   case class ArrayLength(arr: ExprTree) extends ExprTree
   case class MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) extends ExprTree
