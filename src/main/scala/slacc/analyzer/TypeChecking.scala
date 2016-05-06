@@ -111,7 +111,9 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(size, TInt)
         }
         case New(tpe: Identifier) => ???
-        case Not(expr: ExprTree) => ???
+        case Not(expr: ExprTree) => {
+          tcExpr(expr, TBoolean)
+        }
         case Block(exprs: List[ExprTree]) => ???
         case If(expr: ExprTree, thn: ExprTree, els: Option[ExprTree]) => ???
         case While(cond: ExprTree, body: ExprTree) => ???
