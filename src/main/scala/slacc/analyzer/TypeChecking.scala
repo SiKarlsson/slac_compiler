@@ -51,10 +51,10 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(arr, TIntArray)
         }
         case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => ???
-        case IntLit() => {
+        case IntLit(value) => {
           TInt
         }
-        case StrLit() => {
+        case StringLit(value) => {
           TString
         }
         case True() => {
