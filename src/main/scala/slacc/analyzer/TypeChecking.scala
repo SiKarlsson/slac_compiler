@@ -149,7 +149,10 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(expr, TInt)
           TUnit
         }
-        case Strof(expr: ExprTree) => ???
+        case Strof(expr: ExprTree) => {
+          tcExpr(expr, TInt, TBoolean)
+          TString
+        }
         case _ => { sys.error("No typechecking for " + expr)}
       }
 
