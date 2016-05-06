@@ -77,7 +77,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(rhs, TInt)
         }
         case Equals(lhs: ExprTree, rhs: ExprTree) => {
-          tcExpr(lhs) match {
+          tcExpr(lhs, TInt, TString, TIntArray) match {
             case TInt => {
                 tcExpr(rhs, TInt)
             }
@@ -86,6 +86,9 @@ object TypeChecking extends Pipeline[Program, Program] {
             }
             case TIntArray => {
               tcExpr(rhs, TIntArray)
+            }
+            case _ => {
+              sys.error("Tried to match something else than TInt, TString, TIntArray in an equals expression")
             }
           }
         }
