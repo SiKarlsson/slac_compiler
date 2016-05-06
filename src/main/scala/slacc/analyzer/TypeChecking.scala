@@ -87,6 +87,7 @@ object TypeChecking extends Pipeline[Program, Program] {
               sys.error("Tried to match something unexpected in an equals expression")
             }
           }
+          TBoolean
         }
         case ArrayRead(arr: ExprTree, index: ExprTree) => {
           tcExpr(arr, TIntArray)
