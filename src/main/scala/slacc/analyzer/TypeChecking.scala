@@ -117,7 +117,9 @@ object TypeChecking extends Pipeline[Program, Program] {
         case Block(exprs: List[ExprTree]) => ???
         case If(expr: ExprTree, thn: ExprTree, els: Option[ExprTree]) => ???
         case While(cond: ExprTree, body: ExprTree) => ???
-        case Println(expr: ExprTree) => ???
+        case Println(expr: ExprTree) => {
+          TUnit
+        }
         case Assign(id: Identifier, expr: ExprTree) => ???
         case ArrayAssign(id: Identifier, index: ExprTree, expr: ExprTree) => ???
         case Strof(expr: ExprTree) => ???
