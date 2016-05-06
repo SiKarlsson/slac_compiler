@@ -120,15 +120,40 @@ object TypeChecking extends Pipeline[Program, Program] {
         case Not(expr: ExprTree) => {
           tcExpr(expr, TBoolean)
         }
-        case Block(exprs: List[ExprTree]) => ???
-        case If(expr: ExprTree, thn: ExprTree, els: Option[ExprTree]) => ???
-        case While(cond: ExprTree, body: ExprTree) => ???
-        case Println(expr: ExprTree) => {
+        case Block(exprs: List[ExprTree]) => {
+          var lastType: Type = TUnit
+          for (expr <- exprs) {
+            lastType = tcExpr(expr)
+          }
+          lastType
+        }
+        case If(expr: ExprTree, thn: ExprTree, els: Option[ExprTree]) => {
+          tcExpr(expr, TBoolean)
           TUnit
         }
-        case Assign(id: Identifier, expr: ExprTree) => ???
-        case ArrayAssign(id: Identifier, index: ExprTree, expr: ExprTree) => ???
-        case Strof(expr: ExprTree) => ???
+        case While(cond: ExprTree, body: ExprTree) => {
+          tcExpr(cond, TBoolean)
+          tcExpr(body, TUnit)
+          TUnit
+        }
+        case Println(expr: ExprTree) => {
+          tcExpr(expr, TString)
+          TUnit
+        }
+        case Assign(id: Identifier, expr: ExprTree) => {
+          val idType = id.getSymbol.getType
+          tcExpr(expr, idType)
+          TUnit
+        }
+        case ArrayAssign(id: Identifier, index: ExprTree, expr: ExprTree) => {
+          tcExpr(index, TInt)
+          tcExpr(expr, TInt)
+          TUnit
+        }
+        case Strof(expr: ExprTree) => {
+          tcExpr(expr, TInt, TBoolean)
+          TString
+        }
         case _ => { sys.error("No typechecking for " + expr)}
       }
 
