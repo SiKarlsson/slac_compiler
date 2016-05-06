@@ -119,7 +119,13 @@ object TypeChecking extends Pipeline[Program, Program] {
         case Not(expr: ExprTree) => {
           tcExpr(expr, TBoolean)
         }
-        case Block(exprs: List[ExprTree]) => ???
+        case Block(exprs: List[ExprTree]) => {
+          var lastType: Type = TUnit
+          for (expr <- exprs) {
+            lastType = tcExpr(expr)
+          }
+          lastType
+        }
         case If(expr: ExprTree, thn: ExprTree, els: Option[ExprTree]) => ???
         case While(cond: ExprTree, body: ExprTree) => ???
         case Println(expr: ExprTree) => {
