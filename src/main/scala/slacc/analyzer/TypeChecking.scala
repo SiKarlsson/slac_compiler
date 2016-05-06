@@ -138,7 +138,11 @@ object TypeChecking extends Pipeline[Program, Program] {
         case Println(expr: ExprTree) => {
           TUnit
         }
-        case Assign(id: Identifier, expr: ExprTree) => ???
+        case Assign(id: Identifier, expr: ExprTree) => {
+          val idType = id.getSymbol.getType
+          tcExpr(expr, idType)
+          TUnit
+        }
         case ArrayAssign(id: Identifier, index: ExprTree, expr: ExprTree) => ???
         case Strof(expr: ExprTree) => ???
         case _ => { sys.error("No typechecking for " + expr)}
