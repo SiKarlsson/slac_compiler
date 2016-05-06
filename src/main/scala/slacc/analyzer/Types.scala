@@ -43,9 +43,9 @@ object Types {
     override def toString = "Boolean"
   }
 
-  case object TInt[] extends Type {
+  case object TIntArray extends Type {
     override def isSubTypeOf(tpe: Type): Boolean = tpe match {
-      case TInt[] => true
+      case TIntArray => true
       case _ => false
     }
     override def toString = "Int[]"
