@@ -15,7 +15,13 @@ object TypeChecking extends Pipeline[Program, Program] {
     import ctx.reporter._
 
     def tcExpr(expr: ExprTree, expected: Type*): Type = {
-      val tpe: Type = ??? // TODO: Compute type for each kind of expression
+      val tpe: Type = expr match {
+        case And(lhs, rhs) => {
+          tcExpr(lhs, TBoolean)
+          tcExpr(rhs, TBoolean)
+        }
+        case _ => { sys.error("No typechecking for " + expr)}
+      }
 
 
       // Check result and return a valid type in case of error
