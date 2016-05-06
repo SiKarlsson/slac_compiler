@@ -54,7 +54,10 @@ object TypeChecking extends Pipeline[Program, Program] {
             }
           }
         }
-        case Minus(lhs: ExprTree, rhs: ExprTree) => ???
+        case Minus(lhs: ExprTree, rhs: ExprTree) => {
+          tcExpr(lhs, TInt)
+          tcExpr(rhs, TInt)
+        }
         case Times(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
@@ -63,8 +66,23 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
         }
-        case LessThan(lhs: ExprTree, rhs: ExprTree) => ???
-        case Equals(lhs: ExprTree, rhs: ExprTree) => ???
+        case LessThan(lhs: ExprTree, rhs: ExprTree) => {
+          tcExpr(lhs, TInt)
+          tcExpr(rhs, TInt)
+        }
+        case Equals(lhs: ExprTree, rhs: ExprTree) => {
+          tcExpr(lhs) match {
+            case TInt => {
+                tcExpr(rhs, TInt)
+            }
+            case TString => {
+              tcExpr(rhs, TString)
+            }
+            case TIntArray => {
+              tcExpr(rhs, TIntArray)
+            }
+          }
+        }
         case ArrayRead(arr: ExprTree, index: ExprTree) => {
           tcExpr(arr, TIntArray)
           tcExpr(index, TInt)
@@ -89,7 +107,9 @@ object TypeChecking extends Pipeline[Program, Program] {
           expr.getType
         }
         case Self() => ???
-        case NewIntArray(size: ExprTree) => ???
+        case NewIntArray(size: ExprTree) => {
+          tcExpr(size, TInt)
+        }
         case New(tpe: Identifier) => ???
         case Not(expr: ExprTree) => ???
         case Block(exprs: List[ExprTree]) => ???
