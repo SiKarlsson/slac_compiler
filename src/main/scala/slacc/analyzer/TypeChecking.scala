@@ -17,6 +17,9 @@ object TypeChecking extends Pipeline[Program, Program] {
 
     for (classDecl <- prog.classes) {
       for (methodDecl <- classDecl.methods) {
+        for (expr <- methodDecl.exprs) {
+          tcExpr(expr)
+        }
         tcExpr(methodDecl.retExpr, getTypeOfTypeTree(methodDecl.retType))
       }
     }
