@@ -143,7 +143,11 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(expr, idType)
           TUnit
         }
-        case ArrayAssign(id: Identifier, index: ExprTree, expr: ExprTree) => ???
+        case ArrayAssign(id: Identifier, index: ExprTree, expr: ExprTree) => {
+          tcExpr(index, TInt)
+          tcExpr(expr, TInt)
+          TUnit
+        }
         case Strof(expr: ExprTree) => ???
         case _ => { sys.error("No typechecking for " + expr)}
       }
