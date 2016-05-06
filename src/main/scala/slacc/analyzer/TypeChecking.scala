@@ -24,14 +24,33 @@ object TypeChecking extends Pipeline[Program, Program] {
     def tcExpr(expr: ExprTree, expected: Type*): Type = {
       val tpe: Type = expr match {
         case And(lhs, rhs) => {
-          tcExpr(lhs, TBoolean)
+          tcExpr(lhs, TBoolean, TInt)
           tcExpr(rhs, TBoolean)
         }
         case Or(lhs, rhs) => {
           tcExpr(lhs, TBoolean)
           tcExpr(rhs, TBoolean)
         }
-        case Plus(lhs: ExprTree, rhs: ExprTree) => ???
+        case Plus(lhs: ExprTree, rhs: ExprTree) => {
+          val lhsT = tcExpr(lhs, TInt, TString)
+          val rhsT = tcExpr(rhs, TInt, TString)
+
+          lhsT match {
+            case TInt => {
+              rhsT match {
+                case TInt => {
+                  TInt
+                }
+                case TString => {
+                  TString
+                }
+              }
+            }
+            case TString => {
+              TString
+            }
+          }
+        }
         case Minus(lhs: ExprTree, rhs: ExprTree) => ???
         case Times(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
