@@ -130,7 +130,11 @@ object TypeChecking extends Pipeline[Program, Program] {
           tcExpr(expr, TBoolean)
           TUnit
         }
-        case While(cond: ExprTree, body: ExprTree) => ???
+        case While(cond: ExprTree, body: ExprTree) => {
+          tcExpr(cond, TBoolean)
+          tcExpr(body)
+          TUnit
+        }
         case Println(expr: ExprTree) => {
           TUnit
         }
