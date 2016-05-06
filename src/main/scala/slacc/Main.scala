@@ -5,6 +5,7 @@ import java.io.File
 
 import lexer._
 import ast._
+import analyzer._
 
 object Main {
 
@@ -28,6 +29,10 @@ object Main {
 
       case "--ast" :: args =>
         ctx = ctx.copy(doAST = true)
+        processOption(args)
+
+      case "--symid" :: args =>
+        ctx = ctx.copy(doSymbolIds = true)
         processOption(args)
 
       case "-d" :: out :: args =>
@@ -62,6 +67,7 @@ object Main {
     println(" --tokens      displays the list of tokens")
     println(" --print       pretty-prints the program")
     println(" --ast         displays the AST")
+    println(" --symid       displays the AST with symbols")
     println(" -d <outdir>   generates class files in the specified directory")
   }
 
@@ -82,9 +88,13 @@ object Main {
       val pipeline = Lexer andThen Parser
       val ast = pipeline.run(ctx)(ctx.files.head)
       println(ast)
+    } else if (ctx.doSymbolIds) {
+      val pipeline = Lexer andThen Parser andThen NameAnalysis
+      val ast = pipeline.run(ctx)(ctx.files.head)
+      println(Printer(ast))
     } else {
-      println("hej simon")
-      ???
+      val pipeline = Lexer andThen Parser andThen NameAnalysis
+      pipeline.run(ctx)(ctx.files.head)
     }
   }
 }

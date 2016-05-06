@@ -5,6 +5,7 @@ import Trees._
 
 object Printer {
   var tabCount = 0
+  var symid = true;
   def apply(t: Tree): String = {
       t match {
           case Program(mainMethod, classes) => {
@@ -16,7 +17,7 @@ object Printer {
               return programString
           }
           case MainMethod(methodDecl) => {
-              return apply(methodDecl)
+            apply(methodDecl)
           }
           case ClassDecl(id, parent, vars, methods) => {
             var classString = "class ".concat(apply(id))
@@ -37,10 +38,14 @@ object Printer {
             return classString
           }
           case VarDecl(tpe, id) => {
-            return "var ".concat(apply(id)).concat(" : ").concat(apply(tpe)).concat(";")
+            var varString = "var ".concat(apply(id))
+            //if (symid) varString = varString.concat("#").concat(t.asInstanceOf[VarDecl].getSymbol.id.toString)
+            varString = varString.concat(" : ").concat(apply(tpe)).concat(";");
+            return varString
           }
           case MethodDecl(retType, id, args, vars, exprs, retExpr) => {
-            var methodString = "method ".concat(apply(id)).concat("(")
+            var methodString = "method ".concat(apply(id))
+            methodString = methodString.concat("(")
             var first = true
             for (arg <- args) {
               if (!first) {
@@ -135,10 +140,15 @@ object Printer {
             return "false"
           }
           case Identifier(value) => {
-            return value
+            var s = value
+            if (symid && t.asInstanceOf[Identifier].hasSymbol)
+              s = s.concat("#").concat(t.asInstanceOf[Identifier].getSymbol.id.toString)
+            s
           }
           case Self() => {
-            return "self"
+            var s = "self"
+            if (symid) s = s.concat("#").concat(t.asInstanceOf[Self].getSymbol.id.toString)
+            s
           }
           case NewIntArray(size) => {
             return "new Int[".concat(apply(size)).concat("]")
@@ -184,7 +194,10 @@ object Printer {
               .concat(" = ").concat(apply(expr))
           }
           case Formal(varType, id) => {
-            return apply(id) + ": " + apply(varType)
+            var s = apply(id) + ""
+            //if (symid) s = s.concat("#").concat(t.asInstanceOf[Formal].getSymbol.id.toString)
+            s = s.concat(": " + apply(varType))
+            s
           }
           case Strof(expr) => {
             return "strOf(".concat(apply(expr)).concat(")")
