@@ -52,6 +52,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             checkClassType(classVar, ctx.reporter)
             var classVarSym = new VariableSymbol(classVar.id.value)
             classVarSym.setPos(classVarSym)
+            classVarSym.setType(getTypeOfTypeTree(classVar.tpe))
             classVar.setSymbol(classVarSym)
             classVar.id.setSymbol(classVar.getSymbol)
             classDecl.getSymbol.addMember(varID, classVar.getSymbol)
@@ -106,6 +107,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case None => {
                   var paramSymbol = new VariableSymbol(param.id.value)
                   paramSymbol.setPos(param)
+                  paramSymbol.setType(getTypeOfTypeTree(param.tpe))
                   param.setSymbol(paramSymbol)
                   param.id.setSymbol(param.getSymbol)
                   method.getSymbol.addParam(paramId, param.getSymbol)
@@ -127,6 +129,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
               checkClassType(methodVar, ctx.reporter)
               var methodVarSym = new VariableSymbol(methodVar.id.value)
               methodVarSym.setPos(methodVar)
+              methodVarSym.setType(getTypeOfTypeTree(methodVar.tpe))
               methodVar.setSymbol(methodVarSym)
               methodVar.id.setSymbol(methodVar.getSymbol)
               method.getSymbol.addMember(methodVarId, methodVar.getSymbol)
@@ -182,7 +185,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case ArrayLength(arr) => {
               attachIdentifier(arr)
             }
-            case MethodCall(obj, meth, args) => {
+            /*case MethodCall(obj, meth, args) => {
               attachIdentifier(obj)
               var scope = getSymbolFromObj(obj)
               if (scope.isInstanceOf[ClassSymbol]) {
@@ -196,7 +199,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
               for (arg <- args) {
                 attachIdentifier(arg)
               }
-            }
+            }*/
             case Self() => {
               t.asInstanceOf[Self].setSymbol(classDecl.getSymbol)
             }
@@ -303,6 +306,29 @@ object NameAnalysis extends Pipeline[Program, Program] {
       parent = parent.get.parent
     }
     false
+  }
+
+  def getTypeOfTypeTree(t: TypeTree): Types.Type = {
+    t match {
+      case IntType() => {
+        Types.TInt
+      }
+      case StringType() => {
+        Types.TString
+      }
+      case UnitType() => {
+        Types.TUnit
+      }
+      case BooleanType() => {
+        Types.TBoolean
+      }
+      case IntArrayType() => {
+        Types.TIntArray
+      }
+      case _ => {
+        Types.TUntyped
+      }
+    }
   }
 
   def checkClassType(varDecl: VarDecl, reporter: Reporter): Unit = {
