@@ -158,6 +158,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case MethodCall(obj, meth, args) => {
               getSymbolFromObj(obj)
             }
+            case Identifier(id) => {
+              obj.asInstanceOf[Identifier].getSymbol
+            }
             case _ => { ctx.reporter.error("Can't use method call on " + obj, obj); ??? }
           }
         }
@@ -182,10 +185,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case MethodCall(obj, meth, args) => {
               attachIdentifier(obj)
               var scope = getSymbolFromObj(obj)
-              scope.asInstanceOf[ClassSymbol].lookupMethod(meth.value) match {
-                case Some(s) => { meth.asInstanceOf[Identifier].setSymbol(s) }
-                case None => {
-                  printNotDeclared(meth.value, meth, ctx.reporter)
+              if (scope.isInstanceOf[ClassSymbol]) {
+                scope.asInstanceOf[ClassSymbol].lookupMethod(meth.value) match {
+                  case Some(s) => { meth.asInstanceOf[Identifier].setSymbol(s) }
+                  case None => {
+                    printNotDeclared(meth.value, meth, ctx.reporter)
+                  }
                 }
               }
               for (arg <- args) {
