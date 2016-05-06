@@ -126,7 +126,10 @@ object TypeChecking extends Pipeline[Program, Program] {
           }
           lastType
         }
-        case If(expr: ExprTree, thn: ExprTree, els: Option[ExprTree]) => ???
+        case If(expr: ExprTree, thn: ExprTree, els: Option[ExprTree]) => {
+          tcExpr(expr, TBoolean)
+          TUnit
+        }
         case While(cond: ExprTree, body: ExprTree) => ???
         case Println(expr: ExprTree) => {
           TUnit
