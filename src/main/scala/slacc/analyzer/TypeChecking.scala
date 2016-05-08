@@ -55,6 +55,7 @@ object TypeChecking extends Pipeline[Program, Program] {
               }
             }
             case TString => {
+              tcExpr(rhs, TInt, TString)
               TString
             }
             case _ => {
