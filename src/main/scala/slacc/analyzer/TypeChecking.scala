@@ -10,6 +10,8 @@ import NameAnalysis.getTypeOfTypeTree
 
 object TypeChecking extends Pipeline[Program, Program] {
 
+  var classSymbolScope: Option[ClassSymbol] = None
+
   /** Typechecking does not produce a value, but has the side effect of
    * attaching types to trees and potentially outputting error messages. */
   def run(ctx: Context)(prog: Program): Program = {
@@ -18,6 +20,7 @@ object TypeChecking extends Pipeline[Program, Program] {
     tcExpr(prog.main.main.retExpr, TUnit)
 
     for (classDecl <- prog.classes) {
+      classSymbolScope = Some(classDecl.getSymbol)
       for (methodDecl <- classDecl.methods) {
         for (expr <- methodDecl.exprs) {
           tcExpr(expr)
@@ -115,7 +118,12 @@ object TypeChecking extends Pipeline[Program, Program] {
         case Identifier(id) => {
           expr.getType
         }
-        case Self() => ???
+        case Self() => {
+          classSymbolScope match {
+            case Some(cs) => TClass(cs)
+            case None => sys.error("There is no scope for this Self()?")
+          }
+        }
         case NewIntArray(size: ExprTree) => {
           tcExpr(size, TInt)
         }

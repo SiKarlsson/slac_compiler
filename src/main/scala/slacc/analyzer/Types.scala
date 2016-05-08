@@ -69,7 +69,6 @@ object Types {
 
   // TODO: Complete by creating necessary types
 
-  /*
   // TClass working with the isInheritingFrom method
   case class TClass(classSymbol: ClassSymbol) extends Type {
     override def isSubTypeOf(tpe: Type): Boolean = {
@@ -87,7 +86,6 @@ object Types {
     }
     override def toString = classSymbol.name
   }
-  */
 
   case class TObject(classSymbol: ClassSymbol) extends Type {
     override def isSubTypeOf(tpe: Type): Boolean = ???
@@ -97,7 +95,6 @@ object Types {
   // special object to implement the fact that all objects are its subclasses
   val anyObject = TObject(new ClassSymbol("Object"))
 
-  /*
   def isInheritingFrom(child: ClassSymbol, parent: ClassSymbol): Boolean = {
     var currClassSym: Option[ClassSymbol] = Some(child)
     while (currClassSym != None) {
@@ -108,5 +105,4 @@ object Types {
     }
     false
   }
-  */
 }

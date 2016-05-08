@@ -22,6 +22,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         case None => {
           val classSym = new ClassSymbol(classId)
           classSym.setPos(classDecl)
+          classSym.setType(Types.TClass(classSym))
           classDecl.setSymbol(classSym)
           classDecl.id.setSymbol(classDecl.getSymbol)
           glob.addClass(classId, classDecl.getSymbol)
