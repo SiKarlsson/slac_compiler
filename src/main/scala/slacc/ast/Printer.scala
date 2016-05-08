@@ -61,7 +61,7 @@ object Printer {
               methodString += printTabs.concat(apply(vari)) + "\n"
             }
             for (expr <- exprs) {
-              methodString += printTabs.concat(apply(expr)) + "\n"
+              methodString += printTabs.concat(apply(expr)) + ";\n"
             }
             methodString += printTabs.concat(apply(retExpr)) + "\n"
             decrementTabCount
