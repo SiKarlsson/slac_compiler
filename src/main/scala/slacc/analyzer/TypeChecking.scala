@@ -191,6 +191,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           TUnit
         }
         case ArrayAssign(id: Identifier, index: ExprTree, expr: ExprTree) => {
+          tcExpr(id, TIntArray)
           tcExpr(index, TInt)
           tcExpr(expr, TInt)
           TUnit
