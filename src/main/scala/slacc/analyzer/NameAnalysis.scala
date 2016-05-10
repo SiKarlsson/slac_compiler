@@ -187,8 +187,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case ArrayLength(arr) => {
               attachIdentifier(arr)
             }
-            /*case MethodCall(obj, meth, args) => {
-              attachIdentifier(obj)
+            case MethodCall(obj, meth, args) => {
+              /*attachIdentifier(obj)
               var scope = getSymbolFromObj(obj)
               if (scope.isInstanceOf[ClassSymbol]) {
                 scope.asInstanceOf[ClassSymbol].lookupMethod(meth.value) match {
@@ -197,11 +197,11 @@ object NameAnalysis extends Pipeline[Program, Program] {
                     printNotDeclared(meth.value, meth, ctx.reporter)
                   }
                 }
-              }
+              }*/
               for (arg <- args) {
                 attachIdentifier(arg)
               }
-            }*/
+            }
             case Self() => {
               t.asInstanceOf[Self].setSymbol(classDecl.getSymbol)
             }
