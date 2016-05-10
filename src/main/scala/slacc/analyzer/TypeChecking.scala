@@ -81,6 +81,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         case LessThan(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
+          TBoolean
         }
         case Equals(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt, TString, TIntArray, TBoolean, TUnit) match {
