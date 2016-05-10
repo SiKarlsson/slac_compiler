@@ -143,6 +143,9 @@ object Printer {
             var s = value
             if (symid && t.asInstanceOf[Identifier].hasSymbol)
               s = s.concat("#").concat(t.asInstanceOf[Identifier].getSymbol.id.toString).concat("(: ").concat(t.asInstanceOf[Identifier].getSymbol.getType.toString).concat(")")
+            if (symid && !t.asInstanceOf[Identifier].hasSymbol) {
+              s = s.concat("#??")
+            }
             s
           }
           case Self() => {
