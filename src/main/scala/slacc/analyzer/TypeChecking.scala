@@ -181,7 +181,17 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case If(expr: ExprTree, thn: ExprTree, els: Option[ExprTree]) => {
           tcExpr(expr, TBoolean)
-          TUnit
+          val thenType = tcExpr(thn)
+          els match {
+            case Some(e) => {
+              val elsType = tcExpr(e)
+              if (elsType != thenType) {
+                ctx.reporter.error("Bodies of then and else do not return the same type", expr)
+              }
+            }
+            case None => { }
+          }
+          thenType
         }
         case While(cond: ExprTree, body: ExprTree) => {
           tcExpr(cond, TBoolean)
