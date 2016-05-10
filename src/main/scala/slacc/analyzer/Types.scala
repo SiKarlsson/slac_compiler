@@ -84,6 +84,7 @@ object Types {
         case _ => false
       }
     }
+    def getClassSymbol = classSymbol
     override def toString = classSymbol.name
   }
 
