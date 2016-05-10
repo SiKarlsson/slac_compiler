@@ -82,6 +82,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                     case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
                     case None => {
                       var paramSymbol = new VariableSymbol(param.id.value)
+                      paramSymbol.setType(getTypeOfTypeTree(param.tpe))
                       paramSymbol.setPos(param)
                       param.setSymbol(paramSymbol)
                       param.id.setSymbol(param.getSymbol)
