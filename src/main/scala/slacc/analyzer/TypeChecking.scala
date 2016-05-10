@@ -110,6 +110,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           var retType: Option[Type] = None
           ms match {
             case Some(m) => {
+              meth.asInstanceOf[Identifier].setSymbol(m)
               if (m.argList.size == args.size) {
                 for (classDecl <- prog.classes) {
                   if (classDecl.id.value == cs.getType.toString) {
