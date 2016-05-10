@@ -98,6 +98,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         case ArrayRead(arr: ExprTree, index: ExprTree) => {
           tcExpr(arr, TIntArray)
           tcExpr(index, TInt)
+          TInt
         }
         case ArrayLength(arr: ExprTree) => {
           tcExpr(arr, TIntArray)
