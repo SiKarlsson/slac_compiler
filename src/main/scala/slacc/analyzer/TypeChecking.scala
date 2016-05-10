@@ -102,7 +102,39 @@ object TypeChecking extends Pipeline[Program, Program] {
         case ArrayLength(arr: ExprTree) => {
           tcExpr(arr, TIntArray)
         }
-        case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => ???
+        case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => {
+          val c = tcExpr(obj)
+          val cs = c.asInstanceOf[TClass].getClassSymbol
+          val ms = cs.lookupMethod(meth.value)
+          var retType: Option[Type] = None
+          ms match {
+            case Some(m) => {
+              if (m.argList.size == args.size) {
+                for (classDecl <- prog.classes) {
+                  if (classDecl.id.value == cs.getType.toString) {
+                    for (methodDecl <- classDecl.methods) {
+                      if (methodDecl.id.value == meth.value) {
+                        retType = Some(NameAnalysis.getTypeOfTypeTree(methodDecl.retType))
+                      }
+                    }
+                  }
+                }
+                for (arg <- args) {
+                  tcExpr(arg)
+                }
+              } else {
+                ctx.reporter.error("Wrong amount of argument to method", obj)
+              }
+            }
+            case None => ctx.reporter.error("Method does not belong to this class", obj)
+          }
+
+          // TODO: Hur ska vi hitta metodens returtyp?
+          retType match {
+            case Some(rt) => rt
+            case None => sys.error("No return type for method " + meth.value)
+          }
+        }
         case IntLit(value) => {
           TInt
         }
