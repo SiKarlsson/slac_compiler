@@ -165,6 +165,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case NewIntArray(size: ExprTree) => {
           tcExpr(size, TInt)
+          TIntArray
         }
         case New(tpe: Identifier) => {
           TClass(NameAnalysis.glob.classes(tpe.value))
