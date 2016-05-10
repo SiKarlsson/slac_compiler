@@ -34,10 +34,12 @@ object TypeChecking extends Pipeline[Program, Program] {
         case And(lhs, rhs) => {
           tcExpr(lhs, TBoolean)
           tcExpr(rhs, TBoolean)
+          TBoolean
         }
         case Or(lhs, rhs) => {
           tcExpr(lhs, TBoolean)
           tcExpr(rhs, TBoolean)
+          TBoolean
         }
         case Plus(lhs: ExprTree, rhs: ExprTree) => {
           val lhsT = tcExpr(lhs, TInt, TString)
@@ -175,6 +177,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case Not(expr: ExprTree) => {
           tcExpr(expr, TBoolean)
+          TBoolean
         }
         case Block(exprs: List[ExprTree]) => {
           var lastType: Type = TUnit
