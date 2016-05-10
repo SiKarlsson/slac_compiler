@@ -69,18 +69,22 @@ object TypeChecking extends Pipeline[Program, Program] {
         case Minus(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
+          TInt
         }
         case Times(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
+          TInt
         }
         case Div(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
+          TInt
         }
         case LessThan(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
+          TBoolean
         }
         case Equals(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt, TString, TIntArray, TBoolean, TUnit) match {
@@ -102,6 +106,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case ArrayLength(arr: ExprTree) => {
           tcExpr(arr, TIntArray)
+          TInt
         }
         case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => {
           val c = tcExpr(obj)
