@@ -159,12 +159,16 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case Self() => {
           classSymbolScope match {
-            case Some(cs) => TClass(cs)
+            case Some(cs) => {
+              expr.asInstanceOf[Self].setSymbol(cs)
+              TClass(cs)
+            }
             case None => sys.error("There is no scope for this Self()?")
           }
         }
         case NewIntArray(size: ExprTree) => {
           tcExpr(size, TInt)
+          TIntArray
         }
         case New(tpe: Identifier) => {
           TClass(NameAnalysis.glob.classes(tpe.value))
