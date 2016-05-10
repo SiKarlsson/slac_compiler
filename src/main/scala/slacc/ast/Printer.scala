@@ -141,16 +141,24 @@ object Printer {
           }
           case Identifier(value) => {
             var s = value
-            if (symid && t.asInstanceOf[Identifier].hasSymbol)
-              s = s.concat("#").concat(t.asInstanceOf[Identifier].getSymbol.id.toString).concat("(: ").concat(t.asInstanceOf[Identifier].getSymbol.getType.toString).concat(")")
-            if (symid && !t.asInstanceOf[Identifier].hasSymbol) {
-              s = s.concat("#??")
+            if (symid) {
+              if (t.asInstanceOf[Identifier].hasSymbol) {
+                s = s.concat("#").concat(t.asInstanceOf[Identifier].getSymbol.id.toString).concat("(: ").concat(t.asInstanceOf[Identifier].getSymbol.getType.toString).concat(")")
+              } else {
+                s = s.concat("#??")
+              }
             }
             s
           }
           case Self() => {
             var s = "self"
-            if (symid && t.asInstanceOf[Self].hasSymbol) s = s.concat("#").concat(t.asInstanceOf[Self].getSymbol.id.toString)
+            if (symid) {
+              if (t.asInstanceOf[Self].hasSymbol) {
+                s = s.concat("#").concat(t.asInstanceOf[Self].getSymbol.id.toString)
+              } else {
+                s = s.concat("#??")
+              }
+            }
             s
           }
           case NewIntArray(size) => {
