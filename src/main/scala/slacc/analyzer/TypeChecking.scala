@@ -172,6 +172,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case Not(expr: ExprTree) => {
           tcExpr(expr, TBoolean)
+          TBoolean
         }
         case Block(exprs: List[ExprTree]) => {
           var lastType: Type = TUnit
