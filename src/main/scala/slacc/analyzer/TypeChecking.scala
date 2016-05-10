@@ -69,14 +69,17 @@ object TypeChecking extends Pipeline[Program, Program] {
         case Minus(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
+          TInt
         }
         case Times(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
+          TInt
         }
         case Div(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
           tcExpr(rhs, TInt)
+          TInt
         }
         case LessThan(lhs: ExprTree, rhs: ExprTree) => {
           tcExpr(lhs, TInt)
