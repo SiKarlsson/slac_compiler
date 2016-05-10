@@ -106,6 +106,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case ArrayLength(arr: ExprTree) => {
           tcExpr(arr, TIntArray)
+          TInt
         }
         case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => {
           val c = tcExpr(obj)
