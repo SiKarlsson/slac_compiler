@@ -114,7 +114,6 @@ object TypeChecking extends Pipeline[Program, Program] {
           val c = tcExpr(obj)
           val cs = c.asInstanceOf[TClass].getClassSymbol
           val ms = cs.lookupMethod(meth.value)
-          var retType: Option[Type] = None
           ms match {
             case Some(m) => {
               meth.asInstanceOf[Identifier].setSymbol(m)
