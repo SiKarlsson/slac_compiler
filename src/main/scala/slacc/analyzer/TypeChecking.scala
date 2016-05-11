@@ -132,7 +132,7 @@ object TypeChecking extends Pipeline[Program, Program] {
                   tcExpr(arg)
                 }
               } else {
-                ctx.reporter.error("Wrong amount of argument to method", obj)
+                ctx.reporter.error("Wrong amount of arguments to method", obj)
               }
             }
             case None => ctx.reporter.error("Method does not belong to this class", obj)
