@@ -195,8 +195,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
               attachIdentifier(arr)
             }
             case MethodCall(obj, meth, args) => {
-              /*attachIdentifier(obj)
-              var scope = getSymbolFromObj(obj)
+              attachIdentifier(obj)
+              /*var scope = getSymbolFromObj(obj)
               if (scope.isInstanceOf[ClassSymbol]) {
                 scope.asInstanceOf[ClassSymbol].lookupMethod(meth.value) match {
                   case Some(s) => { meth.asInstanceOf[Identifier].setSymbol(s) }
