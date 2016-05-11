@@ -312,24 +312,33 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
       def expression: ExprTree = {
+        val pos = currentToken
         currentToken.kind match {
           case INTLITKIND => {
             val value = currentToken.asInstanceOf[INTLIT].value
+            var e = new IntLit(value)
+            e.setPos(pos)
             eat(INTLITKIND)
-            return new IntLit(value)
+            return e
           }
           case STRLITKIND => {
             val value = currentToken.asInstanceOf[STRLIT].value
+            var e = new StringLit(value)
+            e.setPos(pos)
             eat(STRLITKIND)
-            return new StringLit(value)
+            return e
           }
           case TRUE => {
+            var e = new True()
+            e.setPos(pos)
             eat(TRUE)
-            new True()
+            e
           }
           case FALSE => {
+            var e = new False()
+            e.setPos(pos)
             eat(FALSE)
-            new False()
+            e
           }
           case IDKIND => {
             val id = identifier
@@ -349,12 +358,18 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 new ArrayRead(id, e1)
               }
             } else {
-              id
+              if (currentToken.kind == DOT) {
+                parseExpr6(id)
+              } else {
+                id
+              }
             }
           }
           case SELF => {
+            var e = new Self()
+            e.setPos(pos)
             eat(SELF)
-            new Self()
+            parseExpr6(e)
           }
           case NEW => {
             eat(NEW)
@@ -373,11 +388,14 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           }
           case BANG => {
             eat(BANG)
-            new Not(parseExpr1)
+            var e = new Not(parseExpr1)
+            e.setPos(pos)
+            e
           }
           case LPAREN => {
             eat(LPAREN)
             var expr = parseExpr1
+            expr.setPos(pos)
             eat(RPAREN)
             expr
           }
@@ -391,7 +409,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
               block += parseExpr1
             } while (currentToken.kind == SEMICOLON)
             eat(RBRACE)
-            Block(block.toList)
+            var e = Block(block.toList)
+            e.setPos(pos)
+            e
           }
           case IF => {
             eat(IF)
@@ -404,7 +424,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
               eat(ELSE)
               els = Some(parseExpr1)
             }
-            new If(cond, thn, els)
+            var e = new If(cond, thn, els)
+            e.setPos(pos)
+            e
           }
           case WHILE => {
             eat(WHILE)
@@ -412,21 +434,25 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             var cond = parseExpr1
             eat(RPAREN)
             val body = parseExpr1
-            new While(cond, body)
+            var e = new While(cond, body)
+            e.setPos(pos)
           }
           case PRINTLN => {
             eat(PRINTLN)
             eat(LPAREN)
             var expr = parseExpr1
             eat(RPAREN)
-            new Println(expr)
+            var e = new Println(expr)
+            e.setPos(e)
           }
           case STROF => {
             eat(STROF)
             eat(LPAREN)
             var expr = parseExpr1
             eat(RPAREN)
-            new Strof(expr)
+            var e = new Strof(expr)
+            e.setPos(e)
+            e
           }
         }
       }

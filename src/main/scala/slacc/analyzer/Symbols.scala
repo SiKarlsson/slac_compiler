@@ -2,6 +2,7 @@ package slacc
 package analyzer
 
 import utils._
+import Types._
 
 object Symbols {
   trait Symbolic[S <: Symbol] {
@@ -23,7 +24,7 @@ object Symbols {
     }
   }
 
-  sealed abstract class Symbol extends Positioned {
+  sealed abstract class Symbol extends Positioned with Typed {
     val id: Int = ID.next
     val name: String
   }

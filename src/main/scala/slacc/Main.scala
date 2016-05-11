@@ -89,11 +89,11 @@ object Main {
       val ast = pipeline.run(ctx)(ctx.files.head)
       println(ast)
     } else if (ctx.doSymbolIds) {
-      val pipeline = Lexer andThen Parser andThen NameAnalysis
+      val pipeline = Lexer andThen Parser andThen NameAnalysis andThen TypeChecking
       val ast = pipeline.run(ctx)(ctx.files.head)
       println(Printer(ast))
     } else {
-      val pipeline = Lexer andThen Parser andThen NameAnalysis
+      val pipeline = Lexer andThen Parser andThen NameAnalysis andThen TypeChecking
       pipeline.run(ctx)(ctx.files.head)
     }
   }
