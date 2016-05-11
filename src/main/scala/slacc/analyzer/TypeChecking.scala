@@ -125,7 +125,7 @@ object TypeChecking extends Pipeline[Program, Program] {
               } else {
                 ctx.reporter.error("Wrong amount of arguments to method", obj)
               }
-              m.getType
+              return m.getType
             }
             case None => ctx.reporter.error("Method does not belong to this class", obj)
           }
