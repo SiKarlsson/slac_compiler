@@ -369,7 +369,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             var e = new Self()
             e.setPos(pos)
             eat(SELF)
-            e
+            parseExpr6(e)
           }
           case NEW => {
             eat(NEW)
