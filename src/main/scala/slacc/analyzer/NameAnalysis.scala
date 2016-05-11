@@ -68,8 +68,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
             if (classDecl.methods.contains(s)) {
               printAlreadyDefined(methodId, method.id, ctx.reporter)
             } else {
-              // TODO: Check if overriding
-              if (s.argList.length == method.args.length && sameParameterTypes(method.args, s.argList, ctx.reporter)) {
+              // Check if overriding
+              if (s.argList.length == method.args.length
+                  && sameParameterTypes(method.args, s.argList, ctx.reporter)
+                  && sameReturnTypes(method, s, ctx.reporter)) {
                 var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
                 methodSym.setPos(method)
                 methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
@@ -369,5 +371,13 @@ object NameAnalysis extends Pipeline[Program, Program] {
       }
     }
     true
+  }
+
+  def sameReturnTypes(meth: MethodDecl, parent: MethodSymbol, rep: Reporter): Boolean = {
+    if (getTypeOfTypeTree(meth.retType, rep) == parent.getType) {
+      true
+    } else {
+      false
+    }
   }
 }
