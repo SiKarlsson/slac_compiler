@@ -53,7 +53,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             checkClassType(classVar, ctx.reporter)
             var classVarSym = new VariableSymbol(classVar.id.value)
             classVarSym.setPos(classVarSym)
-            classVarSym.setType(getTypeOfTypeTree(classVar.tpe))
+            classVarSym.setType(getTypeOfTypeTree(classVar.tpe, ctx.reporter))
             classVar.setSymbol(classVarSym)
             classVar.id.setSymbol(classVar.getSymbol)
             classDecl.getSymbol.addMember(varID, classVar.getSymbol)
@@ -82,7 +82,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                     case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
                     case None => {
                       var paramSymbol = new VariableSymbol(param.id.value)
-                      paramSymbol.setType(getTypeOfTypeTree(param.tpe))
+                      paramSymbol.setType(getTypeOfTypeTree(param.tpe, ctx.reporter))
                       paramSymbol.setPos(param)
                       param.setSymbol(paramSymbol)
                       param.id.setSymbol(param.getSymbol)
@@ -109,7 +109,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case None => {
                   var paramSymbol = new VariableSymbol(param.id.value)
                   paramSymbol.setPos(param)
-                  paramSymbol.setType(getTypeOfTypeTree(param.tpe))
+                  paramSymbol.setType(getTypeOfTypeTree(param.tpe, ctx.reporter))
                   param.setSymbol(paramSymbol)
                   param.id.setSymbol(param.getSymbol)
                   method.getSymbol.addParam(paramId, param.getSymbol)
@@ -131,7 +131,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
               checkClassType(methodVar, ctx.reporter)
               var methodVarSym = new VariableSymbol(methodVar.id.value)
               methodVarSym.setPos(methodVar)
-              methodVarSym.setType(getTypeOfTypeTree(methodVar.tpe))
+              methodVarSym.setType(getTypeOfTypeTree(methodVar.tpe, ctx.reporter))
               methodVar.tpe match {
                 case Identifier(value) => {
                   // Class type
@@ -317,7 +317,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
     false
   }
 
-  def getTypeOfTypeTree(t: TypeTree): Types.Type = {
+  def getTypeOfTypeTree(t: TypeTree, rep: Reporter): Types.Type = {
     t match {
       case IntType() => {
         Types.TInt
@@ -334,17 +334,26 @@ object NameAnalysis extends Pipeline[Program, Program] {
       case IntArrayType() => {
         Types.TIntArray
       }
+      case Identifier(value) => {
+        glob.lookupClass(value) match {
+          case Some(c) => Types.TClass(c)
+          case None => {
+            rep.error(value + " can't be used as type", t)
+            Types.TUntyped
+          }
+        }
+      }
       case _ => {
-        Types.TUntyped
+        sys.error(t + " has no type!")
       }
     }
   }
 
-  def checkClassType(varDecl: VarDecl, reporter: Reporter): Unit = {
+  def checkClassType(varDecl: VarDecl, rep: Reporter): Unit = {
     if (varDecl.tpe.isInstanceOf[Identifier]) {
       glob.lookupClass(varDecl.tpe.asInstanceOf[Identifier].value) match {
         case None => {
-          reporter.error("Class " + varDecl.tpe.asInstanceOf[Identifier].value + " is not defined", varDecl)
+          rep.error("Class " + varDecl.tpe.asInstanceOf[Identifier].value + " is not defined", varDecl)
         }
         case _ => {}
       }

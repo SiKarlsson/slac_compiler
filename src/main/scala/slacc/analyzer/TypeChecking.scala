@@ -25,7 +25,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         for (expr <- methodDecl.exprs) {
           tcExpr(expr)
         }
-        tcExpr(methodDecl.retExpr, getTypeOfTypeTree(methodDecl.retType))
+        tcExpr(methodDecl.retExpr, getTypeOfTypeTree(methodDecl.retType, ctx.reporter))
       }
     }
 
@@ -123,7 +123,7 @@ object TypeChecking extends Pipeline[Program, Program] {
                   if (classDecl.id.value == cs.getType.toString) {
                     for (methodDecl <- classDecl.methods) {
                       if (methodDecl.id.value == meth.value) {
-                        retType = Some(NameAnalysis.getTypeOfTypeTree(methodDecl.retType))
+                        retType = Some(NameAnalysis.getTypeOfTypeTree(methodDecl.retType, ctx.reporter))
                       }
                     }
                   }
