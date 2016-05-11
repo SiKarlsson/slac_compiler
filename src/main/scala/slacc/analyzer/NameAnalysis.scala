@@ -127,6 +127,15 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     for (classDecl <- prog.classes :+ mainClassDecl) {
       for (method <- classDecl.methods) {
+        for (classVar <- classDecl.vars) {
+          classVar.tpe match {
+            case Identifier(value) => {
+              // Class type
+              attachIdentifier(classVar.tpe.asInstanceOf[Identifier])
+            }
+            case _ => { /* Primitive type */ }
+          }
+        }
         for (methodVar <- method.vars) {
           val methodVarId = methodVar.id.value
           glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(methodVarId) match {
