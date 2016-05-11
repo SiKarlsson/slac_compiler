@@ -132,6 +132,13 @@ object NameAnalysis extends Pipeline[Program, Program] {
               var methodVarSym = new VariableSymbol(methodVar.id.value)
               methodVarSym.setPos(methodVar)
               methodVarSym.setType(getTypeOfTypeTree(methodVar.tpe))
+              methodVar.tpe match {
+                case Identifier(value) => {
+                  // Class type
+                  attachIdentifier(methodVar.tpe.asInstanceOf[Identifier])
+                }
+                case _ => { /* Primitive type */ }
+              }
               methodVar.setSymbol(methodVarSym)
               methodVar.id.setSymbol(methodVar.getSymbol)
               method.getSymbol.addMember(methodVarId, methodVar.getSymbol)
