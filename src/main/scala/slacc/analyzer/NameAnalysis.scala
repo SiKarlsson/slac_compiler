@@ -116,7 +116,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                   paramSymbol.setType(getTypeOfTypeTree(param.tpe, ctx.reporter))
                   param.setSymbol(paramSymbol)
                   param.id.setSymbol(param.getSymbol)
-                  method.getSymbol.addParam(paramId, param.getSymbol)
+                  method.getSymbol.addParam(paramId, paramSymbol)
                 }
               }
             }
