@@ -150,6 +150,15 @@ object NameAnalysis extends Pipeline[Program, Program] {
           }
         }
 
+        for (param <- method.args) {
+          param.tpe match {
+            case Identifier(_) => {
+              attachIdentifier(param.tpe.asInstanceOf[Identifier])
+            }
+            case _ => { }
+          }
+        }
+
         classDecl.parent match {
           case Some(p) => {
             attachIdentifier(p)
