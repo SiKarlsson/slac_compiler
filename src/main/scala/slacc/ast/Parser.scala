@@ -358,7 +358,11 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                 new ArrayRead(id, e1)
               }
             } else {
-              id
+              if (currentToken.kind == DOT) {
+                parseExpr6(id)
+              } else {
+                id
+              }
             }
           }
           case SELF => {
