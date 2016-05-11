@@ -119,8 +119,8 @@ object TypeChecking extends Pipeline[Program, Program] {
             case Some(m) => {
               meth.asInstanceOf[Identifier].setSymbol(m)
               if (m.argList.size == args.size) {
-                for (arg <- args) {
-                  tcExpr(arg)
+                for (mArg <- args; mParam <- m.argList) {
+                  tcExpr(mArg, mParam.getType)
                 }
               } else {
                 ctx.reporter.error("Wrong amount of arguments to method", obj)
