@@ -140,7 +140,10 @@ object TypeChecking extends Pipeline[Program, Program] {
 
           // TODO: Hur ska vi hitta metodens returtyp?
           retType match {
-            case Some(rt) => rt
+            case Some(rt) => {
+              meth.asInstanceOf[Identifier].getSymbol.setType(rt)
+              rt
+            }
             case None => sys.error("No return type for method " + meth.value)
           }
         }
