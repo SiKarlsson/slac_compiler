@@ -100,6 +100,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
             methodSym.setPos(method)
             method.setSymbol(methodSym)
+            methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
             method.id.setSymbol(method.getSymbol)
             classDecl.getSymbol.addMethod(methodId, method.getSymbol)
 
