@@ -69,7 +69,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
               printAlreadyDefined(methodId, method.id, ctx.reporter)
             } else {
               // TODO: Check if overriding
-              if (s.argList.length == method.args.length) {
+              if (s.argList.length == method.args.length && sameParameterTypes(method.args, s.argList, ctx.reporter)) {
                 var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
                 methodSym.setPos(method)
                 methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
@@ -359,5 +359,14 @@ object NameAnalysis extends Pipeline[Program, Program] {
         case _ => {}
       }
     }
+  }
+
+  def sameParameterTypes(args: List[Formal], argList: List[VariableSymbol], rep: Reporter): Boolean = {
+    for (i <- 0 until args.length) {
+      if (getTypeOfTypeTree(args(i).tpe, rep) != argList(i).getType) {
+        return false
+      }
+    }
+    true
   }
 }
