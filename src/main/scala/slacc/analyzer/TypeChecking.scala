@@ -119,33 +119,17 @@ object TypeChecking extends Pipeline[Program, Program] {
             case Some(m) => {
               meth.asInstanceOf[Identifier].setSymbol(m)
               if (m.argList.size == args.size) {
-                for (classDecl <- prog.classes) {
-                  if (classDecl.id.value == cs.getType.toString) {
-                    for (methodDecl <- classDecl.methods) {
-                      if (methodDecl.id.value == meth.value) {
-                        retType = Some(NameAnalysis.getTypeOfTypeTree(methodDecl.retType, ctx.reporter))
-                      }
-                    }
-                  }
-                }
                 for (arg <- args) {
                   tcExpr(arg)
                 }
               } else {
                 ctx.reporter.error("Wrong amount of arguments to method", obj)
               }
+              m.getType
             }
             case None => ctx.reporter.error("Method does not belong to this class", obj)
           }
-
-          // TODO: Hur ska vi hitta metodens returtyp?
-          retType match {
-            case Some(rt) => {
-              meth.asInstanceOf[Identifier].getSymbol.setType(rt)
-              rt
-            }
-            case None => sys.error("No return type for method " + meth.value)
-          }
+          TUntyped
         }
         case IntLit(value) => {
           TInt
