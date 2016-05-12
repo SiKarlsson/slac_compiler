@@ -23,7 +23,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     }
 
     def currentLabel(): String = {
-      "label".concat(labelCount.toString)
+      "label_".concat(labelCount.toString)
     }
 
     /** Writes the proper .class file in a given directory. An empty string for dir is equivalent to "./". */
