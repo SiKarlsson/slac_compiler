@@ -109,7 +109,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case True() => {
-
+          ch << ICONST_1
         }
         case False() => {
 
