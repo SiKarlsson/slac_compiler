@@ -17,8 +17,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
     /** Writes the proper .class file in a given directory. An empty string for dir is equivalent to "./". */
     def generateClassFile(sourceName: String, ct: ClassDecl, dir: String): Unit = {
-      val classFile = new ClassFile(ct.id.value + ".class", None)
+      val classFile = new ClassFile(ct.id.value, None)
       classFile.setSourceFile(sourceName)
+      classFile.addDefaultConstructor
       ct.methods foreach {
         meth => {
           if (ct.id.value == "Main") {
