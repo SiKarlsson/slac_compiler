@@ -4,6 +4,7 @@ package code
 import ast.Trees._
 import analyzer.Symbols._
 import analyzer.Types._
+import analyzer.NameAnalysis._
 import cafebabe._
 import AbstractByteCodes.{New => _, _}
 import ByteCodes._
@@ -16,8 +17,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
     /** Writes the proper .class file in a given directory. An empty string for dir is equivalent to "./". */
     def generateClassFile(sourceName: String, ct: ClassDecl, dir: String): Unit = {
-      // TODO: Create code handler, save to files ...
-      ???
+      val classFile = new ClassFile(ct.id.value + ".class", None)
+      classFile.setSourceFile(sourceName)
+      classFile.writeToFile(dir + "/" + ct.id.value + ".class")
     }
 
     // a mapping from variable symbols to positions in the local variables
@@ -44,8 +46,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       ct => generateClassFile(sourceName, ct, outDir)
     }
 
-    // Now do the main method
-    // ...
+    generateClassFile(sourceName, mainClassDecl, outDir)
+
   }
 
 }
