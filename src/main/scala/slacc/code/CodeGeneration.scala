@@ -19,13 +19,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     def generateClassFile(sourceName: String, ct: ClassDecl, dir: String): Unit = {
       val classFile = new ClassFile(ct.id.value + ".class", None)
       classFile.setSourceFile(sourceName)
-      classFile.writeToFile(dir + "/" + ct.id.value + ".class")
       ct.methods foreach {
         meth => {
           val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
           generateMethodCode(mh.codeHandler, meth)
         }
       }
+      classFile.writeToFile(dir + "/" + ct.id.value + ".class")
     }
 
     // a mapping from variable symbols to positions in the local variables
