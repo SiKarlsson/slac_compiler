@@ -19,6 +19,14 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     def generateClassFile(sourceName: String, ct: ClassDecl, dir: String): Unit = {
       val classFile = new ClassFile(ct.id.value + ".class", None)
       classFile.setSourceFile(sourceName)
+      ct.methods foreach {
+        m => {
+          if (ct.id.value == "Main") {
+            val mainHandler = classFile.addMainMethod.codeHandler
+            generateMethodCode(mainHandler, m)
+          }
+        }
+      }
       classFile.writeToFile(dir + "/" + ct.id.value + ".class")
     }
 
