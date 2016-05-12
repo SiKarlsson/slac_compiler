@@ -157,7 +157,14 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case While(cond, body) => {
-
+          val label1 = nextLabel
+          val label2 = nextLabel
+          val label3 = nextLabel
+          ch << Label(label1)
+          generateExprCode(ch, cond)
+          ch << Ldc(1) << If_ICmpEq(label2) << Goto(label3) << Label(label2)
+          generateExprCode(ch, body)
+          ch << Goto(label1) << Label(label3)
         }
         case Println(expr) => {
           ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;") <<
