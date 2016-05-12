@@ -102,7 +102,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ILoad(value)
         }
         case StringLit(value) => {
-
+          ch << Ldc(value)
         }
         case True() => {
 
