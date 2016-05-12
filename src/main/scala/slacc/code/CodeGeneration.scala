@@ -47,27 +47,33 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         mVars => println(mVars)
       }
 
-      mt.exprs foreach {
+      mt.exprs :+ mt.retExpr foreach {
         mExpr => generateExprCode(ch, mExpr)
       }
 
-      ch << ILoad(1) << IRETURN
+      ch.print
       ch.freeze
     }
 
     def generateExprCode(ch: CodeHandler, e: ExprTree): Unit = {
       e match {
         case And(lhs, rhs) => {
-
+          ch << ICONST_1
+          generateExprCode(ch, lhs)
+          generateExprCode(ch, rhs)
         }
         case Or(lhs, rhs) => {
 
         }
         case Plus(lhs, rhs) => {
-
+          ch << IADD
+          generateExprCode(ch, lhs)
+          generateExprCode(ch, rhs)
         }
         case Minus(lhs, rhs) => {
-
+          ch << ISUB
+          generateExprCode(ch, lhs)
+          generateExprCode(ch, rhs)
         }
         case Times(lhs, rhs) => {
 
