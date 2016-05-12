@@ -4,7 +4,7 @@ for f in ./testprograms_public_typer/lab5/valid/*.slac
 do
 	echo "--------------------------"
 	echo "COMPILING $f"
-	sbt "run $f"
+	sbt "run $f --symid"
 	if [ $? == 1 ] 
 		then
 		ERROR+=($f)
