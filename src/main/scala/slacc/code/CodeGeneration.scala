@@ -15,6 +15,17 @@ object CodeGeneration extends Pipeline[Program, Unit] {
   def run(ctx: Context)(prog: Program): Unit = {
     import ctx.reporter._
 
+    var labelCount = 0
+
+    def nextLabel(): String = {
+      labelCount = labelCount + 1
+      currentLabel
+    }
+
+    def currentLabel(): String = {
+      "label".concat(labelCount.toString)
+    }
+
     /** Writes the proper .class file in a given directory. An empty string for dir is equivalent to "./". */
     def generateClassFile(sourceName: String, ct: ClassDecl, dir: String): Unit = {
       val classFile = new ClassFile(ct.id.value, None)
