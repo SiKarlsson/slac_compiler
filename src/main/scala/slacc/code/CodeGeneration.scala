@@ -35,6 +35,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         meth => {
           if (ct.id.value == "Main") {
             val mainHandler = classFile.addMainMethod.codeHandler
+            mainHandler << RETURN
             generateMethodCode(mainHandler, meth)
           } else {
             val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
