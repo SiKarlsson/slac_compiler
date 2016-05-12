@@ -8,11 +8,12 @@ import Symbols._
 object NameAnalysis extends Pipeline[Program, Program] {
 
   var glob = new GlobalScope()
+  var mainClassDecl = new ClassDecl(new Identifier("main"), None, List(), List())
 
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
-    var mainClassDecl = new ClassDecl(new Identifier("main"), None, List(), List(prog.main.main))
+    mainClassDecl = new ClassDecl(new Identifier("main"), None, List(), List(prog.main.main))
 
     // Step 1: Collect symbols in declarations
     for (classDecl <- prog.classes :+ mainClassDecl) {
