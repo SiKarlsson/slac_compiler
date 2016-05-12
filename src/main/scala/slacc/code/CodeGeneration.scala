@@ -57,10 +57,11 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     def generateExprCode(ch: CodeHandler, e: ExprTree): Unit = {
       e match {
         case And(lhs, rhs) => {
-
+          ch << IAND
+          generateExprCode(ch, lhs)
+          generateExprCode(ch, rhs)
         }
         case Or(lhs, rhs) => {
-
         }
         case Plus(lhs, rhs) => {
 
