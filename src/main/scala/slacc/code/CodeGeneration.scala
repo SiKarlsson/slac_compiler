@@ -86,8 +86,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         }
         case Equals(lhs, rhs) => {
           ch << IFEQ
-          generateExprCode(lhs)
-          generateExprCode(rhs)
+          generateExprCode(ch, lhs)
+          generateExprCode(ch, rhs)
         }
         case ArrayRead(arr, index) => {
 
