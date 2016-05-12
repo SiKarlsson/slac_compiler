@@ -23,7 +23,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     }
 
     def currentLabel(): String = {
-      "label".concat(labelCount.toString)
+      "label_".concat(labelCount.toString)
     }
 
     /** Writes the proper .class file in a given directory. An empty string for dir is equivalent to "./". */
@@ -105,9 +105,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << IDIV
         }
         case LessThan(lhs, rhs) => {
-          generateExprCode(ch, lhs)
+          val label_1 = nextLabel
+          val label_2 = nextLabel
           generateExprCode(ch, rhs)
-          ch << IFLT
+          generateExprCode(ch, lhs)
+          ch << IfLe(label_1) <<Ldc(0) << Goto(label_2) <<
+            Label(label_1) << Ldc(1) << Label(label_2)
         }
         case Equals(lhs, rhs) => {
           generateExprCode(ch, lhs)
