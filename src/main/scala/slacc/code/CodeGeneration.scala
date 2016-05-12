@@ -27,9 +27,106 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     def generateMethodCode(ch: CodeHandler, mt: MethodDecl): Unit = {
       val methSym = mt.getSymbol
 
-      // TODO: Emit code
+      mt.args foreach {
+        mArgs => println(mArgs)
+      }
 
+      mt.vars foreach {
+        mVars => println(mVars)
+      }
+
+      mt.exprs foreach {
+        mExpr => generateExprCode(ch, mExpr)
+      }
+
+      ch << ILoad(1) << IRETURN
       ch.freeze
+    }
+
+    def generateExprCode(ch: CodeHandler, e: ExprTree): Unit = {
+      e match {
+        case And(lhs, rhs) => {
+
+        }
+        case Or(lhs, rhs) => {
+
+        }
+        case Plus(lhs, rhs) => {
+
+        }
+        case Minus(lhs, rhs) => {
+
+        }
+        case Times(lhs, rhs) => {
+
+        }
+        case Div(lhs, rhs) => {
+
+        }
+        case LessThan(lhs, rhs) => {
+
+        }
+        case Equals(lhs, rhs) => {
+
+        }
+        case ArrayRead(arr, index) => {
+
+        }
+        case ArrayLength(arr) => {
+
+        }
+        case MethodCall(obj, meth, args) => {
+
+        }
+        case IntLit(value) => {
+
+        }
+        case StringLit(value) => {
+
+        }
+        case True() => {
+
+        }
+        case False() => {
+
+        }
+        case Identifier(value) => {
+
+        }
+        case Self() => {
+
+        }
+        case NewIntArray(size) => {
+
+        }
+        case New(tpe) => {
+
+        }
+        case Not(tpe) => {
+
+        }
+        case Block(exprs) => {
+
+        }
+        case If(expr, thn, els) => {
+
+        }
+        case While(cond, body) => {
+
+        }
+        case Println(expr) => {
+
+        }
+        case Assign(id, expr) => {
+
+        }
+        case ArrayAssign(id, index, expr) => {
+
+        }
+        case Strof(expr) => {
+
+        }
+      }
     }
 
     val outDir = ctx.outDir.map(_.getPath+"/").getOrElse("./")
