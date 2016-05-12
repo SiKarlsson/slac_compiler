@@ -20,10 +20,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       val classFile = new ClassFile(ct.id.value + ".class", None)
       classFile.setSourceFile(sourceName)
       ct.methods foreach {
-        m => {
+        meth => {
           if (ct.id.value == "Main") {
             val mainHandler = classFile.addMainMethod.codeHandler
-            generateMethodCode(mainHandler, m)
+            generateMethodCode(mainHandler, meth)
+          } else {
+            val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
+            generateMethodCode(mh.codeHandler, meth)
           }
         }
       }
@@ -155,4 +158,37 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
   }
 
+  def typeString(retType: TypeTree): String = {
+    retType match {
+      case IntType() => {
+        "I"
+      }
+      case StringType() => {
+        "Ljava/lang/String"
+      }
+      case UnitType() => {
+        "V"
+      }
+      case BooleanType() => {
+        "Z"
+      }
+      case IntArrayType() => {
+        "[I"
+      }
+      case Identifier(value) => {
+        "L".concat(value)
+      }
+      case _ => {
+        sys.error(retType + " has no type!")
+      }
+    }
+  }
+
+  def parameterString(args: List[Formal]): String = {
+    var paramStr = "";
+    for (arg <- args) {
+      paramStr = paramStr.concat(typeString(arg.tpe))
+    }
+    paramStr
+  }
 }
