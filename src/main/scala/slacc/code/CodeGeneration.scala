@@ -73,10 +73,11 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case Times(lhs, rhs) => {
-
+          ch << IMUL
+          generateExprCode(ch, lhs)
+          generateExprCode(ch, rhs)
         }
         case Div(lhs, rhs) => {
-
         }
         case LessThan(lhs, rhs) => {
 
