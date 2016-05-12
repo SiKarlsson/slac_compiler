@@ -8,7 +8,7 @@ import Symbols._
 object NameAnalysis extends Pipeline[Program, Program] {
 
   var glob = new GlobalScope()
-  var mainClassDecl = new ClassDecl(new Identifier("main"), None, List(), List())
+  var mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List())
 
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
