@@ -173,4 +173,11 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       }
     }
 
+    def parameterString(args: List[Formal]): String = {
+      var paramStr = "";
+      for (arg <- args) {
+        paramStr = paramStr.concat(typeString(arg.tpe))
+      }
+      paramStr
+    }
 }
