@@ -154,7 +154,19 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
         }
         case If(expr, thn, els) => {
-
+          generateExprCode(ch, expr)
+          val label_1 = nextLabel
+          val label_2 = nextLabel
+          ch << Ldc(1) << If_ICmpEq(label_1)
+          els match {
+            case Some(e) => {
+              generateExprCode(ch, e)
+            }
+            case _ => {}
+          }
+          ch << Goto(label_2) << Label(label_1)
+          generateExprCode(ch, thn)
+          ch << Label(label_2)
         }
         case While(cond, body) => {
 
