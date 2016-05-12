@@ -105,7 +105,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case IntLit(value) => {
-          ch << ILoad(value)
+          ch << Ldc(value)
         }
         case StringLit(value) => {
           ch << Ldc(value)
@@ -117,7 +117,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ICONST_0
         }
         case Identifier(value) => {
-
+          ch << Ldc(value)
         }
         case Self() => {
 
