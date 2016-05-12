@@ -154,36 +154,36 @@ object CodeGeneration extends Pipeline[Program, Unit] {
   }
 
   def typeString(retType: TypeTree): String = {
-      retType match {
-        case IntType() => {
-          "I"
-        }
-        case StringType() => {
-          "Ljava/lang/String"
-        }
-        case UnitType() => {
-          "V"
-        }
-        case BooleanType() => {
-          "Z"
-        }
-        case IntArrayType() => {
-          "[I"
-        }
-        case Identifier(value) => {
-          "L".concat(value)
-        }
-        case _ => {
-          sys.error(retType + " has no type!")
-        }
+    retType match {
+      case IntType() => {
+        "I"
+      }
+      case StringType() => {
+        "Ljava/lang/String"
+      }
+      case UnitType() => {
+        "V"
+      }
+      case BooleanType() => {
+        "Z"
+      }
+      case IntArrayType() => {
+        "[I"
+      }
+      case Identifier(value) => {
+        "L".concat(value)
+      }
+      case _ => {
+        sys.error(retType + " has no type!")
       }
     }
+  }
 
-    def parameterString(args: List[Formal]): String = {
-      var paramStr = "";
-      for (arg <- args) {
-        paramStr = paramStr.concat(typeString(arg.tpe))
-      }
-      paramStr
+  def parameterString(args: List[Formal]): String = {
+    var paramStr = "";
+    for (arg <- args) {
+      paramStr = paramStr.concat(typeString(arg.tpe))
     }
+    paramStr
+  }
 }
