@@ -35,7 +35,6 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         meth => {
           if (ct.id.value == "Main") {
             val mainHandler = classFile.addMainMethod.codeHandler
-            mainHandler << RETURN
             generateMethodCode(mainHandler, meth)
           } else {
             val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
@@ -62,6 +61,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       mt.exprs :+ mt.retExpr foreach {
         mExpr => generateExprCode(ch, mExpr)
       }
+
+      ch << RETURN
 
       ch.print
       ch.freeze
