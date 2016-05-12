@@ -145,7 +145,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case Block(exprs) => {
-
+          exprs foreach {
+            b => { generateExprCode(ch, b) }
+          }
         }
         case If(expr, thn, els) => {
 
