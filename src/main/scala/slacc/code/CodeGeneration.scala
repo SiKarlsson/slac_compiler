@@ -62,6 +62,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           generateExprCode(ch, rhs)
         }
         case Or(lhs, rhs) => {
+          ch << IOR
+          generateExprCode(ch, lhs)
+          generateExprCode(ch, rhs)
         }
         case Plus(lhs, rhs) => {
 
