@@ -142,7 +142,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case Not(tpe) => {
-
+          generateExprCode(ch, tpe)
+          ch << Ldc(1) << If_ICmpNe("label_1") << Ldc(0) << Goto("label_2") <<
+            Label("label_1") << Ldc(1) << Label("label_2")
         }
         case Block(exprs) => {
 
