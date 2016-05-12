@@ -99,7 +99,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case IntLit(value) => {
-
+          ch << ILoad(value)
         }
         case StringLit(value) => {
 
