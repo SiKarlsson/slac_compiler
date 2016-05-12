@@ -93,7 +93,7 @@ object Main {
       val ast = pipeline.run(ctx)(ctx.files.head)
       println(Printer(ast))
     } else {
-      val pipeline = Lexer andThen Parser andThen NameAnalysis andThen TypeChecking
+      val pipeline = Lexer andThen Parser andThen NameAnalysis andThen TypeChecking andThen CodeGeneration
       pipeline.run(ctx)(ctx.files.head)
     }
   }
