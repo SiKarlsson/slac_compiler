@@ -62,7 +62,11 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         mExpr => generateExprCode(ch, mExpr)
       }
 
-      ch << RETURN
+      ch << (getTypeOfTypeTree(mt.retType, ctx.reporter) match {
+        case TInt => { IRETURN }
+        case TUnit => { RETURN }
+        case _ => { ARETURN }
+      })
 
       ch.print
       ch.freeze
