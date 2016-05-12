@@ -13,7 +13,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
-    mainClassDecl = new ClassDecl(new Identifier("main"), None, List(), List(prog.main.main))
+    mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List(prog.main.main))
 
     // Step 1: Collect symbols in declarations
     for (classDecl <- prog.classes :+ mainClassDecl) {
