@@ -7,3 +7,4 @@ src/project/
 test_programs
 lib/
 .idea/
+*.class
