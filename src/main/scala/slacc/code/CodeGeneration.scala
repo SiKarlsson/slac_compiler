@@ -69,47 +69,46 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     def generateExprCode(ch: CodeHandler, e: ExprTree): Unit = {
       e match {
         case And(lhs, rhs) => {
-          ch << IAND
           generateExprCode(ch, lhs)
           generateExprCode(ch, rhs)
+          ch << IAND
         }
         case Or(lhs, rhs) => {
-          ch << IOR
           generateExprCode(ch, lhs)
           generateExprCode(ch, rhs)
+          ch << IOR
         }
         case Plus(lhs, rhs) => {
-          ch << IADD
           generateExprCode(ch, lhs)
           generateExprCode(ch, rhs)
+          ch << IADD
         }
         case Minus(lhs, rhs) => {
-          ch << ISUB
           generateExprCode(ch, lhs)
           generateExprCode(ch, rhs)
+          ch << ISUB
         }
         case Times(lhs, rhs) => {
-          ch << IMUL
           generateExprCode(ch, lhs)
           generateExprCode(ch, rhs)
+          ch << IMUL
         }
         case Div(lhs, rhs) => {
-          ch << IDIV
           generateExprCode(ch, lhs)
           generateExprCode(ch, rhs)
+          ch << IDIV
         }
         case LessThan(lhs, rhs) => {
-          ch << IFLT
           generateExprCode(ch, lhs)
           generateExprCode(ch, rhs)
+          ch << IFLT
         }
         case Equals(lhs, rhs) => {
-          ch << IFEQ
           generateExprCode(ch, lhs)
           generateExprCode(ch, rhs)
+          ch << IFEQ
         }
         case ArrayRead(arr, index) => {
-
         }
         case ArrayLength(arr) => {
 
@@ -154,7 +153,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case Println(expr) => {
-
+          ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;") <<
+            Ldc("SIMON") <<
+            InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
         }
         case Assign(id, expr) => {
 
