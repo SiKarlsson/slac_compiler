@@ -35,10 +35,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         meth => {
           if (ct.id.value == "Main") {
             val mainHandler = classFile.addMainMethod.codeHandler
-            generateMethodCode(mainHandler, meth)
+            generateMethodCode(meth)(mainHandler)
           } else {
             val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
-            generateMethodCode(mh.codeHandler, meth)
+            generateMethodCode(meth)(mh.codeHandler)
           }
         }
       }
@@ -47,7 +47,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
     // a mapping from variable symbols to positions in the local variables
     // of the stack frame
-    def generateMethodCode(ch: CodeHandler, mt: MethodDecl): Unit = {
+    def generateMethodCode(mt: MethodDecl)(implicit ch: CodeHandler): Unit = {
       val methSym = mt.getSymbol
 
       mt.args foreach {
@@ -59,7 +59,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       }
 
       mt.exprs :+ mt.retExpr foreach {
-        mExpr => generateExprCode(ch, mExpr)
+        mExpr => generateExprCode(mExpr)(ch)
       }
 
       ch << (getTypeOfTypeTree(mt.retType, ctx.reporter) match {
@@ -72,50 +72,51 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       ch.freeze
     }
 
-    def generateExprCode(ch: CodeHandler, e: ExprTree): Unit = {
+    def generateExprCode(e: ExprTree)(implicit ch: CodeHandler): Unit = {
       e match {
         case And(lhs, rhs) => {
-          generateExprCode(ch, lhs)
-          generateExprCode(ch, rhs)
+          generateExprCode(lhs)
+          generateExprCode(rhs)
           ch << IAND
         }
         case Or(lhs, rhs) => {
-          generateExprCode(ch, lhs)
-          generateExprCode(ch, rhs)
+          generateExprCode(lhs)
+          generateExprCode(rhs)
           ch << IOR
         }
         case Plus(lhs, rhs) => {
-          generateExprCode(ch, lhs)
-          generateExprCode(ch, rhs)
+          generateExprCode(lhs)
+          generateExprCode(rhs)
           ch << IADD
         }
         case Minus(lhs, rhs) => {
-          generateExprCode(ch, lhs)
-          generateExprCode(ch, rhs)
+          generateExprCode(lhs)
+          generateExprCode(rhs)
           ch << ISUB
         }
         case Times(lhs, rhs) => {
-          generateExprCode(ch, lhs)
-          generateExprCode(ch, rhs)
+          generateExprCode(lhs)
+          generateExprCode(rhs)
           ch << IMUL
         }
         case Div(lhs, rhs) => {
-          generateExprCode(ch, lhs)
-          generateExprCode(ch, rhs)
+          generateExprCode(lhs)
+          generateExprCode(rhs)
           ch << IDIV
         }
         case LessThan(lhs, rhs) => {
           val label_1 = nextLabel
           val label_2 = nextLabel
-          generateExprCode(ch, rhs)
-          generateExprCode(ch, lhs)
+          generateExprCode(rhs)
+          generateExprCode(lhs)
           ch << IfLe(label_1) <<Ldc(0) << Goto(label_2) <<
             Label(label_1) << Ldc(1) << Label(label_2)
         }
         case Equals(lhs, rhs) => {
-          generateExprCode(ch, lhs)
-          generateExprCode(ch, rhs)
-          ch << IFEQ
+          val label1 = nextLabel
+          val label2 = nextLabel
+          generateExprCode(lhs)
+          generateExprCode(rhs)
         }
         case ArrayRead(arr, index) => {
         }
@@ -138,7 +139,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ICONST_0
         }
         case Identifier(value) => {
-          ch << Ldc(value)
+
         }
         case Self() => {
 
@@ -150,7 +151,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case Not(tpe) => {
-          generateExprCode(ch, tpe)
+          generateExprCode(tpe)
           val label_1 = nextLabel
           val label_2 = nextLabel
           ch << Ldc(1) << If_ICmpNe(label_1) << Ldc(0) << Goto(label_2) <<
@@ -158,22 +159,22 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         }
         case Block(exprs) => {
           exprs foreach {
-            b => { generateExprCode(ch, b) }
+            b => { generateExprCode(b) }
           }
         }
         case If(expr, thn, els) => {
-          generateExprCode(ch, expr)
+          generateExprCode(expr)
           val label_1 = nextLabel
           val label_2 = nextLabel
           ch << Ldc(1) << If_ICmpEq(label_1)
           els match {
             case Some(e) => {
-              generateExprCode(ch, e)
+              generateExprCode(e)
             }
             case _ => {}
           }
           ch << Goto(label_2) << Label(label_1)
-          generateExprCode(ch, thn)
+          generateExprCode(thn)
           ch << Label(label_2)
         }
         case While(cond, body) => {
@@ -181,14 +182,14 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           val label2 = nextLabel
           val label3 = nextLabel
           ch << Label(label1)
-          generateExprCode(ch, cond)
+          generateExprCode(cond)
           ch << Ldc(1) << If_ICmpEq(label2) << Goto(label3) << Label(label2)
-          generateExprCode(ch, body)
+          generateExprCode(body)
           ch << Goto(label1) << Label(label3)
         }
         case Println(expr) => {
           ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;") <<
-            Ldc("SIMON") <<
+            Ldc("hej") <<
             InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
         }
         case Assign(id, expr) => {
