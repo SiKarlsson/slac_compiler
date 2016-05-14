@@ -48,18 +48,25 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     // a mapping from variable symbols to positions in the local variables
     // of the stack frame
     def generateMethodCode(mt: MethodDecl)(implicit ch: CodeHandler): Unit = {
+      var variables = Map[Symbol, Int]()
+      def addVariable(sym: Symbol)(implicit ch: CodeHandler) {
+        variables += (sym -> ch.getFreshVar)
+      }
+
       val methSym = mt.getSymbol
 
       mt.args foreach {
         mArgs => println(mArgs)
       }
 
-      mt.vars foreach {
-        mVars => println(mVars)
+      mt.getSymbol.members foreach {
+        mVars => {
+          addVariable(mVars._2)
+        }
       }
 
       mt.exprs :+ mt.retExpr foreach {
-        mExpr => generateExprCode(mExpr)(ch)
+        mExpr => generateExprCode(mExpr)(ch, variables)
       }
 
       ch << (getTypeOfTypeTree(mt.retType, ctx.reporter) match {
@@ -72,7 +79,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       ch.freeze
     }
 
-    def generateExprCode(e: ExprTree)(implicit ch: CodeHandler): Unit = {
+    def generateExprCode(e: ExprTree)(implicit ch: CodeHandler, variables: Map[Symbol, Int]): Unit = {
       e match {
         case And(lhs, rhs) => {
           generateExprCode(lhs)
@@ -139,7 +146,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ICONST_0
         }
         case Identifier(value) => {
-
+          e.asInstanceOf[Identifier].getType match {
+            case TInt => { ch << ILoad(variables(e.asInstanceOf[Identifier].getSymbol)) }
+            case _ => { ch << ALoad(variables(e.asInstanceOf[Identifier].getSymbol)) }
+          }
         }
         case Self() => {
 
@@ -193,7 +203,16 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
         }
         case Assign(id, expr) => {
-
+          // The value to be stored will be on the top of the stack
+          generateExprCode(expr)
+          id.asInstanceOf[Identifier].getType match {
+            case TInt => {
+              ch << { IStore(variables(id.asInstanceOf[Identifier].getSymbol)) }
+            }
+            case _ => {
+              ch << { AStore(variables(id.asInstanceOf[Identifier].getSymbol)) }
+            }
+          }
         }
         case ArrayAssign(id, index, expr) => {
 
