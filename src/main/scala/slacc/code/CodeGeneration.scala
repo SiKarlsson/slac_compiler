@@ -104,20 +104,19 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << IDIV
         }
         case LessThan(lhs, rhs) => {
-          val label_1 = nextLabel
-          val label_2 = nextLabel
+          val label_1 = ch.getFreshLabel("lessthan-if")
+          val label_2 = ch.getFreshLabel("lessthan-else")
           generateExprCode(rhs)
           generateExprCode(lhs)
           ch << IfLe(label_1) <<Ldc(0) << Goto(label_2) <<
             Label(label_1) << Ldc(1) << Label(label_2)
         }
         case Equals(lhs, rhs) => {
-          val label1 = nextLabel
-          val label2 = nextLabel
           generateExprCode(lhs)
           generateExprCode(rhs)
         }
         case ArrayRead(arr, index) => {
+
         }
         case ArrayLength(arr) => {
 
@@ -154,8 +153,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         }
         case Not(tpe) => {
           generateExprCode(tpe)
-          val label_1 = nextLabel
-          val label_2 = nextLabel
+          val label_1 = ch.getFreshLabel("not-return-1")
+          val label_2 = ch.getFreshLabel("not-return-0")
           ch << Ldc(1) << If_ICmpNe(label_1) << Ldc(0) << Goto(label_2) <<
             Label(label_1) << Ldc(1) << Label(label_2)
         }
@@ -166,8 +165,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         }
         case If(expr, thn, els) => {
           generateExprCode(expr)
-          val label_1 = nextLabel
-          val label_2 = nextLabel
+          val label_1 = ch.getFreshLabel("if-then")
+          val label_2 = ch.getFreshLabel("if-else")
           ch << Ldc(1) << If_ICmpEq(label_1)
           els match {
             case Some(e) => {
@@ -180,9 +179,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << Label(label_2)
         }
         case While(cond, body) => {
-          val label1 = nextLabel
-          val label2 = nextLabel
-          val label3 = nextLabel
+          val label1 = ch.getFreshLabel("while-cond")
+          val label2 = ch.getFreshLabel("while-body")
+          val label3 = ch.getFreshLabel("while-after")
           ch << Label(label1)
           generateExprCode(cond)
           ch << Ldc(1) << If_ICmpEq(label2) << Goto(label3) << Label(label2)
