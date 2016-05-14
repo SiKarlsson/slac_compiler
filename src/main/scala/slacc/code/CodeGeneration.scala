@@ -197,9 +197,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           generateExprCode(body)
           ch << Goto(label1) << Label(label3)
         }
-        case Println(expr) => {
+        case Println(value) => {
           ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;") <<
-            Ldc("hej") <<
+            Ldc(value.asInstanceOf[StringLit].value.toString) <<
             InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
         }
         case Assign(id, expr) => {
