@@ -17,6 +17,7 @@ object TypeChecking extends Pipeline[Program, Program] {
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
+    prog.main.main.exprs foreach { e => tcExpr(e) }
     tcExpr(prog.main.main.retExpr, TUnit)
 
     for (classDecl <- prog.classes) {
