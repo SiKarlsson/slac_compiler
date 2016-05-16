@@ -214,7 +214,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case _ => { sys.error("No typechecking for " + expr)}
       }
-
+      expr.setType(tpe)
 
       // Check result and return a valid type in case of error
       if (expected.isEmpty) {
