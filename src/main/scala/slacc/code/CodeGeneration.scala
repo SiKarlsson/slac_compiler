@@ -155,12 +155,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case NewIntArray(size) => {
-          println(size)
           generateExprCode(size)
           ch << NewArray("I")
         }
         case New(tpe) => {
-
+          println(tpe)
+          ch << DefaultNew(typeString(tpe))
         }
         case Not(tpe) => {
           generateExprCode(tpe)
