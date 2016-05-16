@@ -89,9 +89,18 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << IOR
         }
         case Plus(lhs, rhs) => {
-          generateExprCode(lhs)
-          generateExprCode(rhs)
-          ch << IADD
+          e.getType match {
+            case TString => {
+              // TODO: Concatenating strings
+              sys.error("String concatenation is not implemented yet")
+            }
+            case TInt => {
+              generateExprCode(lhs)
+              generateExprCode(rhs)
+              ch << IADD
+            }
+            case _ => sys.error("Plus is not supported for " + e)
+          }
         }
         case Minus(lhs, rhs) => {
           generateExprCode(lhs)
