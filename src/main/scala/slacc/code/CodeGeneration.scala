@@ -118,11 +118,11 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << IDIV
         }
         case LessThan(lhs, rhs) => {
-          val label1 = ch.getFreshLabel("lessthan-return-0")
-          val label2 = ch.getFreshLabel("lessthan-return-1")
+          val label1 = ch.getFreshLabel("lessthan-return-1")
+          val label2 = ch.getFreshLabel("lessthan-after")
           generateExprCode(rhs)
           generateExprCode(lhs)
-          ch << IfLe(label1) <<Ldc(0) << Goto(label2) <<
+          ch << IfLe(label1) << Ldc(0) << Goto(label2) <<
             Label(label1) << Ldc(1) << Label(label2)
         }
         case Equals(lhs, rhs) => {
