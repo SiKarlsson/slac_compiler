@@ -57,8 +57,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         }
       }
 
-      mt.exprs :+ mt.retExpr foreach {
-        mExpr => generateExprCode(mExpr)(ch, variables)
+      for (e <- mt.exprs :+ mt.retExpr) {
+        generateExprCode(e)(ch, variables)
+        e.getType match {
+          case TUnit => { }
+          case _ => { ch << POP }
+        }
+
       }
 
       ch << (getTypeOfTypeTree(mt.retType, ctx.reporter) match {
