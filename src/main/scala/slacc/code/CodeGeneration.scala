@@ -199,9 +199,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           val label3 = ch.getFreshLabel("while-after")
           ch << Label(label1)
           generateExprCode(cond)
-          ch << Ldc(1) << If_ICmpEq(label2) << Goto(label3) << Label(label2)
+          ch << Ldc(1) << If_ICmpEq(label2) << Goto(label3) << Label(label2) << POP
           generateExprCode(body)
-          ch << Goto(label1) << Label(label3)
+          ch << Goto(label1) << Label(label3) << POP
         }
         case Println(value) => {
           ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;") <<
