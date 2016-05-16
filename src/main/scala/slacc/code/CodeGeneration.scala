@@ -47,15 +47,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
       val methSym = mt.getSymbol
 
-      mt.args foreach {
-        mArgs => println(mArgs)
-      }
+      mt.args foreach { mArgs => addVariable(mArgs.id.getSymbol) }
 
-      mt.getSymbol.members foreach {
-        mVars => {
-          addVariable(mVars._2)
-        }
-      }
+      mt.getSymbol.members foreach { mVars => addVariable(mVars._2) }
 
       for (e <- mt.exprs :+ mt.retExpr) {
         generateExprCode(e)(ch, variables)
