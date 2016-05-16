@@ -160,7 +160,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case NewIntArray(size) => {
-
+          generateExprCode(size)
+          ch << NEWARRAY
         }
         case New(tpe) => {
 
@@ -214,13 +215,19 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             case TInt => {
               ch << { IStore(variables(id.asInstanceOf[Identifier].getSymbol)) }
             }
+            case TIntArray => {
+              ch << { AStore(variables(id.asInstanceOf[Identifier].getSymbol)) }
+            }
             case _ => {
               ch << { AStore(variables(id.asInstanceOf[Identifier].getSymbol)) }
             }
           }
         }
         case ArrayAssign(id, index, expr) => {
-
+          ch << ILoad(variables(id.asInstanceOf[Identifier].getSymbol))
+          generateExprCode(index)
+          generateExprCode(expr)
+          ch << IASTORE
         }
         case Strof(expr) => {
 
