@@ -133,7 +133,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case ArrayLength(arr) => {
-
+          generateExprCode(arr)
+          ch << ARRAYLENGTH
         }
         case MethodCall(obj, meth, args) => {
 
@@ -160,8 +161,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case NewIntArray(size) => {
+          println(size)
           generateExprCode(size)
-          ch << NEWARRAY
+          ch << NewArray("I")
         }
         case New(tpe) => {
 
