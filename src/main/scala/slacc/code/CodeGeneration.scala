@@ -108,8 +108,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << IMUL
         }
         case Div(lhs, rhs) => {
-          generateExprCode(rhs)
           generateExprCode(lhs)
+          generateExprCode(rhs)
           ch << IDIV
         }
         case LessThan(lhs, rhs) => {
