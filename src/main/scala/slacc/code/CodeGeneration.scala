@@ -259,7 +259,17 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << IASTORE
         }
         case Strof(expr) => {
-
+          ch << Label(ch.getFreshLabel("strOf-" + expr))
+          expr.getType match {
+            case TInt => {
+              ch << DefaultNew("java/lang/StringBuilder")
+              generateExprCode(expr)
+              ch << InvokeVirtual("java/lang/StringBuilder", "append", "(I)Ljava/lang/StringBuilder;") <<
+                InvokeVirtual("java/lang/StringBuilder", "toString", "()Ljava/lang/String;")
+            }
+            case _ => sys.error("Strof does not support " + expr.getType)
+          }
+          ch << Label(ch.getFreshLabel("strOf-" + expr))
         }
       }
     }
