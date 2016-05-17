@@ -190,7 +190,6 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << NewArray("I")
         }
         case New(tpe) => {
-          println(tpe)
           ch << DefaultNew(typeString(tpe))
         }
         case Not(tpe) => {
