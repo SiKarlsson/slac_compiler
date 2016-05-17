@@ -204,6 +204,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             generateExprCode(b)
             b.getType match {
               case TUnit => { }
+              case TClass(cs) => { }
               case _ => { ch << POP }
             }
           }
