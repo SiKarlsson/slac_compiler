@@ -74,9 +74,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     def generateExprCode(e: ExprTree)(implicit ch: CodeHandler, variables: Map[Symbol, Int]): Unit = {
       e match {
         case And(lhs, rhs) => {
+          val label1 = ch.getFreshLabel("lazy_eval_false")
+          val label2 = ch.getFreshLabel("lazy_eval_true")
           generateExprCode(lhs)
+          ch << Ldc(1) << If_ICmpNe(label1) << Ldc(1)
           generateExprCode(rhs)
-          ch << IAND
+          ch << IAND << Goto(label2) << Label(label1) << Ldc(0) << Label(label2)
         }
         case Or(lhs, rhs) => {
           generateExprCode(lhs)
