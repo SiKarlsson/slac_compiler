@@ -155,12 +155,14 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ARRAYLENGTH
         }
         case MethodCall(obj, meth, args) => {
+          ch << Label(ch.getFreshLabel(obj + "." + meth + "(" + args + ")"))
           val retType = meth.asInstanceOf[Identifier].getSymbol.getType
           generateExprCode(obj)
           args foreach { a => generateExprCode(a) }
           val methodSignature = invokeVirtualMethodSig(args, retType)
           ch << InvokeVirtual(getTypeStringOfExprTree(obj
-            .asInstanceOf[Identifier]), meth.value, methodSignature)
+            .asInstanceOf[Identifier]), meth.value, methodSignature) <<
+            Label("EndOf-" + obj + "." + meth + "(" + args + ")")
         }
         case IntLit(value) => {
           ch << Ldc(value)
@@ -233,9 +235,11 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << Goto(label1) << Label(label3)
         }
         case Println(value) => {
+          ch << Label(ch.getFreshLabel("Println(" + value.toString + ")"))
           ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;")
           generateExprCode(value)
           ch << InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
+          ch << Label(ch.getFreshLabel("EndOf-Println(" + value.toString + ")"))
         }
         case Assign(id, expr) => {
           // The value to be stored will be on the top of the stack
