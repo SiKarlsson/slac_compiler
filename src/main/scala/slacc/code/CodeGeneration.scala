@@ -132,7 +132,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ARRAYLENGTH
         }
         case MethodCall(obj, meth, args) => {
-
+          val retType = meth.asInstanceOf[Identifier].getSymbol.getType
+          generateExprCode(obj)
+          args foreach { a => generateExprCode(a) }
+          val methodSignature = invokeVirtualMethodSig(args, retType)
+          ch << InvokeVirtual(getTypeStringOfExprTree(obj
+            .asInstanceOf[Identifier]), meth.value, methodSignature)
         }
         case IntLit(value) => {
           ch << Ldc(value)
@@ -273,12 +278,44 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         "[I"
       }
       case Identifier(value) => {
-        "L".concat(value)
+        value
       }
       case _ => {
         sys.error(retType + " has no type!")
       }
     }
+  }
+  def getTypeStringOfExprTree(e: ExprTree): String = {
+    e.getType match {
+      case TInt => "I"
+      case TBoolean => "B"
+      case TString => "Ljava/lang/String"
+      case TUnit => "V"
+      case TIntArray => "[I"
+      case TClass(cs) => cs.name.toString
+      case _ => sys.error("Unexpected type: " + e.getType)
+    }
+  }
+  def getTypeStringOfType(t: Type): String = {
+    t match {
+      case TInt => "I"
+      case TBoolean => "B"
+      case TString => "Ljava/lang/String"
+      case TUnit => "V"
+      case TIntArray => "[I"
+      case TClass(cs) => cs.name.toString
+      case _ => sys.error("Unexpected type: " + t)
+    }
+  }
+
+  def invokeVirtualMethodSig(args: List[ExprTree], retType: Type): String = {
+    var sig = "("
+    for (arg <- args) {
+      sig += getTypeStringOfType(arg.getType)
+    }
+    sig += ")"
+    sig += getTypeStringOfType(retType)
+    sig
   }
 
   def parameterString(args: List[Formal]): String = {
