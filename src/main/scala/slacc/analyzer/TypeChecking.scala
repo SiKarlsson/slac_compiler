@@ -116,7 +116,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           val c = tcExpr(obj)
           val cs = c.asInstanceOf[TClass].getClassSymbol
           val ms = cs.lookupMethod(meth.value)
-          ms match {
+          val retType = (ms match {
             case Some(m) => {
               meth.asInstanceOf[Identifier].setSymbol(m)
               if (m.argList.size == args.size) {
@@ -126,11 +126,14 @@ object TypeChecking extends Pipeline[Program, Program] {
               } else {
                 ctx.reporter.error("Wrong amount of arguments to method", obj)
               }
-              return m.getType
+              m.getType
             }
-            case None => ctx.reporter.error("Method does not belong to this class", obj)
-          }
-          TUntyped
+            case None => {
+              ctx.reporter.error("Method does not belong to this class", obj)
+              TUntyped
+            }
+          })
+          retType
         }
         case IntLit(value) => {
           TInt
