@@ -210,9 +210,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << Goto(label1) << Label(label3)
         }
         case Println(value) => {
-          ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;") <<
-            Ldc(value.asInstanceOf[StringLit].value.toString) <<
-            InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
+          ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;")
+          generateExprCode(value)
+          ch << InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
         }
         case Assign(id, expr) => {
           // The value to be stored will be on the top of the stack
