@@ -98,8 +98,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
         }
         case Minus(lhs, rhs) => {
-          generateExprCode(rhs)
           generateExprCode(lhs)
+          generateExprCode(rhs)
           ch << ISUB
         }
         case Times(lhs, rhs) => {
