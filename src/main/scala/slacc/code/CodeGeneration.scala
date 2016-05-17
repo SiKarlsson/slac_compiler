@@ -240,12 +240,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
     val sourceName = ctx.files.head.getName
 
+
+    generateClassFile(sourceName, mainClassDecl, outDir)
+
     // output code
     prog.classes foreach {
       ct => generateClassFile(sourceName, ct, outDir)
     }
-
-    generateClassFile(sourceName, mainClassDecl, outDir)
 
   }
 
