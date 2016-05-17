@@ -82,9 +82,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << IAND << Goto(label2) << Label(label1) << Ldc(0) << Label(label2)
         }
         case Or(lhs, rhs) => {
+          val label1 = ch.getFreshLabel("lazy_eval_true")
+          val label2 = ch.getFreshLabel("lazy_eval_false")
           generateExprCode(lhs)
+          ch << Ldc(1) << If_ICmpEq(label1) << Ldc(0)
           generateExprCode(rhs)
-          ch << IOR
+          ch << IOR << Goto(label2) << Label(label1) << Ldc(1) << Label(label2)
         }
         case Plus(lhs, rhs) => {
           e.getType match {
