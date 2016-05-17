@@ -51,14 +51,15 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
       mt.getSymbol.members foreach { mVars => addVariable(mVars._2) }
 
-      for (e <- mt.exprs :+ mt.retExpr) {
+      for (e <- mt.exprs) {
         generateExprCode(e)(ch, variables)
         e.getType match {
           case TUnit => { }
           case _ => { ch << POP }
         }
-
       }
+
+      generateExprCode(mt.retExpr)(ch, variables)
 
       ch << (getTypeOfTypeTree(mt.retType, ctx.reporter) match {
         case TInt => { IRETURN }
@@ -170,8 +171,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             Label(label1) << Ldc(1) << Label(label2)
         }
         case Block(exprs) => {
-          exprs foreach {
-            b => { generateExprCode(b) }
+          for (b <- exprs) {
+            generateExprCode(b)
+            b.getType match {
+              case TUnit => { }
+              case _ => { ch << POP }
+            }
           }
         }
         case If(expr, thn, els) => {
