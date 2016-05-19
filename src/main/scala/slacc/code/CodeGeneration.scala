@@ -287,7 +287,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
           ch << Label(ch.getFreshLabel("strOf-" + expr))
         }
-        case _ => sys.error("Ran into unexpected ExprTree: " + e)
+        case _ => sys.error("Can't generate bytecode for " + e)
       }
     }
 
