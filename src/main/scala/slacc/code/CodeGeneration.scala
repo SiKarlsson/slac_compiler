@@ -260,17 +260,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           // The value to be stored will be on the top of the stack
           generateExprCode(expr)
           val idSym = id.asInstanceOf[Identifier].getSymbol
-          id.asInstanceOf[Identifier].getType match {
-            case TInt => {
-              ch << { IStore(variables(idSym)) }
-            }
-            case TIntArray => {
-              ch << { AStore(variables(idSym)) }
-            }
-            case _ => {
-              ch << { AStore(variables(idSym)) }
-            }
-          }
+          ch << (id.asInstanceOf[Identifier].getType match {
+            case TInt => IStore(variables(idSym))
+            case _ => AStore(variables(idSym))
+          })
         }
         case ArrayAssign(id, index, expr) => {
           ch << ILoad(variables(id.asInstanceOf[Identifier].getSymbol))
