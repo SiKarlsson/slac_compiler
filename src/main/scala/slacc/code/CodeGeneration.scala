@@ -92,8 +92,17 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case Plus(lhs, rhs) => {
           e.getType match {
             case TString => {
-              // TODO: Concatenating strings
-              sys.error("String concatenation is not implemented yet")
+              ch << Label(ch.getFreshLabel("StringConcat-before"))
+              val z = ch.getFreshVar;
+              ch << DefaultNew("java/lang/StringBuilder") << AStore(z) << ALoad(z)
+              generateExprCode(lhs)
+              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${getTypeStringOfExprTree(lhs)})Ljava/lang/StringBuilder;")
+              generateExprCode(rhs)
+              ch << InvokeVirtual("java/lang/StringBuilder",
+                "append",
+                s"(${getTypeStringOfExprTree(rhs)})Ljava/lang/StringBuilder;") <<
+              InvokeVirtual("java/lang/StringBuilder", "toString", "()Ljava/lang/String;")
+              ch << Label(ch.getFreshLabel("StringConcat-after"))
             }
             case TInt => {
               generateExprCode(lhs)
@@ -309,7 +318,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         "I"
       }
       case StringType() => {
-        "Ljava/lang/String"
+        "Ljava/lang/String;"
       }
       case UnitType() => {
         "V"
@@ -332,7 +341,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     e.getType match {
       case TInt => "I"
       case TBoolean => "B"
-      case TString => "Ljava/lang/String"
+      case TString => "Ljava/lang/String;"
       case TUnit => "V"
       case TIntArray => "[I"
       case TClass(cs) => cs.name.toString
@@ -343,7 +352,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     t match {
       case TInt => "I"
       case TBoolean => "Z"
-      case TString => "Ljava/lang/String"
+      case TString => "Ljava/lang/String;"
       case TUnit => "V"
       case TIntArray => "[I"
       case TClass(cs) => cs.name.toString
