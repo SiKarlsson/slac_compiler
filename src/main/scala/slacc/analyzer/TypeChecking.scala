@@ -114,6 +114,10 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => {
           val c = tcExpr(obj)
+          if (!c.isInstanceOf[TClass]) {
+            ctx.reporter.error("Can't invoke method from ", obj)
+            return TUntyped
+          }
           val cs = c.asInstanceOf[TClass].getClassSymbol
           val ms = cs.lookupMethod(meth.value)
           val retType = (ms match {
