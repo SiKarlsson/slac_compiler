@@ -27,25 +27,25 @@ object NameAnalysis extends Pipeline[Program, Program] {
           classDecl.setSymbol(classSym)
           classDecl.id.setSymbol(classDecl.getSymbol)
           glob.addClass(classId, classDecl.getSymbol)
-          classDecl.parent match {
-            case Some(p) => {
-              glob.lookupClass(p.value) match {
-                case None => { printNotDeclared(p.value, p, ctx.reporter) }
-                case Some(c) => {
-                  classDecl.getSymbol.parent = Some(c)
-                  if (hasInheritanceCycle(classDecl.getSymbol)) {
-                    ctx.reporter.error("cycles in the inheritance graph", p)
-                  }
-                }
-              }
-            }
-            case None => { }
-          }
         }
       }
     }
 
     for (classDecl <- prog.classes :+ mainClassDecl) {
+      classDecl.parent match {
+        case Some(p) => {
+          glob.lookupClass(p.value) match {
+            case None => { printNotDeclared(p.value, p, ctx.reporter) }
+            case Some(c) => {
+              classDecl.getSymbol.parent = Some(c)
+              if (hasInheritanceCycle(classDecl.getSymbol)) {
+                ctx.reporter.error("cycles in the inheritance graph", p)
+              }
+            }
+          }
+        }
+        case None => { }
+      }
       for (classVar <- classDecl.vars) {
         val varID = classVar.id.value
         glob.classes(classDecl.id.value).lookupVar(varID) match {
