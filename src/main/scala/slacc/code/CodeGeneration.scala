@@ -163,7 +163,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
         }
         case ArrayRead(arr, index) => {
-
+          generateExprCode(arr)
+          generateExprCode(index)
+          ch << IALOAD
         }
         case ArrayLength(arr) => {
           generateExprCode(arr)
@@ -200,8 +202,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case NewIntArray(size) => {
+          ch << Label(ch.getFreshLabel("HEJHEJ"))
           generateExprCode(size)
-          ch << NewArray("I")
+          ch << NewArray(10) // 10 = T_INT
+          ch << Label(ch.getFreshLabel("HEJHEJ"))
         }
         case New(tpe) => {
           ch << DefaultNew(typeString(tpe))
@@ -265,7 +269,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           })
         }
         case ArrayAssign(id: Identifier, index, expr) => {
-          ch << ILoad(variables(id.getSymbol))
+          ch << ALoad(variables(id.getSymbol))
           generateExprCode(index)
           generateExprCode(expr)
           ch << IASTORE
