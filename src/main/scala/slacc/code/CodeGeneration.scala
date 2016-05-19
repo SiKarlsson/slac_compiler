@@ -329,6 +329,14 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
   }
 
+  def pushVariable(sym: Symbol, vars: Map[Symbol, Int])(implicit ch: CodeHandler): Unit = {
+    val reg = vars(sym)
+    sym.getType match {
+      case TInt => ILoad(reg)
+      case _ => ALoad(reg)
+    }
+  }
+
   def typeString(retType: TypeTree): String = {
     retType match {
       case IntType() => {
