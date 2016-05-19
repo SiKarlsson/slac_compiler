@@ -190,7 +190,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           generateExprCode(arr)
           ch << ARRAYLENGTH
         }
-        case MethodCall(obj: Identifier, meth: Identifier, args) => {
+        case MethodCall(obj, meth: Identifier, args) => {
           ch << Label(ch.getFreshLabel(obj + "." + meth + "(" + args + ")"))
           val retType = meth.getSymbol.getType
           generateExprCode(obj)
