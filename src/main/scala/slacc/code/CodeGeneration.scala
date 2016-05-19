@@ -169,14 +169,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           generateExprCode(arr)
           ch << ARRAYLENGTH
         }
-        case MethodCall(obj, meth, args) => {
+        case MethodCall(obj: Identifier, meth: Identifier, args) => {
           ch << Label(ch.getFreshLabel(obj + "." + meth + "(" + args + ")"))
-          val retType = meth.asInstanceOf[Identifier].getSymbol.getType
+          val retType = meth.getSymbol.getType
           generateExprCode(obj)
           args foreach { a => generateExprCode(a) }
           val methodSignature = invokeVirtualMethodSig(args, retType)
-          ch << InvokeVirtual(getTypeStringOfExprTree(obj
-            .asInstanceOf[Identifier]), meth.value, methodSignature) <<
+          ch << InvokeVirtual(getTypeStringOfExprTree(obj), meth.value, methodSignature) <<
             Label("EndOf-" + obj + "." + meth + "(" + args + ")")
         }
         case IntLit(value) => {
@@ -256,17 +255,17 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
           ch << Label(ch.getFreshLabel("EndOf-Println(" + value.toString + ")"))
         }
-        case Assign(id, expr) => {
+        case Assign(id: Identifier, expr) => {
           // The value to be stored will be on the top of the stack
           generateExprCode(expr)
-          val idSym = id.asInstanceOf[Identifier].getSymbol
-          ch << (id.asInstanceOf[Identifier].getType match {
+          val idSym = id.getSymbol
+          ch << (id.getType match {
             case TInt => IStore(variables(idSym))
             case _ => AStore(variables(idSym))
           })
         }
-        case ArrayAssign(id, index, expr) => {
-          ch << ILoad(variables(id.asInstanceOf[Identifier].getSymbol))
+        case ArrayAssign(id: Identifier, index, expr) => {
+          ch << ILoad(variables(id.getSymbol))
           generateExprCode(index)
           generateExprCode(expr)
           ch << IASTORE
@@ -284,6 +283,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
           ch << Label(ch.getFreshLabel("strOf-" + expr))
         }
+        case _ => sys.error("Ran into unexpected ExprTree: " + e)
       }
     }
 
