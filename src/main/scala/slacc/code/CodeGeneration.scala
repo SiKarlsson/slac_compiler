@@ -23,6 +23,22 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       for (vari <- ct.vars) {
           classFile.addField(typeString(vari.tpe), vari.id.value)
       }
+      ct.parent match {
+        case Some(p) => {
+          ct.getSymbol.parent match {
+            case Some(pm) => {
+              for ((value, varSymbol) <- pm.members) {
+                classFile.addField(getTypeStringOfType(varSymbol.getType), value)
+              }
+            }
+            case None => {
+              sys.error("ClassDecl has parent but parent has no class symbol")
+            }
+          }
+        }
+        case None => { }
+      }
+
       ct.methods foreach {
         meth => {
           if (ct.id.value == "Main") {
