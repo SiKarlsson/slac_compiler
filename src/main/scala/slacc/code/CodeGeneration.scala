@@ -81,7 +81,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         variables += (sym -> ch.getFreshVar)
       }
 
-      def addVarsOfParent(p: ClassDecl): Unit = {
+      /*def addVarsOfParent(p: ClassDecl): Unit = {
         p.vars foreach { v => addVariable(v.id.getSymbol) }
         identToClassDecl(p.parent, prog) match {
           case Some(pp) => addVarsOfParent(pp)
@@ -92,7 +92,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case Some(pp) => addVarsOfParent(pp)
         case None => { }
       }
-      ct.vars foreach { v => addVariable(v.id.getSymbol) }
+      ct.vars foreach { v => addVariable(v.id.getSymbol) }*/
       val methSym = mt.getSymbol
       var param = 1
       mt.args foreach { mArgs => {
@@ -362,7 +362,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         })
       }
       case None => {
-        sys.error(s"There is no mapping (${sym} -> int)")
+        currentClass match {
+          case Some(c) => {
+            ch << ALoad(0) << GetField(c.id.value, sym.name, getTypeStringOfType(sym.getType))
+          }
+          case None => sys.error(s"There is no current class (weirdly enough)")
+        }
       }
     }
   }
@@ -376,7 +381,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         })
       }
       case None => {
-        sys.error(s"There is no mapping (${sym.name} -> int)")
+        currentClass match {
+          case Some(c) => {
+            ch << ALoad(0) << DUP_X1 << POP
+            ch << PutField(c.id.value, sym.name, getTypeStringOfType(sym.getType))
+          }
+          case None => sys.error(s"There is no current class (weirdly enough)")
+        }
       }
     }
   }
