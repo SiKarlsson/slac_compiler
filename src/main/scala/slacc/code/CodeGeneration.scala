@@ -19,6 +19,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
     /** Writes the proper .class file in a given directory. An empty string for dir is equivalent to "./". */
     def generateClassFile(sourceName: String, ct: ClassDecl, dir: String): Unit = {
+      var addedMethods = scala.collection.mutable.Set[String]()
       currentClass = Some(ct)
       val classFile = new ClassFile(ct.id.value, None)
       classFile.setSourceFile(sourceName)
@@ -50,6 +51,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           } else {
             val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
             generateMethodCode(meth)(mh.codeHandler, ct)
+            addedMethods.add(meth.id.value)
           }
         }
       }
