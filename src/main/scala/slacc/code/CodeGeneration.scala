@@ -47,14 +47,15 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         meth => {
           if (ct.id.value == "Main") {
             val mainHandler = classFile.addMainMethod.codeHandler
-            generateMethodCode(meth)(mainHandler, ct)
+            generateMethodCode(meth)(mainHandler)
           } else {
             val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
-            generateMethodCode(meth)(mh.codeHandler, ct)
+            generateMethodCode(meth)(mh.codeHandler)
             addedMethods.add(meth.id.value)
           }
         }
       }
+
 
       var parent: Option[ClassDecl] = identToClassDecl(ct.parent, prog)
       while (parent != None) {
@@ -62,7 +63,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           for (meth <- parent.get.methods) {
             if (!addedMethods.contains(meth.id.value)) {
               val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
-              generateMethodCode(meth)(mh.codeHandler, ct)
+              generateMethodCode(meth)(mh.codeHandler)
               addedMethods.add(meth.id.value)
             }
           }
@@ -75,7 +76,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
     // a mapping from variable symbols to positions in the local variables
     // of the stack frame
-    def generateMethodCode(mt: MethodDecl)(implicit ch: CodeHandler, ct: ClassDecl): Unit = {
+    def generateMethodCode(mt: MethodDecl)(implicit ch: CodeHandler): Unit = {
       var variables = Map[Symbol, Int]()
       def addVariable(sym: Symbol)(implicit ch: CodeHandler) {
         variables += (sym -> ch.getFreshVar)
