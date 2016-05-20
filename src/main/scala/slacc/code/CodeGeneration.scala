@@ -247,7 +247,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           pushVariable(e.asInstanceOf[Identifier].getSymbol, variables)
         }
         case Self() => {
-
+          ch << ALoad(0)
         }
         case NewIntArray(size) => {
           generateExprCode(size)
