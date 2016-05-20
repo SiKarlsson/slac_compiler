@@ -221,10 +221,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         }
         case NewIntArray(size) => {
-          ch << Label(ch.getFreshLabel("HEJHEJ"))
           generateExprCode(size)
           ch << NewArray(10) // 10 = T_INT
-          ch << Label(ch.getFreshLabel("HEJHEJ"))
         }
         case New(tpe) => {
           ch << DefaultNew(typeString(tpe))
