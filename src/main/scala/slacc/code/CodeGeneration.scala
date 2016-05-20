@@ -416,7 +416,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
   def getTypeStringOfExprTree(e: ExprTree): String = {
     e.getType match {
       case TInt => "I"
-      case TBoolean => "B"
+      case TBoolean => "Z"
       case TString => "Ljava/lang/String;"
       case TUnit => "V"
       case TIntArray => "[I"
