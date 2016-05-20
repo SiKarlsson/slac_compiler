@@ -196,17 +196,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
               ch << If_ICmpEq(label1) << Ldc(0) << Goto(label2) <<
               Label(label1) << Ldc(1) << Label(label2)
             }
-            case TIntArray => {
-              sys.error("IntArray comparison is not implemented yet")
-            }
-            case TString => {
-              sys.error("String comparison is not implemented yet")
-            }
-            case TUnit => {
-              sys.error("Unit comparison is not implemented yet")
-            }
-            case TClass(_) => {
-              sys.error("Class comparison is not implemented yet")
+            case TIntArray | TString | TUnit | TClass(_) => {
+              val label1 = ch.getFreshLabel("equals")
+              val label2 = ch.getFreshLabel("not_equals")
+              generateExprCode(lhs)
+              generateExprCode(rhs)
+              ch << If_ACmpEq(label1) << Ldc(0) << Goto(label2) <<
+                Label(label1) << Ldc(1) << Label(label2)
             }
             case _ => {
               sys.error("Tried to match something unexpected in an equals expression")
