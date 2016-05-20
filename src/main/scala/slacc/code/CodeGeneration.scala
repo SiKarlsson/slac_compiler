@@ -213,10 +213,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ICONST_0
         }
         case Identifier(value) => {
-          e.asInstanceOf[Identifier].getType match {
-            case TInt => { ch << ILoad(variables(e.asInstanceOf[Identifier].getSymbol)) }
-            case _ => { ch << ALoad(variables(e.asInstanceOf[Identifier].getSymbol)) }
-          }
+          pushVariable(e.asInstanceOf[Identifier].getSymbol, variables)
         }
         case Self() => {
 
@@ -281,10 +278,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           // The value to be stored will be on the top of the stack
           generateExprCode(expr)
           val idSym = id.getSymbol
-          ch << (id.getType match {
-            case TInt => IStore(variables(idSym))
-            case _ => AStore(variables(idSym))
-          })
+          storeVariable(idSym, variables)
         }
         case ArrayAssign(id: Identifier, index, expr) => {
           ch << ALoad(variables(id.getSymbol))
@@ -329,10 +323,30 @@ object CodeGeneration extends Pipeline[Program, Unit] {
   }
 
   def pushVariable(sym: Symbol, vars: Map[Symbol, Int])(implicit ch: CodeHandler): Unit = {
-    val reg = vars(sym)
-    sym.getType match {
-      case TInt => ILoad(reg)
-      case _ => ALoad(reg)
+    vars get sym match {
+      case Some(s) => {
+        ch << (sym.getType match {
+          case TInt => ILoad(s)
+          case _ => ALoad(s)
+        })
+      }
+      case None => {
+        sys.error(s"There is no mapping (${sym} -> int)")
+      }
+    }
+  }
+
+  def storeVariable(sym: Symbol, vars: Map[Symbol, Int])(implicit ch: CodeHandler): Unit = {
+    vars get sym match {
+      case Some(s) => {
+        ch << (sym.getType match {
+          case TInt => IStore(s)
+          case _ => AStore(s)
+        })
+      }
+      case None => {
+        sys.error(s"There is no mapping (${sym.name} -> int)")
+      }
     }
   }
 
