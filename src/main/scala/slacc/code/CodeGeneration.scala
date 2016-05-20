@@ -94,9 +94,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       }
       ct.vars foreach { v => addVariable(v.id.getSymbol) }
       val methSym = mt.getSymbol
-
-      mt.args foreach { mArgs => addVariable(mArgs.id.getSymbol) }
-
+      var param = 1
+      mt.args foreach { mArgs => {
+        variables += (mArgs.id.getSymbol -> param)
+        param += 1
+      }}
+      println(s"${mt.id.value} has args ${mt.args}")
       mt.getSymbol.members foreach { mVars => addVariable(mVars._2) }
 
       for (e <- mt.exprs) {
