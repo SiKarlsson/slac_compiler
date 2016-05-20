@@ -12,14 +12,14 @@ import utils._
 
 object CodeGeneration extends Pipeline[Program, Unit] {
 
+  var currentClass: Option[ClassDecl] = None
+
   def run(ctx: Context)(prog: Program): Unit = {
     import ctx.reporter._
 
-    var currentClass: Option[String] = None
-
     /** Writes the proper .class file in a given directory. An empty string for dir is equivalent to "./". */
     def generateClassFile(sourceName: String, ct: ClassDecl, dir: String): Unit = {
-      currentClass = Some(ct.id.value)
+      currentClass = Some(ct)
       val classFile = new ClassFile(ct.id.value, None)
       classFile.setSourceFile(sourceName)
       classFile.addDefaultConstructor
@@ -46,10 +46,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         meth => {
           if (ct.id.value == "Main") {
             val mainHandler = classFile.addMainMethod.codeHandler
-            generateMethodCode(meth)(mainHandler)
+            generateMethodCode(meth)(mainHandler, ct)
           } else {
             val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
-            generateMethodCode(meth)(mh.codeHandler)
+            generateMethodCode(meth)(mh.codeHandler, ct)
           }
         }
       }
@@ -58,12 +58,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
     // a mapping from variable symbols to positions in the local variables
     // of the stack frame
-    def generateMethodCode(mt: MethodDecl)(implicit ch: CodeHandler): Unit = {
+    def generateMethodCode(mt: MethodDecl)(implicit ch: CodeHandler, ct: ClassDecl): Unit = {
       var variables = Map[Symbol, Int]()
       def addVariable(sym: Symbol)(implicit ch: CodeHandler) {
         variables += (sym -> ch.getFreshVar)
       }
 
+      ct.vars foreach { v => addVariable(v.id.getSymbol) }
       val methSym = mt.getSymbol
 
       mt.args foreach { mArgs => addVariable(mArgs.id.getSymbol) }
@@ -212,19 +213,14 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ICONST_0
         }
         case Identifier(value) => {
-          e.asInstanceOf[Identifier].getType match {
-            case TInt => { ch << ILoad(variables(e.asInstanceOf[Identifier].getSymbol)) }
-            case _ => { ch << ALoad(variables(e.asInstanceOf[Identifier].getSymbol)) }
-          }
+          pushVariable(e.asInstanceOf[Identifier].getSymbol, variables)
         }
         case Self() => {
 
         }
         case NewIntArray(size) => {
-          ch << Label(ch.getFreshLabel("HEJHEJ"))
           generateExprCode(size)
           ch << NewArray(10) // 10 = T_INT
-          ch << Label(ch.getFreshLabel("HEJHEJ"))
         }
         case New(tpe) => {
           ch << DefaultNew(typeString(tpe))
@@ -282,10 +278,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           // The value to be stored will be on the top of the stack
           generateExprCode(expr)
           val idSym = id.getSymbol
-          ch << (id.getType match {
-            case TInt => IStore(variables(idSym))
-            case _ => AStore(variables(idSym))
-          })
+          storeVariable(idSym, variables)
         }
         case ArrayAssign(id: Identifier, index, expr) => {
           ch << ALoad(variables(id.getSymbol))
@@ -330,10 +323,30 @@ object CodeGeneration extends Pipeline[Program, Unit] {
   }
 
   def pushVariable(sym: Symbol, vars: Map[Symbol, Int])(implicit ch: CodeHandler): Unit = {
-    val reg = vars(sym)
-    sym.getType match {
-      case TInt => ILoad(reg)
-      case _ => ALoad(reg)
+    vars get sym match {
+      case Some(s) => {
+        ch << (sym.getType match {
+          case TInt => ILoad(s)
+          case _ => ALoad(s)
+        })
+      }
+      case None => {
+        sys.error(s"There is no mapping (${sym} -> int)")
+      }
+    }
+  }
+
+  def storeVariable(sym: Symbol, vars: Map[Symbol, Int])(implicit ch: CodeHandler): Unit = {
+    vars get sym match {
+      case Some(s) => {
+        ch << (sym.getType match {
+          case TInt => IStore(s)
+          case _ => AStore(s)
+        })
+      }
+      case None => {
+        sys.error(s"There is no mapping (${sym.name} -> int)")
+      }
     }
   }
 
