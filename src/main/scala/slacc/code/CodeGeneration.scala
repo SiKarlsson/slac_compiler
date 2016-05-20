@@ -12,14 +12,14 @@ import utils._
 
 object CodeGeneration extends Pipeline[Program, Unit] {
 
+  var currentClass: Option[ClassDecl] = None
+
   def run(ctx: Context)(prog: Program): Unit = {
     import ctx.reporter._
 
-    var currentClass: Option[String] = None
-
     /** Writes the proper .class file in a given directory. An empty string for dir is equivalent to "./". */
     def generateClassFile(sourceName: String, ct: ClassDecl, dir: String): Unit = {
-      currentClass = Some(ct.id.value)
+      currentClass = Some(ct)
       val classFile = new ClassFile(ct.id.value, None)
       classFile.setSourceFile(sourceName)
       classFile.addDefaultConstructor
