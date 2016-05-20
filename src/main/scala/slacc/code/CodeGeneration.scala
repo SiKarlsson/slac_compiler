@@ -55,6 +55,21 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
         }
       }
+
+      var parent: Option[ClassDecl] = identToClassDecl(ct.parent, prog)
+      while (parent != None) {
+        if (parent.get.id.value != "Main") {
+          for (meth <- parent.get.methods) {
+            if (!addedMethods.contains(meth.id.value)) {
+              val mh: MethodHandler = classFile.addMethod(typeString(meth.retType), meth.id.value, parameterString(meth.args))
+              generateMethodCode(meth)(mh.codeHandler, ct)
+              addedMethods.add(meth.id.value)
+            }
+          }
+        }
+        parent = identToClassDecl(parent.get.parent, prog)
+      }
+
       classFile.writeToFile(dir + "/" + ct.id.value + ".class")
     }
 
