@@ -402,4 +402,18 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     }
     paramStr
   }
+
+  def identToClassDecl(ident: Option[Identifier], prog: Program): Option[ClassDecl] = {
+    ident match {
+      case Some(i) => {
+        for (classInst <-  prog.classes) {
+          if (classInst.id.value == i.value) {
+            return Some(classInst)
+          }
+        }
+      }
+      case _ => {}
+    }
+    None
+  }
 }
