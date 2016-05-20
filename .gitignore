@@ -8,3 +8,4 @@ test_programs
 lib/
 .idea/
 *.class
+*.log
