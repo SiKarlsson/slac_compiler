@@ -132,7 +132,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           e.getType match {
             case TString => {
               ch << Label(ch.getFreshLabel("StringConcat-before"))
-              val z = ch.getFreshVar;
+              val z = ch.getFreshVar("Ljava/lang/StringBuilder;");
               ch << DefaultNew("java/lang/StringBuilder") << AStore(z) << ALoad(z)
               generateExprCode(lhs)
               ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${getTypeStringOfExprTree(lhs)})Ljava/lang/StringBuilder;")
