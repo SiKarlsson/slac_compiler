@@ -307,7 +307,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             case TInt | TBoolean => {
               ch << DefaultNew("java/lang/StringBuilder")
               generateExprCode(expr)
-              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${getTypeStringOfType(expr.getType)})Ljava/lang/StringBuilder;") <<
+              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${getTypeStringOfExprTree(expr)})Ljava/lang/StringBuilder;") <<
                 InvokeVirtual("java/lang/StringBuilder", "toString", "()Ljava/lang/String;")
             }
             case _ => sys.error("Strof does not support " + expr.getType)
