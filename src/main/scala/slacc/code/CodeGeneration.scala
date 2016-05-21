@@ -82,25 +82,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         variables += (sym -> ch.getFreshVar)
       }
 
-      /*def addVarsOfParent(p: ClassDecl): Unit = {
-        p.vars foreach { v => addVariable(v.id.getSymbol) }
-        identToClassDecl(p.parent, prog) match {
-          case Some(pp) => addVarsOfParent(pp)
-          case None => { }
-        }
-      }
-      identToClassDecl(ct.parent, prog) match {
-        case Some(pp) => addVarsOfParent(pp)
-        case None => { }
-      }
-      ct.vars foreach { v => addVariable(v.id.getSymbol) }*/
       val methSym = mt.getSymbol
       var param = 1
       mt.args foreach { mArgs => {
         variables += (mArgs.id.getSymbol -> param)
         param += 1
       }}
-      println(s"${mt.id.value} has args ${mt.args}")
       mt.getSymbol.members foreach { mVars => addVariable(mVars._2) }
 
       for (e <- mt.exprs) {
