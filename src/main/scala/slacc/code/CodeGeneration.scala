@@ -212,7 +212,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           generateExprCode(obj)
           args foreach { a => generateExprCode(a) }
           val methodSignature = invokeVirtualMethodSig(args, retType)
-          ch << InvokeVirtual(typString(obj), meth.value, methodSignature) <<
+          ch << InvokeVirtual(typeString(obj), meth.value, methodSignature) <<
             Label("EndOf-" + obj + "." + meth + "(" + args + ")")
         }
         case IntLit(value) => {
@@ -307,7 +307,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             case TInt | TBoolean => {
               ch << DefaultNew("java/lang/StringBuilder")
               generateExprCode(expr)
-              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${typString(expr)})Ljava/lang/StringBuilder;") <<
+              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${typeString(expr)})Ljava/lang/StringBuilder;") <<
                 InvokeVirtual("java/lang/StringBuilder", "toString", "()Ljava/lang/String;")
             }
             case _ => sys.error("Strof does not support " + expr.getType)
@@ -348,7 +348,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       case None => {
         currentClass match {
           case Some(c) => {
-            ch << ALoad(0) << GetField(c.id.value, sym.name, typString(sym.getType))
+            ch << ALoad(0) << GetField(c.id.value, sym.name, typeString(sym.getType))
           }
           case None => sys.error(s"There is no current class (weirdly enough)")
         }
@@ -368,7 +368,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         currentClass match {
           case Some(c) => {
             ch << ALoad(0) << DUP_X1 << POP
-            ch << PutField(c.id.value, sym.name, typString(sym.getType))
+            ch << PutField(c.id.value, sym.name, typeString(sym.getType))
           }
           case None => sys.error(s"There is no current class (weirdly enough)")
         }
@@ -385,7 +385,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           case UnitType() => "V"
           case BooleanType() => "Z"
           case IntArrayType() => "I"
-          case Identifier(value) => "L" + value + ";"
+          case Identifier(value) => value
           case _ => sys.error(tt + " has no type!")
         }
       }
@@ -418,7 +418,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
   def invokeVirtualMethodSig(args: List[ExprTree], retType: Type): String = {
     var sig = "("
     for (arg <- args) {
-      sig += typString(arg.getType)
+      sig += typeString(arg.getType)
     }
     sig += ")"
     sig += typeString(retType)
