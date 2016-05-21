@@ -5,7 +5,6 @@ src/main/scala/slacc/target/
 src/project/
 *.slac
 test_programs
-lib/
 .idea/
 *.class
 *.log
