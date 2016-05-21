@@ -135,11 +135,11 @@ object CodeGeneration extends Pipeline[Program, Unit] {
               val z = ch.getFreshVar("Ljava/lang/StringBuilder;");
               ch << DefaultNew("java/lang/StringBuilder") << AStore(z) << ALoad(z)
               generateExprCode(lhs)
-              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${getTypeStringOfExprTree(lhs)})Ljava/lang/StringBuilder;")
+              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${typeString(lhs)})Ljava/lang/StringBuilder;")
               generateExprCode(rhs)
               ch << InvokeVirtual("java/lang/StringBuilder",
                 "append",
-                s"(${getTypeStringOfExprTree(rhs)})Ljava/lang/StringBuilder;") <<
+                s"(${typeString(rhs)})Ljava/lang/StringBuilder;") <<
               InvokeVirtual("java/lang/StringBuilder", "toString", "()Ljava/lang/String;")
               ch << Label(ch.getFreshLabel("StringConcat-after"))
             }
@@ -212,7 +212,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           generateExprCode(obj)
           args foreach { a => generateExprCode(a) }
           val methodSignature = invokeVirtualMethodSig(args, retType)
-          ch << InvokeVirtual(getTypeStringOfExprTree(obj), meth.value, methodSignature) <<
+          ch << InvokeVirtual(typString(obj), meth.value, methodSignature) <<
             Label("EndOf-" + obj + "." + meth + "(" + args + ")")
         }
         case IntLit(value) => {
@@ -307,7 +307,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             case TInt | TBoolean => {
               ch << DefaultNew("java/lang/StringBuilder")
               generateExprCode(expr)
-              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${getTypeStringOfExprTree(expr)})Ljava/lang/StringBuilder;") <<
+              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${typString(expr)})Ljava/lang/StringBuilder;") <<
                 InvokeVirtual("java/lang/StringBuilder", "toString", "()Ljava/lang/String;")
             }
             case _ => sys.error("Strof does not support " + expr.getType)
@@ -348,7 +348,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       case None => {
         currentClass match {
           case Some(c) => {
-            ch << ALoad(0) << GetField(c.id.value, sym.name, getTypeStringOfType(sym.getType))
+            ch << ALoad(0) << GetField(c.id.value, sym.name, typString(sym.getType))
           }
           case None => sys.error(s"There is no current class (weirdly enough)")
         }
@@ -368,7 +368,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         currentClass match {
           case Some(c) => {
             ch << ALoad(0) << DUP_X1 << POP
-            ch << PutField(c.id.value, sym.name, getTypeStringOfType(sym.getType))
+            ch << PutField(c.id.value, sym.name, typString(sym.getType))
           }
           case None => sys.error(s"There is no current class (weirdly enough)")
         }
@@ -376,69 +376,52 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     }
   }
 
-  def typeString(retType: TypeTree): String = {
-    retType match {
-      case IntType() => {
-        "I"
-      }
-      case StringType() => {
-        "Ljava/lang/String;"
-      }
-      case UnitType() => {
-        "V"
-      }
-      case BooleanType() => {
-        "Z"
-      }
-      case IntArrayType() => {
-        "[I"
-      }
-      case Identifier(value) => {
-        value
-      }
-      case _ => {
-        sys.error(retType + " has no type!")
-      }
-    }
-  }
-  def getTypeStringOfExprTree(e: ExprTree): String = {
-    e.getType match {
-      case TInt => "I"
-      case TBoolean => "Z"
-      case TString => "Ljava/lang/String;"
-      case TUnit => "V"
-      case TIntArray => "[I"
-      case TClass(cs) => cs.name.toString
-      case _ => sys.error("Unexpected type: " + e.getType)
-    }
-  }
-  def getTypeStringOfType(t: Type): String = {
+  def typeString(t: Any): String = {
     t match {
-      case TInt => "I"
-      case TBoolean => "Z"
-      case TString => "Ljava/lang/String;"
-      case TUnit => "V"
-      case TIntArray => "[I"
-      case TClass(cs) => cs.name.toString
-      case _ => sys.error("Unexpected type: " + t)
+      case tt: TypeTree => {
+        tt match {
+          case IntType() => "I"
+          case StringType() => "Ljava/lang/String;"
+          case UnitType() => "V"
+          case BooleanType() => "Z"
+          case IntArrayType() => "I"
+          case Identifier(value) => "L" + value + ";"
+          case _ => sys.error(tt + " has no type!")
+        }
+      }
+      case et: ExprTree => {
+        et.getType match {
+          case TInt => "I"
+          case TBoolean => "Z"
+          case TString => "Ljava/lang/String;"
+          case TUnit => "V"
+          case TIntArray => "[I"
+          case TClass(cs) => cs.name.toString
+          case _ => sys.error("Unexpected type: " + et.getType)
+        }
+      }
+      case t: Type => {
+        t match {
+          case TInt => "I"
+          case TBoolean => "Z"
+          case TString => "Ljava/lang/String;"
+          case TUnit => "V"
+          case TIntArray => "[I"
+          case TClass(cs) => cs.name.toString
+          case _ => sys.error("Unexpected type: " + t)
+        }
+      }
+      case _ => sys.error("Don't try to typestring " + t + "...")
     }
   }
 
   def invokeVirtualMethodSig(args: List[ExprTree], retType: Type): String = {
     var sig = "("
     for (arg <- args) {
-      sig += getTypeStringOfType(arg.getType)
+      sig += typString(arg.getType)
     }
     sig += ")"
-    sig += (retType match {
-      case TInt => "I"
-      case TBoolean => "Z"
-      case TString => "Ljava/lang/String;"
-      case TUnit => "V"
-      case TIntArray => "[I"
-      case TClass(cs) => "L" + cs.name.toString + ";"
-      case _ => sys.error("Unexpected type: " + retType)
-    })
+    sig += typeString(retType)
     sig
   }
 
