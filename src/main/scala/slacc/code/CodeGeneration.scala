@@ -430,7 +430,15 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       sig += getTypeStringOfType(arg.getType)
     }
     sig += ")"
-    sig += getTypeStringOfType(retType)
+    sig += (retType match {
+      case TInt => "I"
+      case TBoolean => "Z"
+      case TString => "Ljava/lang/String;"
+      case TUnit => "V"
+      case TIntArray => "[I"
+      case TClass(cs) => "L" + cs.name.toString + ";"
+      case _ => sys.error("Unexpected type: " + retType)
+    })
     sig
   }
 
