@@ -49,7 +49,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             val mainHandler = classFile.addMainMethod.codeHandler
             generateMethodCode(meth)(mainHandler)
           } else {
-            val mh: MethodHandler = classFile.addMethod(typeStringFromTypeTree(meth.retType), meth.id.value, parameterString(meth.args))
+            val mh: MethodHandler = classFile.addMethod(typeStringFromTypeTree(meth.retType, "L", ";"), meth.id.value, parameterString(meth.args))
             generateMethodCode(meth)(mh.codeHandler)
             addedMethods.add(meth.id.value)
           }
