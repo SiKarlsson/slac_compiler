@@ -94,6 +94,16 @@ object NameAnalysis extends Pipeline[Program, Program] {
                     }
                   }
                 }
+
+                method.retType match {
+                  case Identifier(value) => {
+                    glob.classes get value match {
+                      case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
+                      case None => ctx.reporter.error("Class is not declared", method.retType)
+                    }
+                  }
+                  case _ => { }
+                }
               } else {
                 ctx.reporter.error("Method is already defined in superclass", method)
               }
@@ -120,6 +130,16 @@ object NameAnalysis extends Pipeline[Program, Program] {
                   method.getSymbol.addParam(paramId, paramSymbol)
                 }
               }
+            }
+
+            method.retType match {
+              case Identifier(value) => {
+                glob.classes get value match {
+                  case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
+                  case None => ctx.reporter.error("Class is not declared", method.retType)
+                }
+              }
+              case _ => { }
             }
           }
         }
