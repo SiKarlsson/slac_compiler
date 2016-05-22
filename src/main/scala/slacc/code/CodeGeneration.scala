@@ -238,7 +238,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << NewArray(10) // 10 = T_INT
         }
         case New(tpe) => {
-          ch << DefaultNew(typeStringFromExprTree(tpe))
+          //ch << DefaultNew(tpe.value)
+          ch << DefaultNew(tpe.value)
         }
         case Not(tpe) => {
           generateExprCode(tpe)
