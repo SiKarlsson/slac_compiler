@@ -238,7 +238,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << NewArray(10) // 10 = T_INT
         }
         case New(tpe) => {
-          ch << DefaultNew(typeString(tpe))
+          ch << DefaultNew(typeStringFromExprTree(tpe))
         }
         case Not(tpe) => {
           generateExprCode(tpe)
@@ -415,7 +415,7 @@ def typeStringFromType(t: Type, l: String = "", sc: String = ""): String = {
   def invokeVirtualMethodSig(args: List[ExprTree], retType: Type): String = {
     var sig = "("
     for (arg <- args) {
-      sig += typeStringFromType(arg.getType)
+      sig += typeStringFromType(arg.getType, "L", ";")
     }
     sig += ")"
     sig += typeStringFromType(retType, "L", ";")
