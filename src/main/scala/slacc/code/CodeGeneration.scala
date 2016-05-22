@@ -207,13 +207,17 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ARRAYLENGTH
         }
         case MethodCall(obj, meth: Identifier, args) => {
-          ch << Label(ch.getFreshLabel(obj + "." + meth + "(" + args + ")"))
+          ch << Label(ch.getFreshLabel("MethodCall-before")) << Comment(obj + "." + meth.value + "(" + args + ")")
           val retType = meth.getSymbol.getType
+          ch << Comment("Pushing " + obj + " to stack")
           generateExprCode(obj)
-          args foreach { a => generateExprCode(a) }
+          for (a <- args) {
+              ch << Comment("Pushing " + a + " to stack")
+              generateExprCode(a)
+          }
           val methodSignature = invokeVirtualMethodSig(args, retType)
           ch << InvokeVirtual(typeStringFromExprTree(obj), meth.value, methodSignature) <<
-            Label("EndOf-" + obj + "." + meth + "(" + args + ")")
+            Label("MethodCall-after")
         }
         case IntLit(value) => {
           ch << Ldc(value)
@@ -284,11 +288,13 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << Goto(label1) << Label(label3)
         }
         case Println(value) => {
-          ch << Label(ch.getFreshLabel("Println(" + value.toString + ")"))
-          ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;")
+          ch << Comment("Println(" + value.toString + ")") <<
+            Label(ch.getFreshLabel("Println-before")) <<
+            GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;")
           generateExprCode(value)
           ch << InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
-          ch << Label(ch.getFreshLabel("EndOf-Println(" + value.toString + ")"))
+          ch << Comment("EndOf-Println(" + value.toString + ")") <<
+            Label(ch.getFreshLabel("Println-after"))
         }
         case Assign(id: Identifier, expr) => {
           // The value to be stored will be on the top of the stack
@@ -303,17 +309,22 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << IASTORE
         }
         case Strof(expr) => {
-          ch << Label(ch.getFreshLabel("strOf-" + expr))
+          ch << Label(ch.getFreshLabel("strOf-before")) << Comment("strOf(" + expr + ")")
           expr.getType match {
             case TInt | TBoolean => {
-              ch << DefaultNew("java/lang/StringBuilder")
+              ch << Comment("Pushing new StringBuilder to stack") <<
+                DefaultNew("java/lang/StringBuilder")
               generateExprCode(expr)
-              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${typeStringFromExprTree(expr)})Ljava/lang/StringBuilder;") <<
-                InvokeVirtual("java/lang/StringBuilder", "toString", "()Ljava/lang/String;")
+              ch << Comment("Appending " + expr + " to StringBuilder") <<
+                InvokeVirtual("java/lang/StringBuilder", "append",
+                  s"(${typeStringFromExprTree(expr)})Ljava/lang/StringBuilder;") <<
+                  Comment("Calling toString on StringBuilder") <<
+                InvokeVirtual("java/lang/StringBuilder", "toString",
+                  "()Ljava/lang/String;")
             }
             case _ => sys.error("Strof does not support " + expr.getType)
           }
-          ch << Label(ch.getFreshLabel("strOf-" + expr))
+          ch << Label(ch.getFreshLabel("strOf-after"))
         }
         case _ => sys.error("Can't generate bytecode for " + e)
       }
