@@ -1,6 +1,7 @@
 package slacc
 package code
 
+import scala.collection.mutable.ListBuffer
 import ast.Trees._
 import analyzer.Symbols._
 import analyzer.Types._
@@ -51,6 +52,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         }
       }
 
+      var contains = Map[String, Boolean]()
 
       ct.methods foreach {
         meth => {
@@ -60,12 +62,54 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           } else {
             val mh: MethodHandler = classFile.addMethod(typeStringFromTypeTree(meth.retType, "L", ";"), meth.id.value, parameterString(meth.args))
             generateMethodCode(meth)(mh.codeHandler)
-            addedMethods.add(meth.id.value)
+            contains += (meth.id.value -> true)
           }
         }
       }
 
+      var parentMethods = new ListBuffer[MethodDecl]()
 
+      ct.parent match {
+        case Some(p) => {
+          for (ccc <- prog.classes) {
+            if (ccc.id.value == p.value) {
+              addMethodsOfParent(ccc)(parentMethods)
+            }
+          }
+        }
+        case None => { }
+      }
+
+      def addMethodsOfParent(ctm: ClassDecl)(implicit parentMethods: ListBuffer[MethodDecl]): Unit = {
+        for (meth <- ctm.methods) {
+          parentMethods += meth
+        }
+        ctm.parent match {
+          case Some(p) => {
+            for (ccc <- prog.classes) {
+              if (ccc.id.value == p.value) {
+                addMethodsOfParent(ccc)
+              }
+            }
+          }
+          case None => { }
+        }
+      }
+
+      parentMethods.toList foreach {
+        ch => {
+          contains get ch.id.value match {
+            case Some(m) => { ctx.reporter.warning("Overriding method " + ch.id.value + " of superclass", ch) }
+            case None => {
+              val mh: MethodHandler = classFile.addMethod(typeStringFromTypeTree(ch.retType, "L", ";"), ch.id.value, parameterString(ch.args))
+              generateMethodCode(ch)(mh.codeHandler)
+              contains += (ch.id.value -> true)
+            }
+          }
+        }
+      }
+
+      /*
       var parent: Option[ClassDecl] = identToClassDecl(ct.parent, prog)
       while (parent != None) {
         if (parent.get.id.value != "Main") {
@@ -78,7 +122,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
         }
         parent = identToClassDecl(parent.get.parent, prog)
-      }
+      }*/
 
       classFile.writeToFile(dir + "/" + ct.id.value + ".class")
     }
