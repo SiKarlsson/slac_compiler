@@ -490,7 +490,7 @@ def typeStringFromType(t: Type, l: String = "", sc: String = ""): String = {
   def parameterString(args: List[Formal]): String = {
     var paramStr = "";
     for (arg <- args) {
-      paramStr = paramStr.concat(typeStringFromTypeTree(arg.tpe))
+      paramStr = paramStr.concat(typeStringFromTypeTree(arg.tpe, "L", ";"))
     }
     paramStr
   }
