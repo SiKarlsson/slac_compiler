@@ -303,7 +303,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           storeVariable(idSym, variables)
         }
         case ArrayAssign(id: Identifier, index, expr) => {
-          ch << ALoad(variables(id.getSymbol))
+          pushVariable(id.getSymbol, variables)
           generateExprCode(index)
           generateExprCode(expr)
           ch << IASTORE
