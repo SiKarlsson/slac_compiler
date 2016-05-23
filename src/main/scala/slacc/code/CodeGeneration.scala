@@ -27,21 +27,30 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       for (vari <- ct.vars) {
         classFile.addField(typeStringFromTypeTree(vari.tpe), vari.id.value)
       }
-      ct.parent match {
-        case Some(p) => {
-          ct.getSymbol.parent match {
-            case Some(pm) => {
-              for ((value, varSymbol) <- pm.members) {
-                classFile.addField(typeStringFromType(varSymbol.getType), value)
+
+      addFieldsOfParent(ct)
+
+      def addFieldsOfParent(cd: ClassDecl): Unit = {
+        cd.parent match {
+          case Some(p) => {
+            cd.getSymbol.parent match {
+              case Some(pm) => {
+                for ((value, varSymbol) <- pm.members) {
+                  classFile.addField(typeStringFromType(varSymbol.getType), value)
+                }
+              }
+              case None => sys.error("ClassDecl has parent but parent has no class symbol")
+            }
+            for (classD <- prog.classes) {
+              if (classD.id.value == p.value) {
+                addFieldsOfParent(classD)
               }
             }
-            case None => {
-              sys.error("ClassDecl has parent but parent has no class symbol")
-            }
           }
+          case None => { }
         }
-        case None => { }
       }
+
 
       ct.methods foreach {
         meth => {
