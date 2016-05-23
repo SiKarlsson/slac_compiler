@@ -188,7 +188,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
               val z = ch.getFreshVar("Ljava/lang/StringBuilder;");
               ch << DefaultNew("java/lang/StringBuilder") << AStore(z) << ALoad(z)
               generateExprCode(lhs)
-              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${typeStringFromExprTree(lhs)})Ljava/lang/StringBuilder;")
+              ch << InvokeVirtual("java/lang/StringBuilder", "append", s"(${typeStringFromExprTree(lhs, "L", ";")})Ljava/lang/StringBuilder;")
               generateExprCode(rhs)
               ch << InvokeVirtual("java/lang/StringBuilder",
                 "append",
@@ -370,7 +370,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
               generateExprCode(expr)
               ch << Comment("Appending " + expr + " to StringBuilder") <<
                 InvokeVirtual("java/lang/StringBuilder", "append",
-                  s"(${typeStringFromExprTree(expr)})Ljava/lang/StringBuilder;") <<
+                  s"(${typeStringFromExprTree(expr, "L", ";")})Ljava/lang/StringBuilder;") <<
                   Comment("Calling toString on StringBuilder") <<
                 InvokeVirtual("java/lang/StringBuilder", "toString",
                   "()Ljava/lang/String;")
