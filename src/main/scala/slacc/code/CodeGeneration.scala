@@ -406,7 +406,7 @@ def typeStringFromTypeTree(tt: TypeTree, l: String = "", sc: String = ""): Strin
     case StringType() => "Ljava/lang/String;"
     case UnitType() => "V"
     case BooleanType() => "Z"
-    case IntArrayType() => "I"
+    case IntArrayType() => "[I"
     case Identifier(value) => l + value + sc
     case _ => sys.error(tt + " has no type!")
   }
