@@ -269,6 +269,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
               generateExprCode(a)
           }
           val methodSignature = invokeVirtualMethodSig(args, retType)
+          ch << Comment("Invoking " + meth.value)
           ch << InvokeVirtual(typeStringFromExprTree(obj), meth.value, methodSignature) <<
             Label("MethodCall-after")
         }
@@ -295,7 +296,6 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << NewArray(10) // 10 = T_INT
         }
         case New(tpe) => {
-          //ch << DefaultNew(tpe.value)
           ch << DefaultNew(tpe.value)
         }
         case Not(tpe) => {
