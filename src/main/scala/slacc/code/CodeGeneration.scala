@@ -154,7 +154,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       generateExprCode(mt.retExpr)(ch, variables)
 
       ch << (getTypeOfTypeTree(mt.retType, ctx.reporter) match {
-        case TInt => { IRETURN }
+        case TInt | TBoolean => { IRETURN }
         case TUnit => { RETURN }
         case _ => { ARETURN }
       })
@@ -438,8 +438,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
   def typeStringFromExprTree(et: ExprTree, l: String = "", sc: String = ""): String = {
     et.getType match {
-      case TInt => "I"
-      case TBoolean => "Z"
+      case TInt | TBoolean => "I"
+      //case TBoolean => "Z"
       case TString => "Ljava/lang/String;"
       case TUnit => "V"
       case TIntArray => "[I"
@@ -450,10 +450,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
 def typeStringFromTypeTree(tt: TypeTree, l: String = "", sc: String = ""): String = {
   tt match {
-    case IntType() => "I"
+    case IntType() | BooleanType() => "I"
     case StringType() => "Ljava/lang/String;"
     case UnitType() => "V"
-    case BooleanType() => "Z"
+    //case BooleanType() => "Z"
     case IntArrayType() => "[I"
     case Identifier(value) => l + value + sc
     case _ => sys.error(tt + " has no type!")
@@ -462,8 +462,8 @@ def typeStringFromTypeTree(tt: TypeTree, l: String = "", sc: String = ""): Strin
 
 def typeStringFromType(t: Type, l: String = "", sc: String = ""): String = {
   t match {
-    case TInt => "I"
-    case TBoolean => "Z"
+    case TInt | TBoolean => "I"
+    //case TBoolean => "Z"
     case TString => "Ljava/lang/String;"
     case TUnit => "V"
     case TIntArray => "[I"
