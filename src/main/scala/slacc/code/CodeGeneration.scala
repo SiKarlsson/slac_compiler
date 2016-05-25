@@ -26,7 +26,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       classFile.setSourceFile(sourceName)
       classFile.addDefaultConstructor
       for (vari <- ct.vars) {
-        classFile.addField(typeStringFromTypeTree(vari.tpe), vari.id.value)
+        classFile.addField(typeStringFromTypeTree(vari.tpe, "L", ";"), vari.id.value)
       }
 
       addFieldsOfParent(ct)
@@ -37,7 +37,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             cd.getSymbol.parent match {
               case Some(pm) => {
                 for ((value, varSymbol) <- pm.members) {
-                  classFile.addField(typeStringFromType(varSymbol.getType), value)
+                  classFile.addField(typeStringFromType(varSymbol.getType, "L", ";"), value)
                 }
               }
               case None => sys.error("ClassDecl has parent but parent has no class symbol")
