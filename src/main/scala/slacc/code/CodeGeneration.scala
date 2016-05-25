@@ -308,11 +308,6 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case Block(exprs) => {
           for (b <- exprs) {
             generateExprCode(b)
-            b.getType match {
-              case TUnit => { }
-              case TClass(cs) => { }
-              case _ => { ch << POP }
-            }
           }
         }
         case If(expr, thn, els) => {
