@@ -308,7 +308,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                     val classSym = sym.classSymbol
                     classSym.lookupVar(value) match {
                       case Some(ss) => {
-                        // THere is a symbol named value in the class scope
+                        // There is a symbol named value in the class scope
                         t.asInstanceOf[Identifier].setSymbol(ss)
                       }
                       case None => {
