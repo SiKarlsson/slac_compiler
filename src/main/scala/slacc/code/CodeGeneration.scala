@@ -408,7 +408,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       case None => {
         currentClass match {
           case Some(c) => {
-            ch << ALoad(0) << GetField(c.id.value, sym.name, typeStringFromType(sym.getType))
+            ch << ALoad(0) << GetField(c.id.value, sym.name, typeStringFromType(sym.getType, "L", ";"))
           }
           case None => sys.error(s"There is no current class (weirdly enough)")
         }
@@ -428,7 +428,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         currentClass match {
           case Some(c) => {
             ch << ALoad(0) << DUP_X1 << POP
-            ch << PutField(c.id.value, sym.name, typeStringFromType(sym.getType))
+            ch << PutField(c.id.value, sym.name, typeStringFromType(sym.getType, "L", ";"))
           }
           case None => sys.error(s"There is no current class (weirdly enough)")
         }
