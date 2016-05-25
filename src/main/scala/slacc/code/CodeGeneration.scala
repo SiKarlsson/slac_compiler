@@ -401,7 +401,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     vars get sym match {
       case Some(s) => {
         ch << (sym.getType match {
-          case TInt => ILoad(s)
+          case TInt | TBoolean => ILoad(s)
           case _ => ALoad(s)
         })
       }
@@ -420,7 +420,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     vars get sym match {
       case Some(s) => {
         ch << (sym.getType match {
-          case TInt => IStore(s)
+          case TInt | TBoolean => IStore(s)
           case _ => AStore(s)
         })
       }
