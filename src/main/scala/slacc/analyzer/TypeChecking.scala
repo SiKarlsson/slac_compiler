@@ -122,7 +122,10 @@ object TypeChecking extends Pipeline[Program, Program] {
           val ms = cs.lookupMethod(meth.value)
           val retType = (ms match {
             case Some(m) => {
-              meth.asInstanceOf[Identifier].setSymbol(m)
+              m.asInstanceOf[MethodSymbol].overridden match {
+                case Some(om) => meth.asInstanceOf[Identifier].setSymbol(om)
+                case None => meth.asInstanceOf[Identifier].setSymbol(m)
+              }
               if (m.argList.size == args.size) {
                 for ( (mArg, mParam) <- (args zip m.argList)) yield tcExpr(mArg, mParam.getType)
               } else {

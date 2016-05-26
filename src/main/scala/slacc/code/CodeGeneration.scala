@@ -270,7 +270,24 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           }
           val methodSignature = invokeVirtualMethodSig(args, retType)
           ch << Comment("Invoking " + meth.value)
-          ch << InvokeVirtual(typeStringFromExprTree(obj), meth.value, methodSignature) <<
+
+          var objType = obj.getType.toString
+
+          /* Check through the current class if the method exists there as well
+          (overriding the superclass), use that one instead. Reallllllly ugly
+          code.*/
+          currentClass match {
+            case Some(c) => {
+              for (m <- c.methods) {
+                if (m.id.value == meth.value) {
+                  objType = m.id.getSymbol.asInstanceOf[MethodSymbol].classSymbol.name
+                }
+              }
+            }
+            case None => sys.error("Lol")
+          }
+
+          ch << InvokeVirtual(objType, meth.value, methodSignature) <<
             Label("MethodCall-after")
         }
         case IntLit(value) => {
