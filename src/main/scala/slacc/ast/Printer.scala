@@ -5,8 +5,8 @@ import Trees._
 
 object Printer {
   var tabCount = 0
-  var symid = true;
-  def apply(t: Tree): String = {
+  //var symid = true;
+  def apply(t: Tree)(implicit symid: Boolean): String = {
       t match {
           case Program(mainMethod, classes) => {
               var programString = ""

@@ -84,7 +84,7 @@ object Main {
     } else if (ctx.doPrintMain) {
       val pipeline = Lexer andThen Parser
       val ast = pipeline.run(ctx)(ctx.files.head)
-      println(Printer(ast))
+      println(Printer(ast)(false))
     } else if (ctx.doAST) {
       val pipeline = Lexer andThen Parser
       val ast = pipeline.run(ctx)(ctx.files.head)
@@ -92,7 +92,7 @@ object Main {
     } else if (ctx.doSymbolIds) {
       val pipeline = Lexer andThen Parser andThen NameAnalysis andThen TypeChecking
       val ast = pipeline.run(ctx)(ctx.files.head)
-      println(Printer(ast))
+      println(Printer(ast)(true))
     } else {
       val pipeline = Lexer andThen Parser andThen NameAnalysis andThen TypeChecking andThen CodeGeneration
       pipeline.run(ctx)(ctx.files.head)
