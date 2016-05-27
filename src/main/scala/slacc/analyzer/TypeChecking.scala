@@ -17,6 +17,7 @@ object TypeChecking extends Pipeline[Program, Program] {
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
+    prog.main.main.exprs foreach { e => tcExpr(e) }
     tcExpr(prog.main.main.retExpr, TUnit)
 
     for (classDecl <- prog.classes) {
@@ -113,23 +114,31 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) => {
           val c = tcExpr(obj)
+          if (!c.isInstanceOf[TClass]) {
+            ctx.reporter.error("Can't invoke method from ", obj)
+            return TUntyped
+          }
           val cs = c.asInstanceOf[TClass].getClassSymbol
           val ms = cs.lookupMethod(meth.value)
-          ms match {
+          val retType = (ms match {
             case Some(m) => {
-              meth.asInstanceOf[Identifier].setSymbol(m)
+              m.asInstanceOf[MethodSymbol].overridden match {
+                case Some(om) => meth.asInstanceOf[Identifier].setSymbol(om)
+                case None => meth.asInstanceOf[Identifier].setSymbol(m)
+              }
               if (m.argList.size == args.size) {
-                for (mArg <- args; mParam <- m.argList) {
-                  tcExpr(mArg, mParam.getType)
-                }
+                for ( (mArg, mParam) <- (args zip m.argList)) yield tcExpr(mArg, mParam.getType)
               } else {
                 ctx.reporter.error("Wrong amount of arguments to method", obj)
               }
-              return m.getType
+              m.getType
             }
-            case None => ctx.reporter.error("Method does not belong to this class", obj)
-          }
-          TUntyped
+            case None => {
+              ctx.reporter.error("Method does not belong to this class", obj)
+              TUntyped
+            }
+          })
+          retType
         }
         case IntLit(value) => {
           TInt
@@ -213,7 +222,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case _ => { sys.error("No typechecking for " + expr)}
       }
-
+      expr.setType(tpe)
 
       // Check result and return a valid type in case of error
       if (expected.isEmpty) {

@@ -75,7 +75,6 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
       }
 
       def matchToken(s: String) = {
-        //println("matching: \"" + s + "\"")
         s match {
           case ":" => new Token(COLON)
           case ";" => new Token(SEMICOLON)

@@ -8,11 +8,13 @@ import Symbols._
 object NameAnalysis extends Pipeline[Program, Program] {
 
   var glob = new GlobalScope()
+  var unusedVariables = scala.collection.mutable.Map[Symbol, Boolean]()
+  var mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List())
 
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
-    var mainClassDecl = new ClassDecl(new Identifier("main"), None, List(), List(prog.main.main))
+    mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List(prog.main.main))
 
     // Step 1: Collect symbols in declarations
     for (classDecl <- prog.classes :+ mainClassDecl) {
@@ -26,25 +28,25 @@ object NameAnalysis extends Pipeline[Program, Program] {
           classDecl.setSymbol(classSym)
           classDecl.id.setSymbol(classDecl.getSymbol)
           glob.addClass(classId, classDecl.getSymbol)
-          classDecl.parent match {
-            case Some(p) => {
-              glob.lookupClass(p.value) match {
-                case None => { printNotDeclared(p.value, p, ctx.reporter) }
-                case Some(c) => {
-                  classDecl.getSymbol.parent = Some(c)
-                  if (hasInheritanceCycle(classDecl.getSymbol)) {
-                    ctx.reporter.error("cycles in the inheritance graph", p)
-                  }
-                }
-              }
-            }
-            case None => { }
-          }
         }
       }
     }
 
     for (classDecl <- prog.classes :+ mainClassDecl) {
+      classDecl.parent match {
+        case Some(p) => {
+          glob.lookupClass(p.value) match {
+            case None => { printNotDeclared(p.value, p, ctx.reporter) }
+            case Some(c) => {
+              classDecl.getSymbol.parent = Some(c)
+              if (hasInheritanceCycle(classDecl.getSymbol)) {
+                ctx.reporter.error("cycles in the inheritance graph", p)
+              }
+            }
+          }
+        }
+        case None => { }
+      }
       for (classVar <- classDecl.vars) {
         val varID = classVar.id.value
         glob.classes(classDecl.id.value).lookupVar(varID) match {
@@ -52,11 +54,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
           case None => {
             checkClassType(classVar, ctx.reporter)
             var classVarSym = new VariableSymbol(classVar.id.value)
-            classVarSym.setPos(classVarSym)
+            classVarSym.setPos(classVar)
             classVarSym.setType(getTypeOfTypeTree(classVar.tpe, ctx.reporter))
             classVar.setSymbol(classVarSym)
             classVar.id.setSymbol(classVar.getSymbol)
             classDecl.getSymbol.addMember(varID, classVar.getSymbol)
+            unusedVariables += (classVar.getSymbol -> false)
           }
         }
       }
@@ -75,6 +78,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
                 methodSym.setPos(method)
                 methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
+                methodSym.overridden = Some(s)
                 method.setSymbol(methodSym)
                 method.id.setSymbol(method.getSymbol)
                 classDecl.getSymbol.addMethod(methodId, method.getSymbol)
@@ -92,6 +96,16 @@ object NameAnalysis extends Pipeline[Program, Program] {
                       method.getSymbol.addParam(paramId, param.getSymbol)
                     }
                   }
+                }
+
+                method.retType match {
+                  case Identifier(value) => {
+                    glob.classes get value match {
+                      case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
+                      case None => ctx.reporter.error("Class is not declared", method.retType)
+                    }
+                  }
+                  case _ => { }
                 }
               } else {
                 ctx.reporter.error("Method is already defined in superclass", method)
@@ -117,8 +131,19 @@ object NameAnalysis extends Pipeline[Program, Program] {
                   param.setSymbol(paramSymbol)
                   param.id.setSymbol(param.getSymbol)
                   method.getSymbol.addParam(paramId, paramSymbol)
+                  unusedVariables += (param.getSymbol -> false)
                 }
               }
+            }
+
+            method.retType match {
+              case Identifier(value) => {
+                glob.classes get value match {
+                  case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
+                  case None => ctx.reporter.error("Class is not declared", method.retType)
+                }
+              }
+              case _ => { }
             }
           }
         }
@@ -128,6 +153,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
     for (classDecl <- prog.classes :+ mainClassDecl) {
       for (method <- classDecl.methods) {
         for (classVar <- classDecl.vars) {
+          unusedVariables += (classVar.getSymbol -> false)
           classVar.tpe match {
             case Identifier(value) => {
               // Class type
@@ -155,6 +181,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
               methodVar.setSymbol(methodVarSym)
               methodVar.id.setSymbol(methodVar.getSymbol)
               method.getSymbol.addMember(methodVarId, methodVar.getSymbol)
+              unusedVariables += (methodVar.getSymbol -> false)
             }
           }
         }
@@ -287,7 +314,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                     val classSym = sym.classSymbol
                     classSym.lookupVar(value) match {
                       case Some(ss) => {
-                        // THere is a symbol named value in the class scope
+                        // There is a symbol named value in the class scope
                         t.asInstanceOf[Identifier].setSymbol(ss)
                       }
                       case None => {
@@ -305,6 +332,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
                   }
                 }
               }
+
+              unusedVariables -= t.asInstanceOf[Identifier].getSymbol
             }
             case _ => {  }
           }
@@ -316,6 +345,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
     // (Step 3:) Print tree with symbol ids for debugging
 
     // Make sure you check all constraints
+
+    for (k <- unusedVariables) {
+      ctx.reporter.warning(s"Variable ${k._1.name} is not used", k._1)
+    }
 
     prog
   }
