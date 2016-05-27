@@ -53,7 +53,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           case None => {
             checkClassType(classVar, ctx.reporter)
             var classVarSym = new VariableSymbol(classVar.id.value)
-            classVarSym.setPos(classVarSym)
+            classVarSym.setPos(classVar)
             classVarSym.setType(getTypeOfTypeTree(classVar.tpe, ctx.reporter))
             classVar.setSymbol(classVarSym)
             classVar.id.setSymbol(classVar.getSymbol)
