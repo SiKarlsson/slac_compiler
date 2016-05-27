@@ -275,7 +275,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
           /* Check through the current class if the method exists there as well
           (overriding the superclass), use that one instead. Reallllllly ugly
-          code.*/
+          code.
           currentClass match {
             case Some(c) => {
               for (m <- c.methods) {
@@ -286,6 +286,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             }
             case None => sys.error("Lol")
           }
+          */
 
           ch << InvokeVirtual(objType, meth.value, methodSignature) <<
             Label("MethodCall-after")
