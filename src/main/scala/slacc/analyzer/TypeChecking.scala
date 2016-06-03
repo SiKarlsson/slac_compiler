@@ -26,7 +26,15 @@ object TypeChecking extends Pipeline[Program, Program] {
         for (expr <- methodDecl.exprs) {
           tcExpr(expr)
         }
-        tcExpr(methodDecl.retExpr, getTypeOfTypeTree(methodDecl.retType, ctx.reporter))
+        var rt = getTypeOfTypeTree(methodDecl.retType, ctx.reporter)
+        rt match {
+          case TUntyped => {
+            rt = tcExpr(methodDecl.retExpr)
+          }
+          case _ => { }
+        }
+        tcExpr(methodDecl.retExpr, rt)
+        methodDecl.id.getSymbol.setType(rt)
       }
     }
 
