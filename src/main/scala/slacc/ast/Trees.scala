@@ -32,6 +32,7 @@ object Trees {
   case class BooleanType() extends TypeTree
   case class StringType() extends TypeTree
   case class UnitType() extends TypeTree
+  case class UntypedType() extends TypeTree
 
   sealed trait ExprTree extends Tree with Typed
   case class And(lhs: ExprTree, rhs: ExprTree) extends ExprTree with AsTuple

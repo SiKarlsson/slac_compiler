@@ -84,10 +84,20 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         val pos = currentToken
         eat(VAR)
         val ident = identifier
-        eat(COLON)
-        val tt = typeTree
+        var tt: Option[TypeTree] = None
+        if (currentToken.kind == COLON) {
+          eat(COLON)
+          tt = Some(typeTree)
+        } else if (currentToken.kind == EQSIGN) {
+          eat(EQSIGN)
+          val e1 = parseExpr1
+          tt = Some(new UntypedType)
+        }
         eat(SEMICOLON)
-        var varDecl = new VarDecl(tt, ident)
+        var varDecl = (tt match {
+          case Some(t) => new VarDecl(t, ident)
+          case None => sys.error("VarDecl has no type")
+        })
         varDecl.setPos(pos)
         varDecl
       }
@@ -121,7 +131,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           eat(COLON)
           retType = Some(typeTree)
         } else {
-          retType = Some(new Untyped)
+          retType = Some(new UntypedType)
         }
         eat(EQSIGN)
         eat(LBRACE)
@@ -137,8 +147,11 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         } while (currentToken.kind == SEMICOLON)
         eat(RBRACE)
 
-        var methodDecl = new MethodDecl(retType.get, ident, argsList.toList, varList.toList,
-          exprList.toList.dropRight(1), exprList.toList.last)
+        var methodDecl = (retType match {
+          case Some(rt) => new MethodDecl(rt, ident, argsList.toList, varList.toList,
+            exprList.toList.dropRight(1), exprList.toList.last)
+          case None => sys.error("MethodDecl has no retType")
+        })
         methodDecl.setPos(pos)
         methodDecl
       }
