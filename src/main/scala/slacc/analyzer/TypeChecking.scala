@@ -215,7 +215,12 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case Assign(id: Identifier, expr: ExprTree) => {
           val idType = id.getSymbol.getType
-          tcExpr(expr, idType)
+          idType match {
+            case TUntyped => {
+              id.getSymbol.setType(tcExpr(expr))
+            }
+            case _ => tcExpr(expr, idType)
+          }
           TUnit
         }
         case ArrayAssign(id: Identifier, index: ExprTree, expr: ExprTree) => {
