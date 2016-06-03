@@ -92,6 +92,8 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           eat(EQSIGN)
           val e1 = parseExpr1
           tt = Some(new UntypedType)
+        } else {
+          tt = Some(new UntypedType)
         }
         eat(SEMICOLON)
         var varDecl = (tt match {
