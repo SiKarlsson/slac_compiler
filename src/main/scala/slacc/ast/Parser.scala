@@ -116,8 +116,13 @@ object Parser extends Pipeline[Iterator[Token], Program] {
           }
         }
         eat(RPAREN)
-        eat(COLON)
-        val retType = typeTree
+        var retType : Option[TypeTree] = None
+        if (currentToken.kind == COLON) {
+          eat(COLON)
+          retType = Some(typeTree)
+        } else {
+          retType = Some(new Untyped)
+        }
         eat(EQSIGN)
         eat(LBRACE)
         while (currentToken.kind == VAR) {
@@ -132,7 +137,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         } while (currentToken.kind == SEMICOLON)
         eat(RBRACE)
 
-        var methodDecl = new MethodDecl(retType, ident, argsList.toList, varList.toList,
+        var methodDecl = new MethodDecl(retType.get, ident, argsList.toList, varList.toList,
           exprList.toList.dropRight(1), exprList.toList.last)
         methodDecl.setPos(pos)
         methodDecl
