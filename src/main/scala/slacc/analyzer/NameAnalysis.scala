@@ -389,6 +389,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
       case IntArrayType() => {
         Types.TIntArray
       }
+      case UntypedType() => {
+        Types.TUntyped
+      }
       case Identifier(value) => {
         glob.lookupClass(value) match {
           case Some(c) => Types.TClass(c)
