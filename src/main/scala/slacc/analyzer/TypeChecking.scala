@@ -53,28 +53,16 @@ object TypeChecking extends Pipeline[Program, Program] {
         }
         case Plus(lhs: ExprTree, rhs: ExprTree) => {
           val lhsT = tcExpr(lhs, TInt, TString)
-          val rhsT = tcExpr(rhs, TInt, TString)
 
           lhsT match {
             case TInt => {
-              rhsT match {
-                case TInt => {
-                  TInt
-                }
-                case TString => {
-                  TString
-                }
-                case _ => {
-                  sys.error("Tried to match something else than TInt or TString in a plus expression")
-                }
-              }
+              tcExpr(rhs, TInt, TString)
             }
             case TString => {
               tcExpr(rhs, TInt, TString)
               TString
             }
-            case _ => {
-              sys.error("Tried to match something else than TInt or TString in a plus expression")
+              sys.error(s"${rhs} is not String or Int (Can't use addition)")
             }
           }
         }
