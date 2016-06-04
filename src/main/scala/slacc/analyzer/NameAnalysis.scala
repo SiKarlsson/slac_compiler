@@ -300,9 +300,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case Println(expr) => {
               attachIdentifier(expr)
             }
-            case Assign(id, expr) => {
+            case Assign(id: Identifier, expr) => {
               attachIdentifier(id)
               attachIdentifier(expr)
+              unusedVariables -= id.getSymbol
             }
             case ArrayAssign(id, index, expr) => {
               attachIdentifier(id)
@@ -342,8 +343,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
                   }
                 }
               }
-
-              unusedVariables -= t.asInstanceOf[Identifier].getSymbol
             }
             case _ => {  }
           }
