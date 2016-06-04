@@ -119,9 +119,12 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         eat(LPAREN)
         if (currentToken.kind == IDKIND) {
           var argIdent = identifier
+          var pos = currentToken
           eat(COLON)
           var argType = typeTree
-          argsList += new Formal(argType, argIdent)
+          var param = new Formal(argType, argIdent)
+          param.setPos(pos)
+          parameters += param
           while (currentToken.kind == COMMA) {
             eat(COMMA)
             argIdent = identifier
