@@ -105,6 +105,7 @@ object TypeChecking extends Pipeline[Program, Program] {
             case TString => { tcExpr(rhs, TString) }
             case TUnit => { tcExpr(rhs, TUnit) }
             case TClass(_) => { tcExpr(rhs, Types.anyObject) }
+            case TUntyped => { ctx.reporter.error(s"${lhs} has no type yet, has it been initialized?") }
             case _ => {
               sys.error("Tried to match something unexpected in an equals expression")
             }
