@@ -242,6 +242,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
           }
         }
 
+        /* Lots of expressions take two expressions (And, Or, Plus, Minus, etc.)
+        we give these a special trait (asTuple) and use dualAttachment to
+        attach identifiers to them all. Saves a lot of space */
         def dualAttachment(t1: ExprTree, t2: ExprTree): Unit = {
           attachIdentifier(t1)
           attachIdentifier(t2)
@@ -261,15 +264,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
             }
             case MethodCall(obj, meth, args) => {
               attachIdentifier(obj)
-              /*var scope = getSymbolFromObj(obj)
-              if (scope.isInstanceOf[ClassSymbol]) {
-                scope.asInstanceOf[ClassSymbol].lookupMethod(meth.value) match {
-                  case Some(s) => { meth.asInstanceOf[Identifier].setSymbol(s) }
-                  case None => {
-                    printNotDeclared(meth.value, meth, ctx.reporter)
-                  }
-                }
-              }*/
               for (arg <- args) {
                 attachIdentifier(arg)
               }
