@@ -85,21 +85,24 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         eat(VAR)
         val ident = identifier
         var tt: Option[TypeTree] = None
-        if (currentToken.kind == COLON) {
-          eat(COLON)
-          tt = Some(typeTree)
-        } else if (currentToken.kind == EQSIGN) {
-          eat(EQSIGN)
-          val e1 = parseExpr1
-          tt = Some(new UntypedType)
-        } else {
-          tt = Some(new UntypedType)
-        }
-        eat(SEMICOLON)
-        var varDecl = (tt match {
-          case Some(t) => new VarDecl(t, ident)
-          case None => sys.error("VarDecl has no type")
+        var e: Option[ExprTree] = None
+        var varDecl: VarDecl = (currentToken.kind match {
+          case COLON => {
+            eat(COLON)
+            tt = Some(typeTree)
+            new VarDecl(tt.get, ident, None)
+          }
+          case EQSIGN => {
+            eat(EQSIGN)
+            tt = Some(new UntypedType)
+            new VarDecl(tt.get, ident, Some(parseExpr1))
+          }
+          case _ => {
+            tt = Some(new UntypedType)
+            new VarDecl(tt.get, ident, None)
+          }
         })
+        eat(SEMICOLON)
         varDecl.setPos(pos)
         varDecl
       }
