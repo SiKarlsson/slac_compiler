@@ -129,7 +129,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           }
           val cs = c.asInstanceOf[TClass].getClassSymbol
           val ms = cs.lookupMethod(meth.value)
-          val retType = (ms match {
+          val retType: Type = (ms match {
             case Some(m) => {
               m.asInstanceOf[MethodSymbol].overridden match {
                 case Some(om) => meth.asInstanceOf[Identifier].setSymbol(om)
@@ -140,6 +140,11 @@ object TypeChecking extends Pipeline[Program, Program] {
               } else {
                 ctx.reporter.error("Wrong amount of arguments to method", obj)
               }
+              m.getType match {
+                case TUntyped => ctx.reporter.error("Cannot infer type", m)
+                case _ => { }
+              }
+
               m.getType
             }
             case None => {
