@@ -16,7 +16,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List(prog.main.main))
 
-    // Step 1: Collect symbols in declarations
+    /* Iterate through classes first. Otherwise we risk running into a class
+    not yet analysed (for example used as a type) */
     for (classDecl <- prog.classes :+ mainClassDecl) {
       val classId = classDecl.id.value
       glob.lookupClass(classId) match {
@@ -32,6 +33,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       }
     }
 
+    /* Now that all classes has been analysed, we can add parents */
     for (classDecl <- prog.classes :+ mainClassDecl) {
       classDecl.parent match {
         case Some(p) => {
@@ -47,6 +49,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
         case None => { }
       }
+      /* Analyse class variables. As a class variable can have another class as
+      type, this must be done after analysing all the classes */
       for (classVar <- classDecl.vars) {
         val varID = classVar.id.value
         glob.classes(classDecl.id.value).lookupVar(varID) match {
@@ -68,6 +72,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         val methodId = method.id.value
         glob.classes(classDecl.id.value).lookupMethod(methodId) match {
           case Some(s) => {
+            // The method is previously defined (as in, a parent has it)
             if (classDecl.methods.contains(s)) {
               printAlreadyDefined(methodId, method.id, ctx.reporter)
             } else {
@@ -77,6 +82,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                   && sameReturnTypes(method, s, ctx.reporter)) {
                 var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
                 methodSym.setPos(method)
+                // If no type supplied, we set TUntyped and type it later
                 methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
                 methodSym.overridden = Some(s)
                 method.setSymbol(methodSym)
@@ -113,6 +119,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             }
           }
           case None => {
+            // The method is not previously defined
             var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
             methodSym.setPos(method)
             method.setSymbol(methodSym)
