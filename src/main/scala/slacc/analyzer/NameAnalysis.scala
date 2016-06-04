@@ -60,6 +60,14 @@ object NameAnalysis extends Pipeline[Program, Program] {
             var classVarSym = new VariableSymbol(classVar.id.value)
             classVarSym.setPos(classVar)
             classVarSym.setType(getTypeOfTypeTree(classVar.tpe, ctx.reporter))
+            classVarSym.getType match {
+              case Types.TUntyped => { ctx.reporter.error("Trying to infer " +
+                "type on class variable. This is not allowed as the variable" +
+                " could get different types depending on the methods of the" +
+                " class. (Could be a = \"hello\"; in one method and a = 2; in" +
+                " another)", classVar) }
+              case _ => { }
+            }
             classVar.setSymbol(classVarSym)
             classVar.id.setSymbol(classVar.getSymbol)
             classDecl.getSymbol.addMember(varID, classVar.getSymbol)
