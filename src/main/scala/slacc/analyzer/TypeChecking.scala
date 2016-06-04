@@ -62,8 +62,7 @@ object TypeChecking extends Pipeline[Program, Program] {
               tcExpr(rhs, TInt, TString)
               TString
             }
-              sys.error(s"${rhs} is not String or Int (Can't use addition)")
-            }
+            case _ => sys.error(s"${rhs} is not String or Int (Can't use addition)")
           }
         }
         case Minus(lhs: ExprTree, rhs: ExprTree) => {
