@@ -178,11 +178,15 @@ object TypeChecking extends Pipeline[Program, Program] {
           TBoolean
         }
         case Block(exprs: List[ExprTree]) => {
-          var lastType: Type = TUnit
-          for (expr <- exprs) {
-            lastType = tcExpr(expr)
+          var lastType: Option[Type] = None
+          for (expr <- exprs.dropRight(1)) {
+            tcExpr(expr)
           }
-          lastType
+          lastType = Some(tcExpr(exprs.last))
+          lastType match {
+            case Some(lt) => lt
+            case None => { sys.error(s"${expr}'s last expression does not have a type") }
+          }
         }
         case If(expr: ExprTree, thn: ExprTree, els: Option[ExprTree]) => {
           tcExpr(expr, TBoolean)
