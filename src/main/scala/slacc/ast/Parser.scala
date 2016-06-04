@@ -474,6 +474,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             e.setPos(e)
             e
           }
+          case _ => {
+            sys.error(s"Could not match ${currentToken.kind} at ${pos.position}")
+          }
         }
       }
 
