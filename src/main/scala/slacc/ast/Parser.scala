@@ -113,9 +113,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         val pos = currentToken
         eat(METHOD)
         val ident = identifier
-        val argsList = new ListBuffer[Formal]()
-        val varList = new ListBuffer[VarDecl]()
-        val exprList = new ListBuffer[ExprTree]()
+        val parameters = new ListBuffer[Formal]()
+        val variables = new ListBuffer[VarDecl]()
+        val expressions = new ListBuffer[ExprTree]()
         eat(LPAREN)
         if (currentToken.kind == IDKIND) {
           var argIdent = identifier
@@ -127,7 +127,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
             argIdent = identifier
             eat(COLON)
             argType = typeTree
-            argsList += new Formal(argType, argIdent)
+            parameters += new Formal(argType, argIdent)
           }
         }
         eat(RPAREN)
@@ -141,20 +141,20 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         eat(EQSIGN)
         eat(LBRACE)
         while (currentToken.kind == VAR) {
-          varList += varDeclaration
+          variables += varDeclaration
         }
         do {
           if (currentToken.kind == SEMICOLON) {
             eat(SEMICOLON)
           }
           var expr = parseExpr1
-          exprList += expr
+          expressions += expr
         } while (currentToken.kind == SEMICOLON)
         eat(RBRACE)
 
         var methodDecl = (retType match {
-          case Some(rt) => new MethodDecl(rt, ident, argsList.toList, varList.toList,
-            exprList.toList.dropRight(1), exprList.toList.last)
+          case Some(rt) => new MethodDecl(rt, ident, parameters.toList, variables.toList,
+            expressions.toList.dropRight(1), expressions.toList.last)
           case None => sys.error("MethodDecl has no retType")
         })
         methodDecl.setPos(pos)
