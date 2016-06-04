@@ -100,6 +100,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                       param.setSymbol(paramSymbol)
                       param.id.setSymbol(param.getSymbol)
                       method.getSymbol.addParam(paramId, param.getSymbol)
+                      unusedVariables += (param.getSymbol -> false)
                     }
                   }
                 }
