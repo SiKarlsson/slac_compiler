@@ -10,6 +10,7 @@ import NameAnalysis.getTypeOfTypeTree
 
 object TypeChecking extends Pipeline[Program, Program] {
 
+  // Current class we're operating in
   var classSymbolScope: Option[ClassSymbol] = None
 
   /** Typechecking does not produce a value, but has the side effect of
@@ -17,7 +18,9 @@ object TypeChecking extends Pipeline[Program, Program] {
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
+    // Type check each expression of the main body
     prog.main.main.exprs foreach { e => tcExpr(e) }
+    // Ensure that main returns Unit
     tcExpr(prog.main.main.retExpr, TUnit)
 
     for (classDecl <- prog.classes) {
@@ -29,6 +32,8 @@ object TypeChecking extends Pipeline[Program, Program] {
         var rt = getTypeOfTypeTree(methodDecl.retType, ctx.reporter)
         rt match {
           case TUntyped => {
+            /* If rt is TUntyped, we don't know the return type of the method
+            and have to parse the return expression of the method to find out */
             rt = tcExpr(methodDecl.retExpr)
           }
           case _ => { }
@@ -124,6 +129,8 @@ object TypeChecking extends Pipeline[Program, Program] {
                 case None => meth.asInstanceOf[Identifier].setSymbol(m)
               }
               if (m.argList.size == args.size) {
+                // Ensure that the provided arguments have the same types as the
+                // corresponding parameter
                 for ( (mArg, mParam) <- (args zip m.argList)) yield tcExpr(mArg, mParam.getType)
               } else {
                 ctx.reporter.error("Wrong amount of arguments to method", obj)
