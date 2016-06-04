@@ -33,8 +33,9 @@ object TypeChecking extends Pipeline[Program, Program] {
           }
           case _ => { }
         }
-        tcExpr(methodDecl.retExpr, rt)
         methodDecl.id.getSymbol.setType(rt)
+        methodDecl.getSymbol.setType(rt)
+        tcExpr(methodDecl.retExpr, rt)
       }
     }
 
