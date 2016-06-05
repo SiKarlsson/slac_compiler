@@ -197,7 +197,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
               methodVar.setSymbol(methodVarSym)
               methodVar.id.setSymbol(methodVar.getSymbol)
               method.getSymbol.addMember(methodVarId, methodVar.getSymbol)
-              unusedVariables += (methodVar.getSymbol -> false)
+              methodVar.expr match {
+                case Some(e) => { }
+                case None => unusedVariables += (methodVar.getSymbol -> false)
+              }
             }
           }
         }
