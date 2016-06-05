@@ -18,17 +18,20 @@ object TypeChecking extends Pipeline[Program, Program] {
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
+    def typeCheckExprs(exprs: List[ExprTree]): Unit = {
+      exprs foreach { e => tcExpr(e) }
+    }
+
     // Type check each expression of the main body
-    prog.main.main.exprs foreach { e => tcExpr(e) }
+    typeCheckExprs(prog.main.main.exprs)
     // Ensure that main returns Unit
     tcExpr(prog.main.main.retExpr, TUnit)
 
     for (classDecl <- prog.classes) {
       classSymbolScope = Some(classDecl.getSymbol)
       for (methodDecl <- classDecl.methods) {
-        for (expr <- methodDecl.exprs) {
-          tcExpr(expr)
         }
+        typeCheckExprs(methodDecl.exprs)
         var rt = getTypeOfTypeTree(methodDecl.retType, ctx.reporter)
         rt match {
           case TUntyped => {
