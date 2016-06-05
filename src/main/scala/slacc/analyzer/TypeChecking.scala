@@ -22,15 +22,28 @@ object TypeChecking extends Pipeline[Program, Program] {
       exprs foreach { e => tcExpr(e) }
     }
 
+    def typeCheckVarDecls(varDecls: List[VarDecl]): Unit = {
+      for (variable <- varDecls) {
+        variable.expr match {
+          case Some(e) => {
+            val varType = tcExpr(e)
+            variable.getSymbol.setType(varType)
+          }
+          case None => { }
+        }
+      }
+    }
+
     // Type check each expression of the main body
     typeCheckExprs(prog.main.main.exprs)
+    typeCheckVarDecls(prog.main.main.vars)
     // Ensure that main returns Unit
     tcExpr(prog.main.main.retExpr, TUnit)
 
     for (classDecl <- prog.classes) {
       classSymbolScope = Some(classDecl.getSymbol)
       for (methodDecl <- classDecl.methods) {
-        }
+        typeCheckVarDecls(methodDecl.vars)
         typeCheckExprs(methodDecl.exprs)
         var rt = getTypeOfTypeTree(methodDecl.retType, ctx.reporter)
         rt match {
