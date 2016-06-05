@@ -126,8 +126,16 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         variables += (mArgs.id.getSymbol -> param)
         param += 1
       }}
-      mt.getSymbol.members foreach { mVars => addVariable(mVars._2) }
-
+      for (variable <- mt.vars) {
+        addVariable(variable.getSymbol)
+        variable.expr match {
+          case Some(e) => {
+            generateExprCode(e)(ch, variables)
+            storeVariable(variable.id.getSymbol, variables)
+          }
+          case None => { }
+        }
+      }
       for (e <- mt.exprs) {
         generateExprCode(e)(ch, variables)
         e.getType match {
