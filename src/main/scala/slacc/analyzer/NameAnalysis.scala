@@ -4,6 +4,7 @@ package analyzer
 import utils._
 import ast.Trees._
 import Symbols._
+import Types._
 
 object NameAnalysis extends Pipeline[Program, Program] {
 
@@ -28,7 +29,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
     def createClassSymbol(classDecl: ClassDecl): ClassSymbol = {
       val symbol = new ClassSymbol(classDecl.id.value)
       symbol.setPos(classDecl)
-      symbol.setType(Types.TClass(symbol))
+      symbol.setType(TClass(symbol))
       classDecl.setSymbol(symbol)
       classDecl.id.setSymbol(symbol)
       symbol
@@ -75,7 +76,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             classVarSym.setPos(classVar)
             classVarSym.setType(getTypeOfTypeTree(classVar.tpe, ctx.reporter))
             classVarSym.getType match {
-              case Types.TUntyped => { ctx.reporter.error("Trying to infer " +
+              case TUntyped => { ctx.reporter.error("Trying to infer " +
                 "type on class variable. This is not allowed as the variable" +
                 " could get different types depending on the methods of the" +
                 " class. (Could be a = \"hello\"; in one method and a = 2; in" +
@@ -390,32 +391,32 @@ object NameAnalysis extends Pipeline[Program, Program] {
     false
   }
 
-  def getTypeOfTypeTree(t: TypeTree, rep: Reporter): Types.Type = {
+  def getTypeOfTypeTree(t: TypeTree, rep: Reporter): Type = {
     t match {
       case IntType() => {
-        Types.TInt
+        TInt
       }
       case StringType() => {
-        Types.TString
+        TString
       }
       case UnitType() => {
-        Types.TUnit
+        TUnit
       }
       case BooleanType() => {
-        Types.TBoolean
+        TBoolean
       }
       case IntArrayType() => {
-        Types.TIntArray
+        TIntArray
       }
       case UntypedType() => {
-        Types.TUntyped
+        TUntyped
       }
       case Identifier(value) => {
         glob.lookupClass(value) match {
-          case Some(c) => Types.TClass(c)
+          case Some(c) => TClass(c)
           case None => {
             rep.error(value + " can't be used as type", t)
-            Types.TUntyped
+            TUntyped
           }
         }
       }
