@@ -16,6 +16,24 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List(prog.main.main))
 
+    def createParameterSymbol(formal: Formal): VariableSymbol = {
+      var symbol = new VariableSymbol(formal.id.value)
+      symbol.setPos(formal)
+      symbol.setType(getTypeOfTypeTree(formal.tpe, ctx.reporter))
+      formal.setSymbol(symbol)
+      formal.id.setSymbol(symbol)
+      symbol
+    }
+
+    def createClassSymbol(classDecl: ClassDecl): ClassSymbol = {
+      val symbol = new ClassSymbol(classDecl.id.value)
+      symbol.setPos(classDecl)
+      symbol.setType(Types.TClass(symbol))
+      classDecl.setSymbol(symbol)
+      classDecl.id.setSymbol(symbol)
+      symbol
+    }
+
     /* Iterate through classes first. Otherwise we risk running into a class
     not yet analysed (for example used as a type) */
     for (classDecl <- prog.classes :+ mainClassDecl) {
@@ -23,11 +41,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       glob.lookupClass(classId) match {
         case Some(s) => printAlreadyDefined(classId, classDecl.id, ctx.reporter)
         case None => {
-          val classSym = new ClassSymbol(classId)
-          classSym.setPos(classDecl)
-          classSym.setType(Types.TClass(classSym))
-          classDecl.setSymbol(classSym)
-          classDecl.id.setSymbol(classDecl.getSymbol)
+          createClassSymbol(classDecl)
           glob.addClass(classId, classDecl.getSymbol)
         }
       }
@@ -102,11 +116,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                   glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
                     case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
                     case None => {
-                      var paramSymbol = new VariableSymbol(param.id.value)
-                      paramSymbol.setType(getTypeOfTypeTree(param.tpe, ctx.reporter))
-                      paramSymbol.setPos(param)
-                      param.setSymbol(paramSymbol)
-                      param.id.setSymbol(param.getSymbol)
+                      createParameterSymbol(param)
                       method.getSymbol.addParam(paramId, param.getSymbol)
                       unusedVariables += (param.getSymbol -> false)
                     }
@@ -141,12 +151,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
               glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
                 case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
                 case None => {
-                  var paramSymbol = new VariableSymbol(param.id.value)
-                  paramSymbol.setPos(param)
-                  paramSymbol.setType(getTypeOfTypeTree(param.tpe, ctx.reporter))
-                  param.setSymbol(paramSymbol)
-                  param.id.setSymbol(param.getSymbol)
-                  method.getSymbol.addParam(paramId, paramSymbol)
+                  createParameterSymbol(param)
+                  method.getSymbol.addParam(paramId, param.getSymbol)
                   unusedVariables += (param.getSymbol -> false)
                 }
               }
