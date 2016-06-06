@@ -189,10 +189,13 @@ object NameAnalysis extends Pipeline[Program, Program] {
                         case Some(md) => {
                           obj.asInstanceOf[Self].getSymbol.getDeclaration match {
                             case Some(cd) => {
+                              parseMethod(md, cd)
                               md.vars foreach { mdv => parseMethodVar(mdv, md, cd) }
                               md.exprs foreach { mde => attachIdentifier(mde)(md, cd) }
                               attachIdentifier(md.retExpr)(md, cd)
-                              parseMethod(md, cd)
+                              md.id.getSymbol.setType(getTypeOfExprTree(md.retExpr))
+                              meth.setSymbol(md.id.getSymbol)
+                              typeInferredMethods += meth.getSymbol
                             }
                             case None => { sys.error(s"Self is of " +
                               "class " +
@@ -455,6 +458,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case _ => { ctx.reporter.error("Can't use method call on " + obj, obj); ??? }
           }
         }
+        typeInferredMethods += method.getSymbol
       }
     }
 
