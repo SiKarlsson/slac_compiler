@@ -104,11 +104,15 @@ object NameAnalysis extends Pipeline[Program, Program] {
           }
         }
       }
-      typeInferredMethods += method.getSymbol
       method.getSymbol.getType
     }
 
     def parseMethodVar(methodVar: VarDecl, method: MethodDecl, cd: ClassDecl): Unit = {
+      if (method.id.hasSymbol) {
+        if (typeInferredMethods contains method.id.getSymbol) {
+          return
+        }
+      }
       val methodVarId = methodVar.id.value
       glob.classes(cd.id.value).methods(method.id.value).lookupVar(methodVarId) match {
         case Some(s) => printAlreadyDefined(methodVarId, methodVar.id, ctx.reporter)
