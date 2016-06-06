@@ -206,7 +206,41 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case None => { ctx.reporter.error("No method " + meth.value + " defined") }
               }
             }
-            case _ => { }
+            case Identifier(value) => {
+              glob.classes(obj.asInstanceOf[Identifier].getSymbol.getType.toString).lookupMethod(meth.value) match {
+                case Some(ms) => {
+                  ms.getType match {
+                    case TUntyped => {
+                      ms.getDeclaration match {
+                        case Some(md) => {
+                          ms.classSymbol.getDeclaration match {
+                            case Some(cd) => {
+                              parseMethod(md, cd)
+                              md.vars foreach { mdv => parseMethodVar(mdv, md, cd) }
+                              md.exprs foreach { mde => attachIdentifier(mde)(md, cd) }
+                              attachIdentifier(md.retExpr)(md, cd)
+                              md.id.getSymbol.setType(getTypeOfExprTree(md.retExpr))
+                              meth.setSymbol(md.id.getSymbol)
+                              println(meth + ": " + meth.getSymbol.getType)
+                              typeInferredMethods += meth.getSymbol
+                            }
+                            case None => { sys.error(s"Self is of " +
+                              "class " +
+                              "${obj.asInstanceOf[Self].getSymbol.name} " +
+                              "but does not have a declaration attached " +
+                              " to it") }
+                          }
+                        }
+                        case None => sys.error("No declaration connected to " + ms.name)
+                      }
+                    }
+                    case _ => meth.setSymbol(ms)
+                  }
+                }
+                case None => ctx.reporter.error("No method " + meth.value + " defined")
+              }
+            }
+            case _ => { sys.error("You w0t son?") }
           }
           for (arg <- args) {
             attachIdentifier(arg)
