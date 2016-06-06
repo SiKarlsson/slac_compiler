@@ -396,24 +396,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
   def getTypeOfTypeTree(t: TypeTree, rep: Reporter): Type = {
     t match {
-      case IntType() => {
-        TInt
-      }
-      case StringType() => {
-        TString
-      }
-      case UnitType() => {
-        TUnit
-      }
-      case BooleanType() => {
-        TBoolean
-      }
-      case IntArrayType() => {
-        TIntArray
-      }
-      case UntypedType() => {
-        TUntyped
-      }
+      case IntType() => TInt
+      case StringType() => TString
+      case UnitType() => TUnit
+      case BooleanType() => TBoolean
+      case IntArrayType() => TIntArray
+      case UntypedType() => TUntyped
       case Identifier(value) => {
         glob.lookupClass(value) match {
           case Some(c) => TClass(c)
