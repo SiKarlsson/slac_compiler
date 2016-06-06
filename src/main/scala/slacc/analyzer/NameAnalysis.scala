@@ -10,6 +10,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
   var glob = new GlobalScope()
   var unusedVariables = scala.collection.mutable.Set[Symbol]()
+  var typeInferredMethods = scala.collection.mutable.Set[Symbol]()
   var mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List())
 
   def run(ctx: Context)(prog: Program): Program = {
