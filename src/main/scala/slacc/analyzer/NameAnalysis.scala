@@ -290,8 +290,27 @@ object NameAnalysis extends Pipeline[Program, Program] {
               attachIdentifier(obj)
               obj match {
                 case Self() => {
+                  // If object is self, check for the method in the class
                   obj.asInstanceOf[Self].getSymbol.lookupMethod(meth.value) match {
-                    case Some(ms) => meth.setSymbol(ms)
+                    case Some(ms) => {
+                      ms.getType match {
+                        // There is a method in the class but it has not yet
+                        // been typed
+                        case TUntyped => {
+                          // Parse the MethodDecl to find the return expression type
+                          ms.getDeclaration match {
+                            case Some(md) => {
+                              md.exprs foreach { mde => attachIdentifier(mde) }
+                              attachIdentifier(md.retExpr)
+                              ms.setType(getTypeOfExprTree(md.retExpr))
+                              meth.setSymbol(ms)
+                            }
+                            case None => sys.error("No declaration connected to " + ms.name)
+                          }
+                        }
+                        case _ => meth.setSymbol(ms)
+                      }
+                    }
                     case None => { ctx.reporter.error("No method " + meth.value + " defined") }
                   }
                 }
