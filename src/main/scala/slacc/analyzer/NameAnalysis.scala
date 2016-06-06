@@ -445,13 +445,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
       case Equals(lhs, rhs) => TBoolean
       case ArrayRead(arr, idx) => TInt
       case ArrayLength(arr) => TInt
-      case MethodCall(obj, meth, args) => ??? // TODO
+      case MethodCall(obj, meth: Identifier, args) => meth.getSymbol.getType
       case IntLit(value) => TInt
       case StringLit(value) => TInt
       case True() => TBoolean
       case False() => TBoolean
       case Identifier(id) => e.getType
-      case Self() => ??? // TODO
       case NewIntArray(size) => TIntArray
       case New(tpe) => TClass(glob.classes(tpe.value))
       case Not(expr) => TBoolean
