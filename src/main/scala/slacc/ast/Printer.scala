@@ -37,7 +37,7 @@ object Printer {
             classString += printTabs.concat("}")
             return classString
           }
-          case VarDecl(tpe, id) => {
+          case VarDecl(tpe, id, expr) => {
             var varString = "var ".concat(apply(id))
             //if (symid) varString = varString.concat("#").concat(t.asInstanceOf[VarDecl].getSymbol.id.toString)
             varString = varString.concat(" : ").concat(apply(tpe)).concat(";");
