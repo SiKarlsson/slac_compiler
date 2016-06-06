@@ -101,7 +101,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           contains get ch.id.value match {
             case Some(m) => { ctx.reporter.warning("Overriding method " + ch.id.value + " of superclass", ch) }
             case None => {
-              val mh: MethodHandler = classFile.addMethod(typeStringFromTypeTree(ch.retType, "L", ";"), ch.id.value, parameterString(ch.args))
+              val mh: MethodHandler = classFile.addMethod(typeStringFromType(ch.id.getSymbol.getType, "L", ";"), ch.id.value, parameterString(ch.args))
               generateMethodCode(ch)(mh.codeHandler)
               contains += (ch.id.value -> true)
             }
