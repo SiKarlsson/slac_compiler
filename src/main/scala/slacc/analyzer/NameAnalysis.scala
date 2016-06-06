@@ -108,6 +108,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 // If no type supplied, we set TUntyped and type it later
                 methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
                 methodSym.overridden = Some(s)
+                methodSym.setDeclaration(method)
                 method.setSymbol(methodSym)
                 method.id.setSymbol(method.getSymbol)
                 classDecl.getSymbol.addMethod(methodId, method.getSymbol)
@@ -142,6 +143,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             // The method is not previously defined
             var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
             methodSym.setPos(method)
+            methodSym.setDeclaration(method)
             method.setSymbol(methodSym)
             methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
             method.id.setSymbol(method.getSymbol)

@@ -3,6 +3,7 @@ package analyzer
 
 import utils._
 import Types._
+import ast.Trees._
 
 object Symbols {
   trait Symbolic[S <: Symbol] {
@@ -93,6 +94,10 @@ object Symbols {
     var members = Map[String, VariableSymbol]()
     var argList: List[VariableSymbol] = Nil
     var overridden: Option[MethodSymbol] = None
+    var declaration: Option[MethodDecl] = None
+
+    def getDeclaration(): Option[MethodDecl] = declaration
+    def setDeclaration(m: MethodDecl) = { declaration = Some(m) }
 
     def lookupVar(n: String): Option[VariableSymbol] = members get n match {
       case Some(e) => { Some(e) }
