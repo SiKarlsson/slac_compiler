@@ -148,6 +148,143 @@ object NameAnalysis extends Pipeline[Program, Program] {
       symbol
     }
 
+    /* Lots of expressions take two expressions (And, Or, Plus, Minus, etc.)
+    we give these a special trait (asTuple) and use dualAttachment to
+    attach identifiers to them all. Saves a lot of space */
+    def dualAttachment(t1: ExprTree, t2: ExprTree)(implicit method: MethodDecl, cd: ClassDecl): Unit = {
+      attachIdentifier(t1)(method, cd)
+      attachIdentifier(t2)(method, cd)
+    }
+
+    def attachIdentifier(t: ExprTree)(implicit method: MethodDecl, cd: ClassDecl): Unit = {
+      t match {
+        case tuple: AsTuple => {
+          dualAttachment(tuple.lhs, tuple.rhs)(method,cd)
+        }
+        case ArrayRead(arr, index) => {
+          attachIdentifier(arr)
+          attachIdentifier(index)
+        }
+        case ArrayLength(arr) => {
+          attachIdentifier(arr)
+        }
+        case MethodCall(obj, meth, args) => {
+          attachIdentifier(obj)
+          obj match {
+            case Self() => {
+              // If object is self, check for the method in the class
+              obj.asInstanceOf[Self].getSymbol.lookupMethod(meth.value) match {
+                case Some(ms) => {
+                  ms.getType match {
+                    // There is a method in the class but it has not yet
+                    // been typed
+                    case TUntyped => {
+                      // Parse the MethodDecl to find the return expression type
+                      ms.getDeclaration match {
+                        case Some(md) => {
+                          obj.asInstanceOf[Self].getSymbol.getDeclaration match {
+                            case Some(cd) => {
+                              md.vars foreach { mdv => parseMethodVar(mdv, md, cd) }
+                              md.exprs foreach { mde => attachIdentifier(mde)(md, cd) }
+                              attachIdentifier(md.retExpr)(md, cd)
+                              parseMethod(md, cd)
+                            }
+                            case None => { sys.error(s"Self is of " +
+                              "class " +
+                              "${obj.asInstanceOf[Self].getSymbol.name} " +
+                              "but does not have a declaration attached " +
+                              " to it") }
+                          }
+                        }
+                        case None => sys.error("No declaration connected to " + ms.name)
+                      }
+                    }
+                    case _ => meth.setSymbol(ms)
+                  }
+                }
+                case None => { ctx.reporter.error("No method " + meth.value + " defined") }
+              }
+            }
+            case _ => { }
+          }
+          for (arg <- args) {
+            attachIdentifier(arg)
+          }
+        }
+        case Self() => {
+          t.asInstanceOf[Self].setSymbol(cd.getSymbol)
+        }
+        case NewIntArray(size) => attachIdentifier(size)
+        case New(id) => attachIdentifier(id)
+        case Not(expr) => attachIdentifier(expr)
+        case Block(exprList) => {
+          for (expr <- exprList) {
+            attachIdentifier(expr)
+          }
+        }
+        case If(expr, thn, els) => {
+          attachIdentifier(expr)
+          attachIdentifier(thn)
+          els match {
+            case Some(e) => attachIdentifier(e)
+            case None => { }
+          }
+        }
+        case While(cond, body) => {
+          attachIdentifier(cond)
+          attachIdentifier(body)
+        }
+        case Println(expr) => {
+          attachIdentifier(expr)
+        }
+        case Assign(id: Identifier, expr) => {
+          attachIdentifier(id)
+          attachIdentifier(expr)
+          unusedVariables -= id.getSymbol
+        }
+        case ArrayAssign(id, index, expr) => {
+          attachIdentifier(id)
+          attachIdentifier(index)
+          attachIdentifier(expr)
+        }
+        case Strof(expr) => {
+          attachIdentifier(expr)
+        }
+        case Identifier(value) => {
+          if (method.asInstanceOf[MethodDecl].hasSymbol) {
+            val sym = method.asInstanceOf[MethodDecl].getSymbol
+            sym.lookupVar(value) match {
+              case Some(s) => {
+                // There is a symbol named value in the method scope
+                t.asInstanceOf[Identifier].setSymbol(s)
+              }
+              case None => {
+                val classSym = sym.classSymbol
+                classSym.lookupVar(value) match {
+                  case Some(ss) => {
+                    // There is a symbol named value in the class scope
+                    t.asInstanceOf[Identifier].setSymbol(ss)
+                  }
+                  case None => {
+                    // Variable value not define in method or class
+                    glob.lookupClass(value) match {
+                      case Some(sss) => {
+                        t.asInstanceOf[Identifier].setSymbol(sss)
+                      }
+                      case None => {
+                        printNotDeclared(value, t, ctx.reporter)
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        case _ => {  }
+      }
+    }
+
     def createClassSymbol(classDecl: ClassDecl): ClassSymbol = {
       val symbol = new ClassSymbol(classDecl.id.value)
       symbol.setPos(classDecl)
