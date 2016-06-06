@@ -237,8 +237,14 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
 
         attachIdentifier(method.retExpr)
-        method.id.getSymbol.setType(getTypeOfExprTree(method.retExpr))
-        method.getSymbol.setType(getTypeOfExprTree(method.retExpr))
+
+        method.retType match {
+          case UntypedType() => {
+            method.id.getSymbol.setType(getTypeOfExprTree(method.retExpr))
+            method.getSymbol.setType(getTypeOfExprTree(method.retExpr))
+          }
+          case _ => { }
+        }
 
         def getSymbolFromObj(obj: ExprTree): Symbol = {
           obj match {
