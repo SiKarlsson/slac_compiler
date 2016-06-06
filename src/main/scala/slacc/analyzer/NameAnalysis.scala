@@ -411,6 +411,44 @@ object NameAnalysis extends Pipeline[Program, Program] {
     }
   }
 
+  def getTypeOfExprTree(e: ExprTree): Type = {
+    e match {
+      case And(lhs, rhs) => TBoolean
+      case Or(lhs, rhs) => TBoolean
+      case Plus(lhs, rhs) => {
+        getTypeOfExprTree(lhs) match {
+          case TInt => getTypeOfExprTree(rhs)
+          case TString => TString
+          case _ => sys.error(s"Addition not supported for ${getTypeOfExprTree(lhs)}")
+        }
+      }
+      case Minus(lhs, rhs) => TInt
+      case Times(lhs, rhs) => TInt
+      case Div(lhs, rhs) => TInt
+      case LessThan(lhs, rhs) => TBoolean
+      case Equals(lhs, rhs) => TBoolean
+      case ArrayRead(arr, idx) => TInt
+      case ArrayLength(arr) => TInt
+      case MethodCall(obj, meth, args) => ??? // TODO
+      case IntLit(value) => TInt
+      case StringLit(value) => TInt
+      case True() => TBoolean
+      case False() => TBoolean
+      case Identifier(id) => e.getType
+      case Self() => ??? // TODO
+      case NewIntArray(size) => TIntArray
+      case New(tpe) => TClass(glob.classes(tpe.value))
+      case Not(expr) => TBoolean
+      case Block(exprs) => getTypeOfExprTree(exprs.last)
+      case While(cond, body) => TUnit
+      case Println(expr) => TUnit
+      case Assign(id, expr) => TUnit
+      case ArrayAssign(arr, idx, expr) => TUnit
+      case Strof(expr) => TString
+      case _ => sys.error(s"Not handling ${e}")
+    }
+  }
+
   def checkClassType(varDecl: VarDecl, rep: Reporter): Unit = {
     if (varDecl.tpe.isInstanceOf[Identifier]) {
       glob.lookupClass(varDecl.tpe.asInstanceOf[Identifier].value) match {
