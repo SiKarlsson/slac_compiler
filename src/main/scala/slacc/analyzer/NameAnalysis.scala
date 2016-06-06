@@ -289,6 +289,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       val symbol = new ClassSymbol(classDecl.id.value)
       symbol.setPos(classDecl)
       symbol.setType(TClass(symbol))
+      symbol.setDeclaration(classDecl)
       classDecl.setSymbol(symbol)
       classDecl.id.setSymbol(symbol)
       symbol
