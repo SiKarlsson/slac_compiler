@@ -286,7 +286,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             }
             case NewIntArray(size) => attachIdentifier(size)
             case New(id) => attachIdentifier(id)
-            case Not(expr) => attachIdentifier(expr
+            case Not(expr) => attachIdentifier(expr)
             case Block(exprList) => {
               for (expr <- exprList) {
                 attachIdentifier(expr)
