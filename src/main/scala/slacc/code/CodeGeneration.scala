@@ -146,9 +146,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
       generateExprCode(mt.retExpr)(ch, variables)
 
-      ch << (getTypeOfTypeTree(mt.retType, ctx.reporter) match {
+      ch << (mt.id.getSymbol.getType match {
         case TInt | TBoolean => { IRETURN }
         case TUnit => { RETURN }
+        case TUntyped => sys.error("Method is Untyped when deciding on return instruction")
         case _ => { ARETURN }
       })
 
