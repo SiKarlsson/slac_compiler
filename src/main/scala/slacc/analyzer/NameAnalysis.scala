@@ -238,6 +238,8 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
 
         attachIdentifier(method.retExpr)
+        method.id.getSymbol.setType(getTypeOfExprTree(method.retExpr))
+        method.getSymbol.setType(getTypeOfExprTree(method.retExpr))
 
         def getSymbolFromObj(obj: ExprTree): Symbol = {
           obj match {
@@ -355,15 +357,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
             }
             case _ => {  }
           }
-        }
-      }
-
-      for (method <- classDecl.methods) {
-        method.getSymbol.getType match {
-          case TUntyped => {
-            method.getSymbol.setType(getTypeOfExprTree(method.retExpr))
-          }
-          case _ => { }
         }
       }
     }
