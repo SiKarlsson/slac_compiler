@@ -208,7 +208,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case Some(e) => {
                   attachIdentifier(methodVar.id)
                   attachIdentifier(new Assign(methodVar.id, e))
-                  println(s"${methodVar.id} has symbol ${methodVar.id.getSymbol}")
                   methodVar.getSymbol.setType(getTypeOfExprTree(e))
                 }
                 case None => unusedVariables += methodVar.getSymbol
