@@ -286,6 +286,15 @@ object NameAnalysis extends Pipeline[Program, Program] {
             }
             case MethodCall(obj, meth, args) => {
               attachIdentifier(obj)
+              obj match {
+                case Self() => {
+                  obj.asInstanceOf[Self].getSymbol.lookupMethod(meth.value) match {
+                    case Some(ms) => meth.setSymbol(ms)
+                    case None => { ctx.reporter.error("No method " + meth.value + " defined") }
+                  }
+                }
+                case _ => { }
+              }
               for (arg <- args) {
                 attachIdentifier(arg)
               }
