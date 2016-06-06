@@ -55,6 +55,10 @@ object Symbols {
     var parent: Option[ClassSymbol] = None
     var methods = Map[String, MethodSymbol]()
     var members = Map[String, VariableSymbol]()
+    var declaration: Option[ClassDecl] = None
+
+    def getDeclaration(): Option[ClassDecl] = declaration
+    def setDeclaration(c: ClassDecl) = { declaration = Some(c) }
 
     def lookupMethod(n: String): Option[MethodSymbol] = {
       methods get n match {
