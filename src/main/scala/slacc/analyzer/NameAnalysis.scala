@@ -208,6 +208,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case Some(e) => {
                   attachIdentifier(methodVar.id)
                   attachIdentifier(new Assign(methodVar.id, e))
+                  methodVar.getSymbol.setType(getTypeOfExprTree(e))
                 }
                 case None => unusedVariables += (methodVar.getSymbol -> false)
               }
@@ -353,6 +354,15 @@ object NameAnalysis extends Pipeline[Program, Program] {
             }
             case _ => {  }
           }
+        }
+      }
+
+      for (method <- classDecl.methods) {
+        method.getSymbol.getType match {
+          case TUntyped => {
+            method.getSymbol.setType(getTypeOfExprTree(method.retExpr))
+          }
+          case _ => { }
         }
       }
     }
