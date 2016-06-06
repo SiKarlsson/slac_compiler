@@ -148,15 +148,16 @@ object NameAnalysis extends Pipeline[Program, Program] {
       symbol
     }
 
-    /* Lots of expressions take two expressions (And, Or, Plus, Minus, etc.)
-    we give these a special trait (asTuple) and use dualAttachment to
-    attach identifiers to them all. Saves a lot of space */
-    def dualAttachment(t1: ExprTree, t2: ExprTree)(implicit method: MethodDecl, cd: ClassDecl): Unit = {
-      attachIdentifier(t1)(method, cd)
-      attachIdentifier(t2)(method, cd)
-    }
-
     def attachIdentifier(t: ExprTree)(implicit method: MethodDecl, cd: ClassDecl): Unit = {
+
+      /* Lots of expressions take two expressions (And, Or, Plus, Minus, etc.)
+      we give these a special trait (asTuple) and use dualAttachment to
+      attach identifiers to them all. Saves a lot of space */
+      def dualAttachment(t1: ExprTree, t2: ExprTree)(implicit method: MethodDecl, cd: ClassDecl): Unit = {
+        attachIdentifier(t1)(method, cd)
+        attachIdentifier(t2)(method, cd)
+      }
+
       t match {
         case tuple: AsTuple => {
           dualAttachment(tuple.lhs, tuple.rhs)(method,cd)
