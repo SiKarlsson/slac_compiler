@@ -9,7 +9,7 @@ import Types._
 object NameAnalysis extends Pipeline[Program, Program] {
 
   var glob = new GlobalScope()
-  var unusedVariables = scala.collection.mutable.Map[Symbol, Boolean]()
+  var unusedVariables = scala.collection.mutable.Set[Symbol]()
   var mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List())
 
   def run(ctx: Context)(prog: Program): Program = {
@@ -86,7 +86,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             classVar.setSymbol(classVarSym)
             classVar.id.setSymbol(classVar.getSymbol)
             classDecl.getSymbol.addMember(varID, classVar.getSymbol)
-            unusedVariables += (classVar.getSymbol -> false)
+            unusedVariables += classVar.getSymbol
           }
         }
       }
@@ -119,7 +119,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                     case None => {
                       createParameterSymbol(param)
                       method.getSymbol.addParam(paramId, param.getSymbol)
-                      unusedVariables += (param.getSymbol -> false)
+                      unusedVariables += param.getSymbol
                     }
                   }
                 }
@@ -154,7 +154,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case None => {
                   createParameterSymbol(param)
                   method.getSymbol.addParam(paramId, param.getSymbol)
-                  unusedVariables += (param.getSymbol -> false)
+                  unusedVariables += param.getSymbol
                 }
               }
             }
@@ -176,7 +176,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
     for (classDecl <- prog.classes :+ mainClassDecl) {
       for (method <- classDecl.methods) {
         for (classVar <- classDecl.vars) {
-          unusedVariables += (classVar.getSymbol -> false)
+          unusedVariables += classVar.getSymbol
           classVar.tpe match {
             case Identifier(value) => {
               // Class type
@@ -208,9 +208,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case Some(e) => {
                   attachIdentifier(methodVar.id)
                   attachIdentifier(new Assign(methodVar.id, e))
+                  println(s"${methodVar.id} has symbol ${methodVar.id.getSymbol}")
                   methodVar.getSymbol.setType(getTypeOfExprTree(e))
                 }
-                case None => unusedVariables += (methodVar.getSymbol -> false)
+                case None => unusedVariables += methodVar.getSymbol
               }
             }
           }
@@ -372,9 +373,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     // Make sure you check all constraints
 
-    for (k <- unusedVariables) {
-      ctx.reporter.warning(s"Variable ${k._1.name} is not used", k._1)
-    }
+    unusedVariables foreach { uv => ctx.reporter.warning(s"Variable ${uv.name} is not used", uv)}
 
     prog
   }
