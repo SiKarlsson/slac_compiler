@@ -165,21 +165,11 @@ object TypeChecking extends Pipeline[Program, Program] {
           })
           retType
         }
-        case IntLit(value) => {
-          TInt
-        }
-        case StringLit(value) => {
-          TString
-        }
-        case True() => {
-          TBoolean
-        }
-        case False() => {
-          TBoolean
-        }
-        case Identifier(id) => {
-          expr.getType
-        }
+        case IntLit(value) => TInt
+        case StringLit(value) => TString
+        case True() => TBoolean
+        case False() => TBoolean
+        case Identifier(id) => expr.getType
         case Self() => {
           classSymbolScope match {
             case Some(cs) => {
