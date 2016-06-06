@@ -351,88 +351,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
       }
 
-      for (method <- classDecl.methods) {
-        val methodId = method.id.value
-        glob.classes(classDecl.id.value).lookupMethod(methodId) match {
-          case Some(s) => {
-            // The method is previously defined (as in, a parent has it)
-            if (classDecl.methods.contains(s)) {
-              printAlreadyDefined(methodId, method.id, ctx.reporter)
-            } else {
-              // Check if overriding
-              if (s.argList.length == method.args.length
-                  && sameParameterTypes(method.args, s.argList, ctx.reporter)
-                  && sameReturnTypes(method, s, ctx.reporter)) {
-                var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
-                methodSym.setPos(method)
-                // If no type supplied, we set TUntyped and type it later
-                methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
-                methodSym.overridden = Some(s)
-                methodSym.setDeclaration(method)
-                method.setSymbol(methodSym)
-                method.id.setSymbol(method.getSymbol)
-                classDecl.getSymbol.addMethod(methodId, method.getSymbol)
-
-                for (param <- method.args) {
-                  val paramId = param.id.value
-                  glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
-                    case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
-                    case None => {
-                      createParameterSymbol(param)
-                      method.getSymbol.addParam(paramId, param.getSymbol)
-                      unusedVariables += param.getSymbol
-                    }
-                  }
-                }
-
-                method.retType match {
-                  case Identifier(value) => {
-                    glob.classes get value match {
-                      case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
-                      case None => ctx.reporter.error("Class is not declared", method.retType)
-                    }
-                  }
-                  case _ => { }
-                }
-              } else {
-                ctx.reporter.error("Method is already defined in superclass", method)
-              }
-            }
-          }
-          case None => {
-            // The method is not previously defined
-            var methodSym = new MethodSymbol(method.id.value, classDecl.getSymbol)
-            methodSym.setPos(method)
-            methodSym.setDeclaration(method)
-            method.setSymbol(methodSym)
-            methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
-            method.id.setSymbol(method.getSymbol)
-            classDecl.getSymbol.addMethod(methodId, method.getSymbol)
-
-            for (param <- method.args) {
-              val paramId = param.id.value
-              glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(paramId) match {
-                case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
-                case None => {
-                  createParameterSymbol(param)
-                  method.getSymbol.addParam(paramId, param.getSymbol)
-                  unusedVariables += param.getSymbol
-                }
-              }
-            }
-
-            method.retType match {
-              case Identifier(value) => {
-                glob.classes get value match {
-                  case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
-                  case None => ctx.reporter.error("Class is not declared", method.retType)
-                }
-              }
-              case _ => { }
-            }
-          }
-        }
-      }
+      classDecl.methods foreach { m => parseMethod(m, classDecl) }
     }
 
     for (classDecl <- prog.classes :+ mainClassDecl) {
@@ -442,46 +361,18 @@ object NameAnalysis extends Pipeline[Program, Program] {
           classVar.tpe match {
             case Identifier(value) => {
               // Class type
-              attachIdentifier(classVar.tpe.asInstanceOf[Identifier])
+              attachIdentifier(classVar.tpe.asInstanceOf[Identifier])(method, classDecl)
             }
             case _ => { /* Primitive type */ }
           }
         }
-        for (methodVar <- method.vars) {
-          val methodVarId = methodVar.id.value
-          glob.classes(classDecl.id.value).methods(method.id.value).lookupVar(methodVarId) match {
-            case Some(s) => printAlreadyDefined(methodVarId, methodVar.id, ctx.reporter)
-            case None => {
-              checkClassType(methodVar, ctx.reporter)
-              var methodVarSym = new VariableSymbol(methodVar.id.value)
-              methodVarSym.setPos(methodVar)
-              methodVarSym.setType(getTypeOfTypeTree(methodVar.tpe, ctx.reporter))
-              methodVar.tpe match {
-                case Identifier(value) => {
-                  // Class type
-                  attachIdentifier(methodVar.tpe.asInstanceOf[Identifier])
-                }
-                case _ => { /* Primitive type */ }
-              }
-              methodVar.setSymbol(methodVarSym)
-              methodVar.id.setSymbol(methodVar.getSymbol)
-              method.getSymbol.addMember(methodVarId, methodVar.getSymbol)
-              methodVar.expr match {
-                case Some(e) => {
-                  attachIdentifier(methodVar.id)
-                  attachIdentifier(new Assign(methodVar.id, e))
-                  methodVar.getSymbol.setType(getTypeOfExprTree(e))
-                }
-                case None => unusedVariables += methodVar.getSymbol
-              }
-            }
-          }
-        }
+
+        method.vars foreach { mv => parseMethodVar(mv, method, classDecl)}
 
         for (param <- method.args) {
           param.tpe match {
             case Identifier(_) => {
-              attachIdentifier(param.tpe.asInstanceOf[Identifier])
+              attachIdentifier(param.tpe.asInstanceOf[Identifier])(method, classDecl)
             }
             case _ => { }
           }
@@ -489,16 +380,16 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
         classDecl.parent match {
           case Some(p) => {
-            attachIdentifier(p)
+            attachIdentifier(p)(method, classDecl)
           }
           case None => { }
         }
 
         for (expr <- method.exprs) {
-          attachIdentifier(expr)
+          attachIdentifier(expr)(method, classDecl)
         }
 
-        attachIdentifier(method.retExpr)
+        attachIdentifier(method.retExpr)(method, classDecl)
 
         method.retType match {
           case UntypedType() => {
@@ -523,134 +414,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
               obj.asInstanceOf[Identifier].getSymbol
             }
             case _ => { ctx.reporter.error("Can't use method call on " + obj, obj); ??? }
-          }
-        }
-
-        /* Lots of expressions take two expressions (And, Or, Plus, Minus, etc.)
-        we give these a special trait (asTuple) and use dualAttachment to
-        attach identifiers to them all. Saves a lot of space */
-        def dualAttachment(t1: ExprTree, t2: ExprTree): Unit = {
-          attachIdentifier(t1)
-          attachIdentifier(t2)
-        }
-
-        def attachIdentifier(t: ExprTree): Unit = {
-          t match {
-            case tuple: AsTuple => {
-              dualAttachment(tuple.lhs, tuple.rhs)
-            }
-            case ArrayRead(arr, index) => {
-              attachIdentifier(arr)
-              attachIdentifier(index)
-            }
-            case ArrayLength(arr) => {
-              attachIdentifier(arr)
-            }
-            case MethodCall(obj, meth, args) => {
-              attachIdentifier(obj)
-              obj match {
-                case Self() => {
-                  // If object is self, check for the method in the class
-                  obj.asInstanceOf[Self].getSymbol.lookupMethod(meth.value) match {
-                    case Some(ms) => {
-                      ms.getType match {
-                        // There is a method in the class but it has not yet
-                        // been typed
-                        case TUntyped => {
-                          // Parse the MethodDecl to find the return expression type
-                          ms.getDeclaration match {
-                            case Some(md) => {
-                              md.exprs foreach { mde => attachIdentifier(mde) }
-                              attachIdentifier(md.retExpr)
-                              ms.setType(getTypeOfExprTree(md.retExpr))
-                              meth.setSymbol(ms)
-                            }
-                            case None => sys.error("No declaration connected to " + ms.name)
-                          }
-                        }
-                        case _ => meth.setSymbol(ms)
-                      }
-                    }
-                    case None => { ctx.reporter.error("No method " + meth.value + " defined") }
-                  }
-                }
-                case _ => { }
-              }
-              for (arg <- args) {
-                attachIdentifier(arg)
-              }
-            }
-            case Self() => {
-              t.asInstanceOf[Self].setSymbol(classDecl.getSymbol)
-            }
-            case NewIntArray(size) => attachIdentifier(size)
-            case New(id) => attachIdentifier(id)
-            case Not(expr) => attachIdentifier(expr)
-            case Block(exprList) => {
-              for (expr <- exprList) {
-                attachIdentifier(expr)
-              }
-            }
-            case If(expr, thn, els) => {
-              attachIdentifier(expr)
-              attachIdentifier(thn)
-              els match {
-                case Some(e) => attachIdentifier(e)
-                case None => { }
-              }
-            }
-            case While(cond, body) => {
-              attachIdentifier(cond)
-              attachIdentifier(body)
-            }
-            case Println(expr) => {
-              attachIdentifier(expr)
-            }
-            case Assign(id: Identifier, expr) => {
-              attachIdentifier(id)
-              attachIdentifier(expr)
-              unusedVariables -= id.getSymbol
-            }
-            case ArrayAssign(id, index, expr) => {
-              attachIdentifier(id)
-              attachIdentifier(index)
-              attachIdentifier(expr)
-            }
-            case Strof(expr) => {
-              attachIdentifier(expr)
-            }
-            case Identifier(value) => {
-              if (method.asInstanceOf[MethodDecl].hasSymbol) {
-                val sym = method.asInstanceOf[MethodDecl].getSymbol
-                sym.lookupVar(value) match {
-                  case Some(s) => {
-                    // There is a symbol named value in the method scope
-                    t.asInstanceOf[Identifier].setSymbol(s)
-                  }
-                  case None => {
-                    val classSym = sym.classSymbol
-                    classSym.lookupVar(value) match {
-                      case Some(ss) => {
-                        // There is a symbol named value in the class scope
-                        t.asInstanceOf[Identifier].setSymbol(ss)
-                      }
-                      case None => {
-                        // Variable value not define in method or class
-                        glob.lookupClass(value) match {
-                          case Some(sss) => {
-                            t.asInstanceOf[Identifier].setSymbol(sss)
-                          }
-                          case None => {
-                            printNotDeclared(value, t, ctx.reporter)
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            case _ => {  }
           }
         }
       }
@@ -716,7 +479,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
         getTypeOfExprTree(lhs) match {
           case TInt => getTypeOfExprTree(rhs)
           case TString => TString
-          case _ => sys.error(s"Addition not supported for ${getTypeOfExprTree(lhs)}")
+          case _ => sys.error(s"Addition not supported for ${lhs}:${getTypeOfExprTree(lhs)}")
         }
       }
       case Minus(lhs, rhs) => TInt
