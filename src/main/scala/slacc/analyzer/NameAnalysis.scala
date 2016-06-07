@@ -210,7 +210,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                     case _ => meth.setSymbol(ms)
                   }
                 }
-                case None => { ctx.reporter.error("No method " + meth.value + " defined") }
+                case None => { ctx.reporter.error("No method " + meth.value + " defined", meth) }
               }
             }
             case Identifier(value) => {
