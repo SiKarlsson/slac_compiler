@@ -120,6 +120,16 @@ object NameAnalysis extends Pipeline[Program, Program] {
       }
     }
 
+    def handleMethod(meth: Identifier, md: MethodDecl, cd: ClassDecl): Unit= {
+      parseMethod(md, cd)
+      md.vars foreach { mdv => parseMethodVar(mdv, md, cd) }
+      md.exprs foreach { mde => attachIdentifier(mde)(md, cd) }
+      attachIdentifier(md.retExpr)(md, cd)
+      md.id.getSymbol.setType(getTypeOfExprTree(md.retExpr))
+      meth.setSymbol(md.id.getSymbol)
+      typeInferredMethods += meth.getSymbol
+    }
+
     def parseMethodVar(methodVar: VarDecl, method: MethodDecl, cd: ClassDecl): Unit = {
       if (method.id.hasSymbol) {
         if (typeInferredMethods contains method.id.getSymbol) {
@@ -201,15 +211,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                       ms.getDeclaration match {
                         case Some(md) => {
                           obj.asInstanceOf[Self].getSymbol.getDeclaration match {
-                            case Some(cd) => {
-                              parseMethod(md, cd)
-                              md.vars foreach { mdv => parseMethodVar(mdv, md, cd) }
-                              md.exprs foreach { mde => attachIdentifier(mde)(md, cd) }
-                              attachIdentifier(md.retExpr)(md, cd)
-                              md.id.getSymbol.setType(getTypeOfExprTree(md.retExpr))
-                              meth.setSymbol(md.id.getSymbol)
-                              typeInferredMethods += meth.getSymbol
-                            }
+                            case Some(cd) => handleMethod(meth, md, cd)
                             case None => { sys.error(s"Self is of " +
                               "class " +
                               "${obj.asInstanceOf[Self].getSymbol.name} " +
@@ -234,16 +236,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                       ms.getDeclaration match {
                         case Some(md) => {
                           ms.classSymbol.getDeclaration match {
-                            case Some(cd) => {
-                              parseMethod(md, cd)
-                              md.vars foreach { mdv => parseMethodVar(mdv, md, cd) }
-                              md.exprs foreach { mde => attachIdentifier(mde)(md, cd) }
-                              attachIdentifier(md.retExpr)(md, cd)
-                              md.id.getSymbol.setType(getTypeOfExprTree(md.retExpr))
-                              meth.setSymbol(md.id.getSymbol)
-                              println(meth + ": " + meth.getSymbol.getType)
-                              typeInferredMethods += meth.getSymbol
-                            }
+                            case Some(cd) => handleMethod(meth, md, cd)
                             case None => { sys.error(s"Self is of " +
                               "class " +
                               "${obj.asInstanceOf[Self].getSymbol.name} " +
