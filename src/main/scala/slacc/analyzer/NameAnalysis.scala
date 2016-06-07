@@ -72,39 +72,52 @@ object NameAnalysis extends Pipeline[Program, Program] {
           }
         }
         case None => {
-          // The method is not previously defined
-          var methodSym = new MethodSymbol(method.id.value, cd.getSymbol)
-          methodSym.setPos(method)
-          methodSym.setDeclaration(method)
-          method.setSymbol(methodSym)
-          methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
-          method.id.setSymbol(method.getSymbol)
-          cd.getSymbol.addMethod(methodId, method.getSymbol)
-
-          for (param <- method.args) {
-            val paramId = param.id.value
-            glob.classes(cd.id.value).methods(method.id.value).lookupVar(paramId) match {
-              case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
-              case None => {
-                createParameterSymbol(param)
-                method.getSymbol.addParam(paramId, param.getSymbol)
-                unusedVariables += param.getSymbol
-              }
-            }
-          }
-
-          method.retType match {
-            case Identifier(value) => {
-              glob.classes get value match {
-                case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
-                case None => ctx.reporter.error("Class is not declared", method.retType)
-              }
-            }
-            case _ => { }
-          }
+          createMethod(method, cd)
         }
       }
       method.getSymbol.getType
+    }
+
+    def createMethod(method: MethodDecl, cd: ClassDecl): Unit = {
+      // The method is not previously defined
+      var methodSym = new MethodSymbol(method.id.value, cd.getSymbol)
+      methodSym.setPos(method)
+      methodSym.setDeclaration(method)
+      method.setSymbol(methodSym)
+      methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
+      method.id.setSymbol(method.getSymbol)
+      cd.getSymbol.addMethod(method.id.value, method.getSymbol)
+
+      for (param <- method.args) {
+        val paramId = param.id.value
+        glob.classes(cd.id.value).methods(method.id.value).lookupVar(paramId) match {
+          case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
+          case None => {
+            createParameterSymbol(param)
+            method.getSymbol.addParam(paramId, param.getSymbol)
+            unusedVariables += param.getSymbol
+          }
+        }
+      }
+
+      method.retType match {
+        case Identifier(value) => {
+          glob.classes get value match {
+            case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
+            case None => ctx.reporter.error("Class is not declared", method.retType)
+          }
+        }
+        case UntypedType() => {
+          /** Method is untyped, parse the method and set the type */
+          method.vars foreach { mv => parseMethodVar(mv, method, cd) }
+          method.exprs foreach { me => attachIdentifier(me)(method, cd) }
+          attachIdentifier(method.retExpr)(method, cd)
+          method.getSymbol.setType(getTypeOfExprTree(method.retExpr))
+          typeInferredMethods += method.id.getSymbol
+          cd.getSymbol.addMethod(method.id.value, method.getSymbol)
+        }
+        case _ => { }
+      }
     }
 
     def parseMethodVar(methodVar: VarDecl, method: MethodDecl, cd: ClassDecl): Unit = {
