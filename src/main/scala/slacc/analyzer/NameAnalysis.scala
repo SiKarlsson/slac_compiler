@@ -9,7 +9,20 @@ import Types._
 object NameAnalysis extends Pipeline[Program, Program] {
 
   var glob = new GlobalScope()
-  var unusedVariables = scala.collection.mutable.Set[Symbol]()
+
+  /**
+    Variables - put all variables into this set
+    ReadVariables - when a variable is read, put it into this set
+    writtenVariables - when a variable is written to, put it into this set
+
+    If a variable is in Variables but not in both ReadVariables and
+      writtenVariables, it is considered unused.
+   */
+  var variables = scala.collection.mutable.Set[Symbol]()
+  var readVariables = scala.collection.mutable.Set[Symbol]()
+  var writtenVariables = scala.collection.mutable.Set[Symbol]()
+
+  /** typeInferredMethods is the set of methods that has been type inferred */
   var typeInferredMethods = scala.collection.mutable.Set[Symbol]()
   var mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List())
 
@@ -18,11 +31,18 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List(prog.main.main))
 
+    /**
+     * Traverses the method. Creates symbols for all variables and attaches
+     * identifiers to the expressions (incl return expression). It then tries
+     * to determine the return type of the method
+     */
     def inferReturnType(methodDecl: MethodDecl, classDecl: ClassDecl): Type = {
       if (typeInferredMethods contains methodDecl.id.getSymbol) {
         methodDecl.id.getSymbol.getType
       } else {
-        methodDecl.vars foreach (mv => parseMethodVar(mv, methodDecl, classDecl) )
+        /** We need to go through the whole method in case the retExpr contains
+          a variable that needs to be type inferred */
+        methodDecl.vars foreach (mv => analyseMethodVariable(mv, methodDecl, classDecl) )
         methodDecl.exprs foreach (me => attachIdentifier(me)(methodDecl, classDecl) )
         attachIdentifier(methodDecl.retExpr)(methodDecl, classDecl)
         typeInferredMethods += methodDecl.id.getSymbol
@@ -33,6 +53,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
       }
     }
 
+    /**
+     * Creates a method symbol. If the method returns an identifier, the value
+     * is checked to be an existing class.
+     */
     def createMethodSymbol(methodDecl: MethodDecl, classDecl: ClassDecl): MethodSymbol = {
       var methodSymbol = new MethodSymbol(methodDecl.id.value, classDecl.getSymbol)
       methodSymbol.setPos(methodDecl)
@@ -50,6 +74,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
       methodSymbol
     }
 
+    /**
+     * Performs name analysis on a method. This includes checking that there is
+     * no other method in the class with the same name, check whether the method
+     * is overriding a method in the superclass, and create symbols for the
+     * parameters.
+     */
     def analyseMethod(methodDecl: MethodDecl, classDecl: ClassDecl): Unit = {
       val methodId = methodDecl.id;
       if (methodId.hasSymbol) {
@@ -74,10 +104,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
               methodDecl.setSymbol(methodSymbol)
               methodDecl.id.setSymbol(methodDecl.getSymbol)
               classDecl.getSymbol.addMethod(methodDecl.id.value, methodDecl.getSymbol)
-              /*methodDecl.retType match {
-                case UntypedType() => methodSymbol.setType(inferReturnType(methodDecl, classDecl))
+              methodDecl.retType match {
+                case UntypedType() => methodDecl.getSymbol.setType(inferReturnType(methodDecl, classDecl))
                 case _ => { }
-              }*/
+              }
               for (param <- methodDecl.args) {
                 val paramId = param.id.value
                 glob.classes(classDecl.id.value).methods(methodDecl.id.value).lookupVar(paramId) match {
@@ -85,7 +115,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                   case None => {
                     createParameterSymbol(param)
                     methodDecl.getSymbol.addParam(paramId, param.getSymbol)
-                    unusedVariables += param.getSymbol
+                    variables += param.getSymbol
                   }
                 }
               }
@@ -106,7 +136,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
               case None => {
                 createParameterSymbol(param)
                 methodDecl.getSymbol.addParam(paramId, param.getSymbol)
-                unusedVariables += param.getSymbol
+                variables += param.getSymbol
               }
             }
           }
@@ -114,7 +144,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
       }
     }
 
-    def parseMethodVar(methodVar: VarDecl, method: MethodDecl, cd: ClassDecl): Unit = {
+    /**
+     * If the method already has been type inferred, we skip this method as it
+     * would report "variable already declared" errors otherwise. Checks that
+     * the variable has not been previously defined (in method).
+     */
+    def analyseMethodVariable(methodVar: VarDecl, method: MethodDecl, cd: ClassDecl): Unit = {
       if (method.id.hasSymbol) {
         if (typeInferredMethods contains method.id.getSymbol) {
           return
@@ -140,25 +175,39 @@ object NameAnalysis extends Pipeline[Program, Program] {
           method.getSymbol.addMember(methodVarId, methodVar.getSymbol)
           methodVar.expr match {
             case Some(e) => {
+              /**
+               * The declaration is also an assignment (var a = 7;), therefore we need
+               * to handle the assignment as well.
+               */
               attachIdentifier(methodVar.id)(method, cd)
               attachIdentifier(new Assign(methodVar.id, e))(method, cd)
               methodVar.getSymbol.setType(getTypeOfExprTree(e))
+              variables += methodVar.getSymbol
+              writtenVariables += methodVar.getSymbol
             }
-            case None => unusedVariables += methodVar.getSymbol
+            case None => variables += methodVar.getSymbol
           }
         }
       }
     }
 
+    /**
+     * The name speaks for itself.
+     */
     def createParameterSymbol(formal: Formal): VariableSymbol = {
       var symbol = new VariableSymbol(formal.id.value)
       symbol.setPos(formal)
       symbol.setType(getTypeOfTypeTree(formal.tpe, ctx.reporter))
       formal.setSymbol(symbol)
-      formal.id.setSymbol(symbol)
+      formal.id.setSymbol(formal.getSymbol)
       symbol
     }
 
+    /**
+     * Attach identifier to variables. That is, ensure that if we declare var a
+     * in the method body, all consequent references to a should point to the
+     * same symbol.
+     */
     def attachIdentifier(t: ExprTree)(implicit method: MethodDecl, cd: ClassDecl): Unit = {
 
       /* Lots of expressions take two expressions (And, Or, Plus, Minus, etc.)
@@ -191,7 +240,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
               }
             }
             case Identifier(value) => {
-              println(obj)
               glob.classes(obj.asInstanceOf[Identifier].getSymbol.getType.toString).lookupMethod(meth.value) match {
                 case Some(ms) => meth.setSymbol(ms)
                 case None => ctx.reporter.error("No method " + meth.value + " defined")
@@ -204,13 +252,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
               }
             }
             case MethodCall(obj2, meth2, args2) => {
-              println(obj)
               glob.classes(getTypeOfExprTree(obj).toString).lookupMethod(meth.value) match {
                 case Some(ms) => meth.setSymbol(ms)
                 case None => ctx.reporter.error("No method " + meth.value + " defined")
               }
             }
-            case _ => { sys.error("What are you trying to use a method call on? " + obj) }
+            case _ => { sys.error(obj + " trying to invoke method " + meth.value) }
           }
           for (arg <- args) {
             attachIdentifier(arg)
@@ -244,17 +291,18 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
         case Assign(id: Identifier, expr) => {
           attachIdentifier(id)
+          attachIdentifier(expr)
           id.getSymbol.getType match {
             case TUntyped => id.getSymbol.setType(getTypeOfExprTree(expr))
-            case _ => {}
+            case _ => { }
           }
-          attachIdentifier(expr)
-          unusedVariables -= id.getSymbol
+          writtenVariables += id.getSymbol
         }
         case ArrayAssign(id, index, expr) => {
           attachIdentifier(id)
           attachIdentifier(index)
           attachIdentifier(expr)
+          writtenVariables += id.getSymbol
         }
         case Strof(expr) => {
           attachIdentifier(expr)
@@ -289,8 +337,15 @@ object NameAnalysis extends Pipeline[Program, Program] {
               }
             }
           }
+          if (t.asInstanceOf[Identifier].hasSymbol) {
+            readVariables += t.asInstanceOf[Identifier].getSymbol
+          }
         }
-        case _ => {  }
+        case IntLit(value) => { }
+        case StringLit(value) => { }
+        case True() => { }
+        case False() => { }
+        case _ => { sys.error("Trying to attach identifier to " + t) }
       }
     }
 
@@ -326,6 +381,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case Some(c) => {
               classDecl.getSymbol.parent = Some(c)
               if (hasInheritanceCycle(classDecl.getSymbol)) {
+                // Must be fatal as otherwise, we will loop loop loop
                 ctx.reporter.fatal("cycles in the inheritance graph", p)
               }
             }
@@ -355,7 +411,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             classVar.setSymbol(classVarSym)
             classVar.id.setSymbol(classVar.getSymbol)
             classDecl.getSymbol.addMember(varID, classVar.getSymbol)
-            unusedVariables += classVar.getSymbol
+            variables += classVar.getSymbol
           }
         }
       }
@@ -380,7 +436,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
           case _ => method.id.getSymbol.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
         }*/
         for (classVar <- classDecl.vars) {
-          unusedVariables += classVar.getSymbol
+          variables += classVar.getSymbol
           classVar.tpe match {
             case Identifier(value) => {
               // Class type
@@ -389,7 +445,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case _ => { /* Primitive type */ }
           }
         }
-        //method.vars foreach { mv => parseMethodVar(mv, method, classDecl)}
+        //method.vars foreach { mv => analyseMethodVariable(mv, method, classDecl)}
 
         classDecl.parent match {
           case Some(p) => {
@@ -400,20 +456,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
         method.id.getSymbol.setType(inferReturnType(method, classDecl))
 
-        /*for (expr <- method.exprs) {
-          attachIdentifier(expr)(method, classDecl)
-        }
-
-        attachIdentifier(method.retExpr)(method, classDecl)
-
-        method.retType match {
-          case UntypedType() => {
-            method.id.getSymbol.setType(getTypeOfExprTree(method.retExpr))
-            method.getSymbol.setType(getTypeOfExprTree(method.retExpr))
-          }
-          case _ => { }
-        }*/
-
+        typeInferredMethods += method.getSymbol
         def getSymbolFromObj(obj: ExprTree): Symbol = {
           obj match {
             case New(tpe) => {
@@ -431,7 +474,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case _ => { ctx.reporter.error("Can't use method call on " + obj, obj); ??? }
           }
         }
-        typeInferredMethods += method.getSymbol
       }
     }
 
@@ -440,8 +482,17 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     // Make sure you check all constraints
 
-    unusedVariables foreach { uv => ctx.reporter.warning(s"Variable ${uv.name} is not used", uv)}
-
+    for (variable <- variables) {
+      if (!(readVariables contains variable)) {
+        if (!(writtenVariables contains variable)) {
+          ctx.reporter.warning(s"Variable ${variable.name} is not used", variable)
+        } else {
+          ctx.reporter.warning(s"Variable ${variable.name} is read but never written", variable)
+        }
+      } else if (!(writtenVariables contains variable)) {
+        ctx.reporter.warning(s"Variable ${variable.name} is written but never read", variable)
+      }
+    }
     prog
   }
 
