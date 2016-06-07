@@ -260,7 +260,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case None => ctx.reporter.error("No method " + meth.value + " defined")
               }
             }
-            case _ => { sys.error("You w0t son?") }
+            case _ => { sys.error("What are you trying to use a method call on?") }
           }
           for (arg <- args) {
             attachIdentifier(arg)
