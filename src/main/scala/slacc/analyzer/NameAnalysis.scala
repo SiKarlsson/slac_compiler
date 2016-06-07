@@ -253,6 +253,31 @@ object NameAnalysis extends Pipeline[Program, Program] {
                 case None => ctx.reporter.error("No method " + meth.value + " defined")
               }
             }
+            case New(tpe) => {
+              glob.classes(tpe.asInstanceOf[Identifier].getSymbol.getType.toString).lookupMethod(meth.value) match {
+                case Some(ms) => {
+                  ms.getType match {
+                    case TUntyped => {
+                      ms.getDeclaration match {
+                        case Some(md) => {
+                          ms.classSymbol.getDeclaration match {
+                            case Some(cd) => handleMethod(meth, md, cd)
+                            case None => { sys.error(s"Self is of " +
+                              "class " +
+                              "${obj.asInstanceOf[Self].getSymbol.name} " +
+                              "but does not have a declaration attached " +
+                              " to it") }
+                          }
+                        }
+                        case None => sys.error("No declaration connected to " + ms.name)
+                      }
+                    }
+                    case _ => meth.setSymbol(ms)
+                  }
+                }
+                case None => ctx.reporter.error("No method " + meth.value + " defined")
+              }
+            }
             case _ => { sys.error("What are you trying to use a method call on?") }
           }
           for (arg <- args) {
