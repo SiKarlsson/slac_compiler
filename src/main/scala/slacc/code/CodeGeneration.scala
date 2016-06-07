@@ -153,7 +153,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case _ => { ARETURN }
       })
 
-      ch.print
+      //ch.print
       ch.freeze
     }
 

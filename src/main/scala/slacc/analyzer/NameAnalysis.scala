@@ -18,116 +18,100 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     mainClassDecl = new ClassDecl(new Identifier("Main"), None, List(), List(prog.main.main))
 
-    def parseMethod(method: MethodDecl, cd: ClassDecl): Type = {
-      if (method.id.hasSymbol) {
-        if (typeInferredMethods contains method.id.getSymbol) {
-          return method.id.getSymbol.getType
+    def inferReturnType(methodDecl: MethodDecl, classDecl: ClassDecl): Type = {
+      if (typeInferredMethods contains methodDecl.id.getSymbol) {
+        methodDecl.id.getSymbol.getType
+      } else {
+        methodDecl.vars foreach (mv => parseMethodVar(mv, methodDecl, classDecl) )
+        methodDecl.exprs foreach (me => attachIdentifier(me)(methodDecl, classDecl) )
+        attachIdentifier(methodDecl.retExpr)(methodDecl, classDecl)
+        typeInferredMethods += methodDecl.id.getSymbol
+        methodDecl.retType match {
+          case UntypedType() => getTypeOfExprTree(methodDecl.retExpr)
+          case _ => getTypeOfTypeTree(methodDecl.retType, ctx.reporter)
         }
       }
-      val methodId = method.id.value
-      glob.classes(cd.id.value).lookupMethod(methodId) match {
-        case Some(s) => {
-          // The method is previously defined (as in, a parent has it)
-          if (cd.methods.contains(s)) {
-            printAlreadyDefined(methodId, method.id, ctx.reporter)
-          } else {
-            // Check if overriding
-            if (s.argList.length == method.args.length
-                && sameParameterTypes(method.args, s.argList, ctx.reporter)
-                && sameReturnTypes(method, s, ctx.reporter)) {
-              var methodSym = new MethodSymbol(method.id.value, cd.getSymbol)
-              methodSym.setPos(method)
-              // If no type supplied, we set TUntyped and type it later
-              methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
-              methodSym.overridden = Some(s)
-              methodSym.setDeclaration(method)
-              method.setSymbol(methodSym)
-              method.id.setSymbol(method.getSymbol)
-              cd.getSymbol.addMethod(methodId, method.getSymbol)
+    }
 
-              for (param <- method.args) {
+    def createMethodSymbol(methodDecl: MethodDecl, classDecl: ClassDecl): MethodSymbol = {
+      var methodSymbol = new MethodSymbol(methodDecl.id.value, classDecl.getSymbol)
+      methodSymbol.setPos(methodDecl)
+      methodDecl.retType match {
+        case Identifier(value) => {
+          glob.classes get value match {
+            case Some(cs) => methodDecl.retType.asInstanceOf[Identifier].setSymbol(cs)
+            case None => ctx.reporter.error("Class is not declared", methodDecl.retType)
+          }
+        }
+        case UntypedType() => { }
+        case _ => methodSymbol.setType(getTypeOfTypeTree(methodDecl.retType, ctx.reporter))
+      }
+      methodSymbol.setDeclaration(methodDecl)
+      methodSymbol
+    }
+
+    def analyseMethod(methodDecl: MethodDecl, classDecl: ClassDecl): Unit = {
+      val methodId = methodDecl.id;
+      if (methodId.hasSymbol) {
+        if (typeInferredMethods contains methodId.getSymbol) {
+          return
+        }
+      }
+
+      /* Is the method defined? (either in same class => error, or in superclass?) */
+      classDecl.getSymbol.lookupMethod(methodId.value) match {
+        case Some(m) => {
+          if (classDecl.methods contains methodId.value) {
+            /* The method is already defined in this class */
+            printAlreadyDefined(methodId.value, methodDecl.id, ctx.reporter)
+          } else {
+            /* The method exists in a superclass, check overriding */
+            if (m.argList.length == methodDecl.args.length
+                && sameParameterTypes(methodDecl.args, m.argList, ctx.reporter)
+                && sameReturnTypes(methodDecl, m, ctx.reporter)) {
+              /* The method is overriding */
+              var methodSymbol = createMethodSymbol(methodDecl, classDecl)
+              methodDecl.setSymbol(methodSymbol)
+              methodDecl.id.setSymbol(methodDecl.getSymbol)
+              classDecl.getSymbol.addMethod(methodDecl.id.value, methodDecl.getSymbol)
+              /*methodDecl.retType match {
+                case UntypedType() => methodSymbol.setType(inferReturnType(methodDecl, classDecl))
+                case _ => { }
+              }*/
+              for (param <- methodDecl.args) {
                 val paramId = param.id.value
-                glob.classes(cd.id.value).methods(method.id.value).lookupVar(paramId) match {
+                glob.classes(classDecl.id.value).methods(methodDecl.id.value).lookupVar(paramId) match {
                   case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
                   case None => {
                     createParameterSymbol(param)
-                    method.getSymbol.addParam(paramId, param.getSymbol)
+                    methodDecl.getSymbol.addParam(paramId, param.getSymbol)
                     unusedVariables += param.getSymbol
                   }
                 }
               }
-
-              method.retType match {
-                case Identifier(value) => {
-                  glob.classes get value match {
-                    case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
-                    case None => ctx.reporter.error("Class is not declared", method.retType)
-                  }
-                }
-                case _ => { }
-              }
             } else {
-              ctx.reporter.error("Method is already defined in superclass", method)
+              ctx.reporter.error("Method does not override method with same name in superclass", methodDecl)
             }
           }
         }
         case None => {
-          createMethod(method, cd)
-        }
-      }
-      method.getSymbol.getType
-    }
-
-    def createMethod(method: MethodDecl, cd: ClassDecl): Unit = {
-      // The method is not previously defined
-      var methodSym = new MethodSymbol(method.id.value, cd.getSymbol)
-      methodSym.setPos(method)
-      methodSym.setDeclaration(method)
-      method.setSymbol(methodSym)
-      methodSym.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
-      method.id.setSymbol(method.getSymbol)
-      cd.getSymbol.addMethod(method.id.value, method.getSymbol)
-
-      for (param <- method.args) {
-        val paramId = param.id.value
-        glob.classes(cd.id.value).methods(method.id.value).lookupVar(paramId) match {
-          case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
-          case None => {
-            createParameterSymbol(param)
-            method.getSymbol.addParam(paramId, param.getSymbol)
-            unusedVariables += param.getSymbol
+          var methodSymbol = createMethodSymbol(methodDecl, classDecl)
+          methodDecl.setSymbol(methodSymbol)
+          methodDecl.id.setSymbol(methodDecl.getSymbol)
+          classDecl.getSymbol.addMethod(methodDecl.id.value, methodDecl.getSymbol)
+          for (param <- methodDecl.args) {
+            val paramId = param.id.value
+            glob.classes(classDecl.id.value).methods(methodDecl.id.value).lookupVar(paramId) match {
+              case Some(s) => printAlreadyDefined(paramId, param.id, ctx.reporter)
+              case None => {
+                createParameterSymbol(param)
+                methodDecl.getSymbol.addParam(paramId, param.getSymbol)
+                unusedVariables += param.getSymbol
+              }
+            }
           }
         }
       }
-
-      method.retType match {
-        case Identifier(value) => {
-          glob.classes get value match {
-            case Some(cs) => method.retType.asInstanceOf[Identifier].setSymbol(cs)
-            case None => ctx.reporter.error("Class is not declared", method.retType)
-          }
-        }
-        case UntypedType() => {
-          /** Method is untyped, parse the method and set the type */
-          method.vars foreach { mv => parseMethodVar(mv, method, cd) }
-          method.exprs foreach { me => attachIdentifier(me)(method, cd) }
-          attachIdentifier(method.retExpr)(method, cd)
-          method.getSymbol.setType(getTypeOfExprTree(method.retExpr))
-          typeInferredMethods += method.id.getSymbol
-          cd.getSymbol.addMethod(method.id.value, method.getSymbol)
-        }
-        case _ => { }
-      }
-    }
-
-    def handleMethod(meth: Identifier, md: MethodDecl, cd: ClassDecl): Unit= {
-      parseMethod(md, cd)
-      md.vars foreach { mdv => parseMethodVar(mdv, md, cd) }
-      md.exprs foreach { mde => attachIdentifier(mde)(md, cd) }
-      attachIdentifier(md.retExpr)(md, cd)
-      md.id.getSymbol.setType(getTypeOfExprTree(md.retExpr))
-      meth.setSymbol(md.id.getSymbol)
-      typeInferredMethods += meth.getSymbol
     }
 
     def parseMethodVar(methodVar: VarDecl, method: MethodDecl, cd: ClassDecl): Unit = {
@@ -202,83 +186,31 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case Self() => {
               // If object is self, check for the method in the class
               obj.asInstanceOf[Self].getSymbol.lookupMethod(meth.value) match {
-                case Some(ms) => {
-                  ms.getType match {
-                    // There is a method in the class but it has not yet
-                    // been typed
-                    case TUntyped => {
-                      // Parse the MethodDecl to find the return expression type
-                      ms.getDeclaration match {
-                        case Some(md) => {
-                          obj.asInstanceOf[Self].getSymbol.getDeclaration match {
-                            case Some(cd) => handleMethod(meth, md, cd)
-                            case None => { sys.error(s"Self is of " +
-                              "class " +
-                              "${obj.asInstanceOf[Self].getSymbol.name} " +
-                              "but does not have a declaration attached " +
-                              " to it") }
-                          }
-                        }
-                        case None => sys.error("No declaration connected to " + ms.name)
-                      }
-                    }
-                    case _ => meth.setSymbol(ms)
-                  }
-                }
+                case Some(ms) => meth.setSymbol(ms)
                 case None => { ctx.reporter.error("No method " + meth.value + " defined", meth) }
               }
             }
             case Identifier(value) => {
+              println(obj)
               glob.classes(obj.asInstanceOf[Identifier].getSymbol.getType.toString).lookupMethod(meth.value) match {
-                case Some(ms) => {
-                  ms.getType match {
-                    case TUntyped => {
-                      ms.getDeclaration match {
-                        case Some(md) => {
-                          ms.classSymbol.getDeclaration match {
-                            case Some(cd) => handleMethod(meth, md, cd)
-                            case None => { sys.error(s"Self is of " +
-                              "class " +
-                              "${obj.asInstanceOf[Self].getSymbol.name} " +
-                              "but does not have a declaration attached " +
-                              " to it") }
-                          }
-                        }
-                        case None => sys.error("No declaration connected to " + ms.name)
-                      }
-                    }
-                    case _ => meth.setSymbol(ms)
-                  }
-                }
+                case Some(ms) => meth.setSymbol(ms)
                 case None => ctx.reporter.error("No method " + meth.value + " defined")
               }
             }
             case New(tpe) => {
               glob.classes(tpe.asInstanceOf[Identifier].getSymbol.getType.toString).lookupMethod(meth.value) match {
-                case Some(ms) => {
-                  ms.getType match {
-                    case TUntyped => {
-                      ms.getDeclaration match {
-                        case Some(md) => {
-                          ms.classSymbol.getDeclaration match {
-                            case Some(cd) => handleMethod(meth, md, cd)
-                            case None => { sys.error(s"Self is of " +
-                              "class " +
-                              "${obj.asInstanceOf[Self].getSymbol.name} " +
-                              "but does not have a declaration attached " +
-                              " to it") }
-                          }
-                        }
-                        case None => sys.error("No declaration connected to " + ms.name)
-                      }
-                    }
-                    case _ => meth.setSymbol(ms)
-                  }
-                }
+                case Some(ms) => meth.setSymbol(ms)
                 case None => ctx.reporter.error("No method " + meth.value + " defined")
               }
             }
-            case _ => { sys.error("What are you trying to use a method call on?") }
+            case MethodCall(obj2, meth2, args2) => {
+              println(obj)
+              glob.classes(getTypeOfExprTree(obj).toString).lookupMethod(meth.value) match {
+                case Some(ms) => meth.setSymbol(ms)
+                case None => ctx.reporter.error("No method " + meth.value + " defined")
+              }
+            }
+            case _ => { sys.error("What are you trying to use a method call on? " + obj) }
           }
           for (arg <- args) {
             attachIdentifier(arg)
@@ -312,6 +244,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
         case Assign(id: Identifier, expr) => {
           attachIdentifier(id)
+          id.getSymbol.getType match {
+            case TUntyped => id.getSymbol.setType(getTypeOfExprTree(expr))
+            case _ => {}
+          }
           attachIdentifier(expr)
           unusedVariables -= id.getSymbol
         }
@@ -424,11 +360,25 @@ object NameAnalysis extends Pipeline[Program, Program] {
         }
       }
 
-      classDecl.methods foreach { m => parseMethod(m, classDecl) }
+      /* Iterate through methods of the class */
+      classDecl.methods foreach { m => analyseMethod(m, classDecl) }
     }
 
+    /* Iterate through all variables (class, method, parameters) */
     for (classDecl <- prog.classes :+ mainClassDecl) {
       for (method <- classDecl.methods) {
+        for (param <- method.args) {
+          param.tpe match {
+            case Identifier(_) => {
+              attachIdentifier(param.tpe.asInstanceOf[Identifier])(method, classDecl)
+            }
+            case _ => { }
+          }
+        }
+        /*method.retType match {
+          case UntypedType() => method.id.getSymbol.setType(inferReturnType(method, classDecl))
+          case _ => method.id.getSymbol.setType(getTypeOfTypeTree(method.retType, ctx.reporter))
+        }*/
         for (classVar <- classDecl.vars) {
           unusedVariables += classVar.getSymbol
           classVar.tpe match {
@@ -439,17 +389,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             case _ => { /* Primitive type */ }
           }
         }
-
-        method.vars foreach { mv => parseMethodVar(mv, method, classDecl)}
-
-        for (param <- method.args) {
-          param.tpe match {
-            case Identifier(_) => {
-              attachIdentifier(param.tpe.asInstanceOf[Identifier])(method, classDecl)
-            }
-            case _ => { }
-          }
-        }
+        //method.vars foreach { mv => parseMethodVar(mv, method, classDecl)}
 
         classDecl.parent match {
           case Some(p) => {
@@ -458,7 +398,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
           case None => { }
         }
 
-        for (expr <- method.exprs) {
+        method.id.getSymbol.setType(inferReturnType(method, classDecl))
+
+        /*for (expr <- method.exprs) {
           attachIdentifier(expr)(method, classDecl)
         }
 
@@ -470,7 +412,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
             method.getSymbol.setType(getTypeOfExprTree(method.retExpr))
           }
           case _ => { }
-        }
+        }*/
 
         def getSymbolFromObj(obj: ExprTree): Symbol = {
           obj match {
